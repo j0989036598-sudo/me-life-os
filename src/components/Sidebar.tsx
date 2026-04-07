@@ -11,14 +11,15 @@ const ROLE_LABELS: Record<UserRole, { label: string; color: string; icon: string
 
 const ALL_NAV = [
   { id: 'home',      icon: '🏠', label: '首頁',   badge: undefined },
-  { id: 'log',       icon: '📖', label: '賢者之書', badge: '1' },
-  { id: 'tasks',     icon: '⚡', label: '任務中心', badge: '3' },
+  { id: 'log',       icon: '📖', label: '賢者之書', badge: undefined },
+  { id: 'tasks',     icon: '⚡', label: '任務中心', badge: undefined },
   { id: 'metronome', icon: '⏱️', label: '節拍器',  badge: undefined },
   { id: 'skills',    icon: '🌳', label: '技能樹',  badge: undefined },
   { id: 'explore',   icon: '🗺️', label: '探險',   badge: undefined },
   { id: 'base',      icon: '🏰', label: '基地',    badge: undefined },
   { id: 'guild',     icon: '⚔️', label: '公會',   badge: undefined },
   { id: 'market',    icon: '🏪', label: '市集',    badge: undefined },
+  { id: 'settings',  icon: '⚙️', label: '個人設定', badge: undefined },
   { id: 'admin',     icon: '👁️', label: '管理後台', badge: undefined },
 ]
 
@@ -48,15 +49,15 @@ function NavItem({ icon, label, active, onClick, badge }: {
   )
 }
 
-// ─── 桌機版左側欄 ───────────────────────────────────────────────
 export function DesktopSidebar({ page, setPage, user, role, allowedPages, onLogout }: SidebarProps) {
   const { state } = useGame()
   const roleInfo = ROLE_LABELS[role]
-  const navItems = ALL_NAV.filter(n => allowedPages.includes(n.id))
+  const mainNav = ALL_NAV.filter(n => allowedPages.includes(n.id) && n.id !== 'admin' && n.id !== 'settings')
+  const hasAdmin = allowedPages.includes('admin')
+  const hasSettings = allowedPages.includes('settings')
 
   return (
     <div className="hidden md:flex w-64 min-h-screen bg-dark-800 border-r border-white/5 p-4 flex-col fixed left-0 top-0 z-20">
-      {/* Logo */}
       <div className="flex items-center gap-3 mb-5 px-2">
         <span className="text-2xl">⚔️</span>
         <div>
@@ -67,7 +68,6 @@ export function DesktopSidebar({ page, setPage, user, role, allowedPages, onLogo
         </div>
       </div>
 
-      {/* User card */}
       <div className="glass rounded-xl p-3 mb-4">
         <div className="flex items-center gap-3 mb-2">
           <div className="text-2xl">{user.avatar}</div>
@@ -91,13 +91,20 @@ export function DesktopSidebar({ page, setPage, user, role, allowedPages, onLogo
         </div>
       </div>
 
-      {/* Nav */}
       <nav className="flex flex-col gap-0.5 flex-1 overflow-y-auto">
-        {navItems.filter(n => n.id !== 'admin').map(n => (
+        {mainNav.map(n => (
           <NavItem key={n.id} icon={n.icon} label={n.label}
             active={page === n.id} onClick={() => setPage(n.id)} badge={n.badge} />
         ))}
-        {allowedPages.includes('admin') && (
+
+        {hasSettings && (
+          <>
+            <div className="border-t border-white/5 my-2" />
+            <NavItem icon="⚙️" label="個人設定" active={page === 'settings'} onClick={() => setPage('settings')} />
+          </>
+        )}
+
+        {hasAdmin && (
           <>
             <div className="border-t border-white/5 my-2" />
             <NavItem icon="👁️" label="管理後台" active={page === 'admin'} onClick={() => setPage('admin')} />
@@ -105,17 +112,15 @@ export function DesktopSidebar({ page, setPage, user, role, allowedPages, onLogo
         )}
       </nav>
 
-      {/* Logout */}
       <button onClick={onLogout}
         className="mt-4 flex items-center gap-2 w-full px-4 py-2.5 rounded-xl text-gray-500 hover:text-red-400 hover:bg-red-500/5 transition-all text-sm">
         <span>🚪</span><span>切換角色</span>
       </button>
-      <div className="text-[10px] text-gray-600 px-2 mt-1">v2.0 Demo · 遊戲化介面</div>
+      <div className="text-[10px] text-gray-600 px-2 mt-1">v2.0 · 遊戲化介面</div>
     </div>
   )
 }
 
-// ─── 手機版底部 Tab Bar ──────────────────────────────────────────
 export function BottomTabBar({ page, setPage, allowedPages, onLogout }: {
   page: string; setPage: (page: string) => void; allowedPages: string[]; onLogout?: () => void
 }) {
@@ -172,7 +177,6 @@ function MobileMoreMenu({ page, setPage, allowedPages, onLogout }: {
               <span>{n.icon}</span><span>{n.label}</span>
             </button>
           ))}
-          {/* 登出按鈕 */}
           {onLogout && (
             <>
               <div className="border-t border-white/5" />
@@ -188,7 +192,6 @@ function MobileMoreMenu({ page, setPage, allowedPages, onLogout }: {
   )
 }
 
-// 預設 export 保留相容性
 export default function Sidebar(props: SidebarProps) {
   return <DesktopSidebar {...props} />
 }
