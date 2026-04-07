@@ -6,7 +6,8 @@ import { supabase, getAllProfiles, getAllInvited, inviteUser, removeInvited, upd
 const DEPARTMENT_OPTIONS = ['行銷部', '業務部', '設計部', '工程部', '客服部', '財務部', '人資部', '管理部', '其他']
 type AdminTab = 'members' | 'invite' | 'invited'
 
-export default function AdminPage() {
+export default function AdminPage({ role, currentUserId }: { role: UserRole; currentUserId: string }) {
+  const isBoss = role === 'boss'
   const [tab, setTab] = useState<AdminTab>('members')
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [invited, setInvited] = useState<InvitedUser[]>([])
@@ -122,12 +123,12 @@ export default function AdminPage() {
                 <>
                   <div className="p-4 border-b border-white/5"><h3 className="font-bold text-sm">全體成員（{profiles.length} 人）</h3></div>
                   <div className="overflow-x-auto"><div className="min-w-[700px]">
-                    <div className="grid grid-cols-6 text-xs text-gray-500 px-4 py-3 border-b border-white/5 font-medium">
+                    <div className={`grid ${isBoss ? 'grid-cols-6' : 'grid-cols-4'} text-xs text-gray-500 px-4 py-3 border-b border-white/5 font-medium`}>
                       <span>成員</span><span>職稱 / 部門</span><span className="text-center">加入日期</span>
-                      <span className="text-center">角色</span><span className="text-center">調整角色</span><span className="text-center">操作</span>
+                      <span className="text-center">角色</span>{isBoss && <span className="text-center">調整角色</span>}{isBoss && <span className="text-center">操作</span>}
                     </div>
                     {profiles.map(p => (
-                      <div key={p.id} className="grid grid-cols-6 items-center px-4 py-3 border-b border-white/5 hover:bg-dark-700/50 transition-all">
+                      <div key={p.id} className={`grid ${isBoss ? 'grid-cols-6' : 'grid-cols-4'} items-center px-4 py-3 border-b border-white/5 hover:bg-dark-700/50 transition-all`}>
                         <div className="flex items-center gap-2">
                           <span className="text-xl">{p.avatar}</span>
                           <div><div className="text-sm font-medium">{p.name}</div><div className="text-xs text-gray-500 truncate max-w-[100px]">{p.email}</div></div>
@@ -141,22 +142,26 @@ export default function AdminPage() {
                             : 'bg-purple-500/10 text-purple-400'
                           }`}>{p.role === 'boss' ? '👑 老闆' : p.role === 'manager' ? '🛡️ 主管' : '⚔️ 員工'}</span>
                         </div>
-                        <div className="text-center">
-                          {p.role !== 'boss' && (
-                            <select value={p.role} onChange={e => handleRoleChange(p.user_id, e.target.value as UserRole)}
-                              className="text-xs bg-dark-700 border border-white/10 rounded-lg px-2 py-1 text-gray-300 focus:outline-none">
-                              <option value="member">員工</option><option value="manager">主管</option>
-                            </select>
-                          )}
-                        </div>
-                        <div className="text-center">
-                          {p.role !== 'boss' && (
-                            <button onClick={() => handleFireEmployee(p.user_id, p.email, p.name)}
-                              className="text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 px-2 py-1 rounded-lg transition-all">
-                              🚫 開除
-                            </button>
-                          )}
-                        </div>
+                        {isBoss && (
+                          <div className="text-center">
+                            {p.role !== 'boss' && (
+                              <select value={p.role} onChange={e => handleRoleChange(p.user_id, e.target.value as UserRole)}
+                                className="text-xs bg-dark-700 border border-white/10 rounded-lg px-2 py-1 text-gray-300 focus:outline-none">
+                                <option value="member">員工</option><option value="manager">主管</option>
+                              </select>
+                            )}
+                          </div>
+                        )}
+                        {isBoss && (
+                          <div className="text-center">
+                            {p.role !== 'boss' && p.user_id !== currentUserId && (
+                              <button onClick={() => handleFireEmployee(p.user_id, p.email, p.name)}
+                                className="text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 px-2 py-1 rounded-lg transition-all">
+                                🚫 開除
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div></div>
