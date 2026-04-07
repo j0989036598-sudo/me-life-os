@@ -1,27 +1,37 @@
 'use client'
 
-import { MOCK_TASKS, MOCK_DAILY_LOGS, SEASON_PASS, MOCK_MEMBERS } from '@/lib/mockData'
+import { useState, useEffect } from 'react'
+import { MOCK_TASKS, MOCK_DAILY_LOGS, SEASON_PASS } from '@/lib/mockData'
 import { useGame } from '@/lib/GameContext'
-import { UserRole } from '@/components/LoginPage'
+import { UserRole } from '@/app/page'
+import { supabase, getAllProfiles, type Profile } from '@/lib/supabase'
 
 export default function HomePage({ user, role }: { user?: any; role?: UserRole }) {
   const { state } = useGame()
+  const [profiles, setProfiles] = useState<Profile[]>([])
   const today = new Date()
   const days = ['日', '一', '二', '三', '四', '五', '六']
   const dateStr = `${today.getMonth() + 1}/${today.getDate()}（${days[today.getDay()]}）`
   const isManager = role === 'boss' || role === 'manager'
 
-  // 團隊統計
-  const totalMembers = MOCK_MEMBERS.length
-  const checkedIn = MOCK_MEMBERS.filter(m => m.todayDone).length
-  const loggedToday = MOCK_MEMBERS.filter(m => m.dailyLog).length
-  const totalMonthXp = MOCK_MEMBERS.reduce((s, m) => s + m.monthXp, 0)
+  useEffect(() => {
+    if (isManager) {
+      getAllProfiles().then(setProfiles)
+      const channel = supabase.channel('home-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+          getAllProfiles().then(setProfiles)
+        })
+        .subscribe()
+      return () => { supabase.removeChannel(channel) }
+    }
+  }, [isManager])
+
+  const totalMembers = profiles.length
 
   return (
     <div className="animate-fade space-y-6">
-
       {/* ── 管理者專屬：團隊今日總覽 ── */}
-      {isManager && (
+      {isManager && totalMembers > 0 && (
         <div className="glass rounded-2xl p-5 border border-purple-500/20 bg-gradient-to-r from-purple-500/5 to-amber-500/5">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-lg">{role === 'boss' ? '👑' : '🛡️'}</span>
@@ -32,40 +42,29 @@ export default function HomePage({ user, role }: { user?: any; role?: UserRole }
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-dark-700/50 rounded-xl p-3 text-center">
-              <div className="text-2xl font-black text-emerald-400">{checkedIn}/{totalMembers}</div>
-              <div className="text-xs text-gray-500 mt-1">今日打卡</div>
-              <div className="w-full h-1 bg-dark-600 rounded-full mt-2">
-                <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${(checkedIn/totalMembers)*100}%` }} />
-              </div>
+              <div className="text-2xl font-black text-emerald-400">{totalMembers}</div>
+              <div className="text-xs text-gray-500 mt-1">團隊成員</div>
             </div>
             <div className="bg-dark-700/50 rounded-xl p-3 text-center">
-              <div className="text-2xl font-black text-blue-400">{loggedToday}/{totalMembers}</div>
-              <div className="text-xs text-gray-500 mt-1">日誌封印</div>
-              <div className="w-full h-1 bg-dark-600 rounded-full mt-2">
-                <div className="h-full bg-blue-400 rounded-full" style={{ width: `${(loggedToday/totalMembers)*100}%` }} />
-              </div>
+              <div className="text-2xl font-black text-blue-400">{profiles.filter(p => p.role === 'manager').length}</div>
+              <div className="text-xs text-gray-500 mt-1">主管人數</div>
             </div>
             <div className="bg-dark-700/50 rounded-xl p-3 text-center">
-              <div className="text-2xl font-black text-amber-400">{totalMonthXp.toLocaleString()}</div>
-              <div className="text-xs text-gray-500 mt-1">本月團隊 XP</div>
+              <div className="text-2xl font-black text-amber-400">{profiles.filter(p => p.role === 'member').length}</div>
+              <div className="text-xs text-gray-500 mt-1">員工人數</div>
             </div>
             <div className="bg-dark-700/50 rounded-xl p-3 text-center">
-              <div className="text-2xl font-black text-fire-400">
-                {MOCK_MEMBERS.filter(m => m.streak >= 7).length}
-              </div>
-              <div className="text-xs text-gray-500 mt-1">連續 7 天以上</div>
+              <div className="text-2xl font-black text-purple-400">{new Set(profiles.map(p => p.department)).size}</div>
+              <div className="text-xs text-gray-500 mt-1">部門數量</div>
             </div>
           </div>
-
-          {/* 成員今日狀態快覽 */}
+          {/* 成員快覽 */}
           <div className="mt-4 flex flex-wrap gap-2">
-            {MOCK_MEMBERS.map((m, i) => (
-              <div key={i} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all ${
-                m.todayDone ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-300' : 'bg-dark-700/50 border border-white/5 text-gray-500'
-              }`}>
-                <span>{m.avatar}</span>
-                <span>{m.name}</span>
-                {m.todayDone ? <span>✅</span> : <span>⏳</span>}
+            {profiles.map((p) => (
+              <div key={p.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+                <span>{p.avatar}</span>
+                <span>{p.name}</span>
+                <span>✅</span>
               </div>
             ))}
           </div>
@@ -76,7 +75,6 @@ export default function HomePage({ user, role }: { user?: any; role?: UserRole }
       <div className="glass rounded-2xl p-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-500/10 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2" />
-
         <div className="relative flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
           <div className="flex flex-col items-center">
             <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-500/30 to-amber-500/30 flex items-center justify-center text-5xl border border-white/10">
@@ -86,7 +84,6 @@ export default function HomePage({ user, role }: { user?: any; role?: UserRole }
               {user?.title}
             </div>
           </div>
-
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-2xl font-black">{user?.name}</h1>
@@ -100,7 +97,6 @@ export default function HomePage({ user, role }: { user?: any; role?: UserRole }
                 </span>
               ) : `今天是 ${dateStr}`}
             </p>
-
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="bg-dark-700/50 rounded-xl p-3 text-center">
                 <div className="text-xs text-gray-500 mb-1">XP</div>
@@ -143,9 +139,9 @@ export default function HomePage({ user, role }: { user?: any; role?: UserRole }
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
           {SEASON_PASS.tiers.map((t, i) => (
             <div key={i} className={`text-center p-3 rounded-xl transition-all ${
-              t.claimed ? 'bg-emerald-500/10 border border-emerald-500/20' :
-              i < state.seasonTier ? 'bg-amber-500/10 border border-amber-500/20 cursor-pointer hover:scale-105' :
-              'bg-dark-700/50 border border-white/5 opacity-50'
+              t.claimed ? 'bg-emerald-500/10 border border-emerald-500/20'
+              : i < state.seasonTier ? 'bg-amber-500/10 border border-amber-500/20 cursor-pointer hover:scale-105'
+              : 'bg-dark-700/50 border border-white/5 opacity-50'
             }`}>
               <div className="text-xs text-gray-500 mb-1">Tier {t.tier}</div>
               <div className="text-lg mb-1">{t.reward.split(' ')[0]}</div>
