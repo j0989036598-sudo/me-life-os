@@ -16,13 +16,15 @@ import MarketPage from '@/components/MarketPage'
 import SettingsPage from '@/components/SettingsPage'
 import TeamLogsPage from '@/components/TeamLogsPage'
 import TaskDelegatePage from '@/components/TaskDelegatePage'
+import RewardPage from '@/components/RewardPage'
+import PerformancePage from '@/components/PerformancePage'
 
 export type { UserRole }
 
 const ROLE_PAGES: Record<UserRole, string[]> = {
-  boss:    ['home', 'log', 'tasks', 'metronome', 'skills', 'guild', 'market', 'team-logs', 'task-delegate', 'settings', 'admin'],
-  manager: ['home', 'log', 'tasks', 'metronome', 'skills', 'guild', 'market', 'team-logs', 'task-delegate', 'settings', 'admin'],
-  member:  ['home', 'log', 'tasks', 'metronome', 'skills', 'guild', 'market', 'task-delegate', 'settings'],
+  boss:    ['home', 'log', 'tasks', 'metronome', 'skills', 'guild', 'market', 'rewards', 'performance', 'team-logs', 'task-delegate', 'settings', 'admin'],
+  manager: ['home', 'log', 'tasks', 'metronome', 'skills', 'guild', 'market', 'rewards', 'performance', 'team-logs', 'task-delegate', 'settings', 'admin'],
+  member:  ['home', 'log', 'tasks', 'metronome', 'skills', 'guild', 'market', 'rewards', 'task-delegate', 'settings'],
 }
 
 function AppContent({ profile, onLogout, onProfileUpdate }: { profile: Profile; onLogout: () => void; onProfileUpdate: (p: Profile) => void }) {
@@ -49,6 +51,8 @@ function AppContent({ profile, onLogout, onProfileUpdate }: { profile: Profile; 
       case 'admin': return <AdminPage role={role} currentUserId={profile.user_id} />
       case 'metronome': return <MetronomePage profile={profile} />
       case 'market': return <MarketPage profile={profile} />
+      case 'rewards': return <RewardPage profile={profile} role={role} />
+      case 'performance': return <PerformancePage role={role} />
       case 'settings': return <SettingsPage profile={profile} onProfileUpdate={onProfileUpdate} />
       case 'team-logs': return <TeamLogsPage />
       case 'task-delegate': return <TaskDelegatePage currentUserId={profile.user_id} currentUserName={profile.name} currentRole={role} />
