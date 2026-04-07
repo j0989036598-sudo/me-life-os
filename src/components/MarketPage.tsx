@@ -6,12 +6,12 @@ import { getUserInventory, addToInventory, getUserGachaCollection, addGachaCard,
 
 // ── 商品定義（靜態資料，不需要存 DB） ──
 const MARKET_ITEMS = [
-  { id: 1, name: 'SP 加倍符', icon: '🔮', desc: '下次技能升級 SP 消耗減半', price: 500, currency: 'gold' as const, rarity: '普通' },
-  { id: 2, name: 'XP 爆發藥水', icon: '⚡', desc: '今日所有任務 XP 雙倍', price: 800, currency: 'gold' as const, rarity: '稀有' },
-  { id: 3, name: '高級洞見', icon: '💡', desc: '獲得一條隨機商業洞見', price: 300, currency: 'gold' as const, rarity: '普通' },
-  { id: 4, name: '境界跳升', icon: '🚀', desc: '直接獲得 500 XP', price: 15, currency: 'diamond' as const, rarity: '史詩' },
-  { id: 5, name: '連勝護盾', icon: '🛡️', desc: '保護連續打卡天數一次', price: 1200, currency: 'gold' as const, rarity: '稀有' },
-  { id: 6, name: '命運轉盤券', icon: '🎰', desc: '免費使用一次洞見抽卡', price: 10, currency: 'diamond' as const, rarity: '史詩' },
+  { id: 1, name: '雙倍XP藥水', icon: '⚡', desc: '激活 2 倍 XP，持續 3 個任務', price: 2000, currency: 'gold' as const, rarity: '稀有', effect: 'double_xp' },
+  { id: 2, name: '能量飲料', icon: '🥤', desc: '恢復 1 SP', price: 1500, currency: 'gold' as const, rarity: '普通', effect: 'restore_sp' },
+  { id: 3, name: '幸運符', icon: '🍀', desc: '下次抽卡保證 SR 或更高', price: 3000, currency: 'gold' as const, rarity: '史詩', effect: 'lucky_charm' },
+  { id: 4, name: '重置卷軸', icon: '🔄', desc: '重置任意連續任務的連勝，無懲罰', price: 5000, currency: 'gold' as const, rarity: '史詩', effect: 'reset_scroll' },
+  { id: 5, name: '經驗書', icon: '📚', desc: '立即獲得 200 XP', price: 800, currency: 'gold' as const, rarity: '普通', effect: 'xp_book' },
+  { id: 6, name: '金幣袋', icon: '💰', desc: '獲得 5000 金幣', price: 5, currency: 'diamond' as const, rarity: '稀有', effect: 'gold_bag' },
 ]
 
 const GACHA_POOL = [
@@ -24,7 +24,7 @@ const GACHA_POOL = [
 ]
 
 export default function MarketPage({ profile }: { profile: Profile }) {
-  const { state, spendGold, spendDiamond, addXp } = useGame()
+  const { state, spendGold, spendDiamond, addXp, addSp, addGold } = useGame()
   const [tab, setTab] = useState<'shop' | 'gacha'>('shop')
   const [buyAnim, setBuyAnim] = useState<number | null>(null)
   const [gachaResult, setGachaResult] = useState<typeof GACHA_POOL[0] | null>(null)
@@ -47,8 +47,29 @@ export default function MarketPage({ profile }: { profile: Profile }) {
     if (success) {
       await addToInventory({ user_id: profile.user_id, item_name: item.name, item_icon: item.icon })
       setPurchaseCount(prev => prev + 1)
-      // 特殊道具效果
-      if (item.name === '境界跳升') addXp(500)
+
+      // 道具效果
+      switch (item.effect) {
+        case 'xp_book':
+          addXp(200)
+          break
+        case 'restore_sp':
+          addSp(1)
+          break
+        case 'gold_bag':
+          addGold(5000)
+          break
+        case 'double_xp':
+          // Save active buff to inventory with flag - would be implemented in future
+          break
+        case 'lucky_charm':
+          // Gacha guaranteed SR or above - would be implemented in future
+          break
+        case 'reset_scroll':
+          // Reset recurring task streak - would be implemented in future
+          break
+      }
+
       setBuyAnim(item.id)
       setTimeout(() => setBuyAnim(null), 1500)
     }
@@ -93,6 +114,9 @@ export default function MarketPage({ profile }: { profile: Profile }) {
     'SSR': 'text-amber-400 border-amber-400/30 glow-gold',
   }
 
+  // Calculate unique cards bonus (1% per unique card)
+  const collectionBonus = collection.length
+
   return (
     <div className="animate-fade">
       <div className="flex flex-wrap items-center gap-3 mb-2">
@@ -111,8 +135,8 @@ export default function MarketPage({ profile }: { profile: Profile }) {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mt-4 mb-6">
+      {/* Tabs and Collection Bonus */}
+      <div className="flex flex-wrap gap-2 items-center mt-4 mb-6">
         <button onClick={() => setTab('shop')}
           className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
             tab === 'shop' ? 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-400/30' : 'glass text-gray-400'
@@ -125,6 +149,11 @@ export default function MarketPage({ profile }: { profile: Profile }) {
           }`}>
           🎰 洞見抽卡
         </button>
+        {collectionBonus > 0 && (
+          <div className="ml-auto glass rounded-xl px-4 py-2.5 text-sm">
+            <span className="text-emerald-400 font-bold">收藏加成: +{collectionBonus}% XP</span>
+          </div>
+        )}
       </div>
 
       {tab === 'shop' && (

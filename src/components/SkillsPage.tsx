@@ -10,18 +10,22 @@ const TIER_COLORS = ['', 'from-emerald-500/20 to-emerald-500/5', 'from-blue-500/
 
 // ── 預設技能（首次登入時寫入） ──
 const DEFAULT_SKILLS = [
-  { name: '市場直覺', icon: '📊', description: '洞察市場趨勢的能力', category: '商業', tier: 1, level: 0, max_level: 5, sp_cost: 10, unlocked: true },
-  { name: '第一性原理', icon: '🧠', description: '從根本思考問題的能力', category: '商業', tier: 2, level: 0, max_level: 5, sp_cost: 20, unlocked: true },
-  { name: '攝影大師', icon: '📷', description: '完成 50 場拍攝任務', category: '技術', tier: 1, level: 0, max_level: 5, sp_cost: 10, unlocked: true },
-  { name: '剪輯達人', icon: '✂️', description: '剪輯 30 支影片', category: '技術', tier: 1, level: 0, max_level: 5, sp_cost: 10, unlocked: true },
-  { name: '社群操盤手', icon: '📱', description: '發布 100 則貼文', category: '技術', tier: 2, level: 0, max_level: 5, sp_cost: 20, unlocked: true },
-  { name: '鋼鐵意志', icon: '💪', description: '連續打卡 30 天', category: '心理', tier: 1, level: 0, max_level: 5, sp_cost: 10, unlocked: true },
-  { name: '客戶耳語者', icon: '🤝', description: '完成 10 次客戶提案', category: '商業', tier: 2, level: 0, max_level: 5, sp_cost: 20, unlocked: true },
-  { name: 'AI 先鋒', icon: '🤖', description: '使用 AI 工具完成 20 個任務', category: '技術', tier: 2, level: 0, max_level: 5, sp_cost: 20, unlocked: true },
-  { name: '數據分析師', icon: '📈', description: '完成 20 份數據報告', category: '商業', tier: 3, level: 0, max_level: 5, sp_cost: 35, unlocked: false },
-  { name: '創意總監', icon: '🌟', description: '達到 Lv.15 解鎖', category: '傳說', tier: 4, level: 0, max_level: 5, sp_cost: 50, unlocked: false },
-  { name: '團隊導師', icon: '🧭', description: '指導夥伴完成 15 項任務', category: '心理', tier: 2, level: 0, max_level: 5, sp_cost: 20, unlocked: true },
-  { name: '時間領主', icon: '⏰', description: '連續 60 天零遲到', category: '傳說', tier: 4, level: 0, max_level: 5, sp_cost: 50, unlocked: false },
+  // Tier 1 - Marketing Fundamentals
+  { name: '攝影術', icon: '📷', description: '掌握基礎的產品及內容拍攝技巧', category: '技術', tier: 1, level: 0, max_level: 5, sp_cost: 10, unlocked: true },
+  { name: '文案力', icon: '✍️', description: '撰寫吸引人的行銷文案與廣告詞', category: '技術', tier: 1, level: 0, max_level: 5, sp_cost: 10, unlocked: true },
+  { name: '社群經營', icon: '📱', description: '管理社群媒體帳號和互動', category: '技術', tier: 1, level: 0, max_level: 5, sp_cost: 10, unlocked: true },
+  // Tier 2 - Intermediate Skills (Requires Level 10)
+  { name: '視覺設計', icon: '🎨', description: '設計視覺化素材與品牌識別', category: '技術', tier: 2, level: 0, max_level: 5, sp_cost: 20, unlocked: false },
+  { name: '數據分析', icon: '📊', description: '分析行銷數據與消費者洞察', category: '商業', tier: 2, level: 0, max_level: 5, sp_cost: 20, unlocked: false },
+  { name: '短影音製作', icon: '🎬', description: '製作 TikTok、Reels 等短影音內容', category: '技術', tier: 2, level: 0, max_level: 5, sp_cost: 20, unlocked: false },
+  // Tier 3 - Advanced Skills (Requires Level 20)
+  { name: '品牌策略', icon: '🎯', description: '制定品牌定位與長期策略', category: '商業', tier: 3, level: 0, max_level: 5, sp_cost: 35, unlocked: false },
+  { name: '客戶管理', icon: '🤝', description: '管理客戶關係與提升滿意度', category: '商業', tier: 3, level: 0, max_level: 5, sp_cost: 35, unlocked: false },
+  { name: '專案領導', icon: '🧭', description: '領導行銷專案的規劃與執行', category: '商業', tier: 3, level: 0, max_level: 5, sp_cost: 35, unlocked: false },
+  // Tier 4 - Expert Skills (Requires Level 30)
+  { name: '商業洞察', icon: '🔮', description: '深度市場洞察與競爭分析能力', category: '商業', tier: 4, level: 0, max_level: 5, sp_cost: 50, unlocked: false },
+  { name: '團隊培育', icon: '👥', description: '培育與管理高效能的行銷團隊', category: '商業', tier: 4, level: 0, max_level: 5, sp_cost: 50, unlocked: false },
+  { name: '創新思維', icon: '⚡', description: '創意突破與創新行銷方案設計', category: '商業', tier: 4, level: 0, max_level: 5, sp_cost: 50, unlocked: false },
 ]
 
 export default function SkillsPage({ profile }: { profile: Profile }) {
@@ -30,6 +34,9 @@ export default function SkillsPage({ profile }: { profile: Profile }) {
   const [skills, setSkills] = useState<UserSkill[]>([])
   const [loading, setLoading] = useState(true)
   const [upgradeAnim, setUpgradeAnim] = useState<string | null>(null)
+
+  // Tier unlock requirements
+  const TIER_UNLOCK_REQS = { 1: 0, 2: 10, 3: 20, 4: 30 }
 
   useEffect(() => {
     ;(async () => {
@@ -43,17 +50,28 @@ export default function SkillsPage({ profile }: { profile: Profile }) {
     })()
   }, [profile.user_id])
 
+  // Calculate total XP bonus from all unlocked skills
+  const totalXpBonus = skills
+    .filter(s => s.unlocked && s.level > 0)
+    .reduce((sum, s) => sum + (s.level * 5), 0)
+
+  // Filter and enforce unlock conditions
   const filtered = category === '全部' ? skills : skills.filter(s => s.category === category)
 
   const grouped = [1, 2, 3, 4].map(tier => ({
     tier,
     label: TIER_LABELS[tier],
     color: TIER_COLORS[tier],
-    skills: filtered.filter(s => s.tier === tier),
+    skills: filtered.filter(s => s.tier === tier).map(s => ({
+      ...s,
+      // Enforce unlock conditions
+      unlocked: state.level >= TIER_UNLOCK_REQS[s.tier as keyof typeof TIER_UNLOCK_REQS]
+    })),
   })).filter(g => g.skills.length > 0)
 
   const handleUpgrade = async (skill: UserSkill) => {
-    if (skill.level >= skill.max_level || !skill.unlocked) return
+    const unlocked = state.level >= TIER_UNLOCK_REQS[skill.tier as keyof typeof TIER_UNLOCK_REQS]
+    if (skill.level >= skill.max_level || !unlocked) return
     if (spendSp(skill.sp_cost)) {
       const newLevel = skill.level + 1
       await updateUserSkill(skill.id, { level: newLevel })
@@ -63,6 +81,11 @@ export default function SkillsPage({ profile }: { profile: Profile }) {
       setUpgradeAnim(skill.name)
       setTimeout(() => setUpgradeAnim(null), 1000)
     }
+  }
+
+  const getLockRequirement = (tier: number): string => {
+    const req = TIER_UNLOCK_REQS[tier as keyof typeof TIER_UNLOCK_REQS]
+    return req === 0 ? '' : `Lv.${req} 解鎖`
   }
 
   if (loading) {
@@ -87,6 +110,30 @@ export default function SkillsPage({ profile }: { profile: Profile }) {
         </div>
         <div className="ml-auto glass rounded-xl px-4 py-2 text-sm">
           <span className="text-sp-400 font-bold">🔮 {state.sp} SP</span>
+        </div>
+      </div>
+
+      {/* XP Bonus Display */}
+      <div className="glass rounded-2xl p-4 mb-6 bg-gradient-to-r from-xp-500/10 to-amber-500/10 border border-xp-400/20">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-xs text-gray-400 mb-1">你的 XP 加成</div>
+            <div className="text-2xl font-black text-xp-400">+{totalXpBonus}%</div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-gray-400 mb-2">技能加成來自</div>
+            <div className="text-sm text-gray-300">
+              {skills.filter(s => s.unlocked && s.level > 0).length} 個已升級技能
+            </div>
+            {totalXpBonus > 0 && (
+              <div className="mt-2 text-[10px] text-gray-500 max-w-xs">
+                {skills
+                  .filter(s => s.unlocked && s.level > 0)
+                  .map(s => `${s.name} Lv.${s.level} (+${s.level * 5}%)`)
+                  .join(' · ')}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -118,17 +165,20 @@ export default function SkillsPage({ profile }: { profile: Profile }) {
                 const canUpgrade = s.unlocked && s.level < s.max_level && state.sp >= s.sp_cost
                 const isAnimating = upgradeAnim === s.name
                 return (
-                  <div key={s.id} className={`glass rounded-2xl p-4 transition-all ${
-                    !s.unlocked ? 'opacity-30 grayscale' : isAnimating ? 'ring-2 ring-emerald-400 scale-[1.02]' : 'hover:border-white/10'
+                  <div key={s.id} className={`glass rounded-2xl p-4 transition-all relative ${
+                    !s.unlocked ? 'opacity-50 grayscale' : isAnimating ? 'ring-2 ring-emerald-400 scale-[1.02]' : 'hover:border-white/10'
                   }`}>
                     <div className="flex items-start gap-3">
-                      <div className="text-3xl">{s.icon}</div>
+                      <div className={`text-3xl ${!s.unlocked ? 'opacity-50' : ''}`}>{s.icon}</div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-sm truncate">{s.name}</span>
                           {!s.unlocked && <span className="text-[10px] bg-gray-700 px-1.5 py-0.5 rounded-full">🔒</span>}
                         </div>
-                        <div className="text-xs text-gray-500 mt-0.5">{s.description}</div>
+                        {!s.unlocked && (
+                          <div className="text-xs text-amber-400 mt-0.5 font-bold">{getLockRequirement(s.tier)}</div>
+                        )}
+                        <div className={`text-xs mt-0.5 ${!s.unlocked ? 'text-gray-600' : 'text-gray-500'}`}>{s.description}</div>
                         <div className="flex items-center gap-2 mt-2">
                           <div className="flex-1 h-2 bg-dark-600 rounded-full overflow-hidden">
                             <div className="h-full bg-gradient-to-r from-xp-500 to-xp-400 rounded-full progress-bar"

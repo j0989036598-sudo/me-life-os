@@ -13,6 +13,7 @@ export default function TasksPage({ role, profile }: { role?: UserRole; profile?
   const [rewardAnim, setRewardAnim] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'personal' | 'team'>('personal')
   const [filter, setFilter] = useState('all')
+  const [priorityFilter, setPriorityFilter] = useState('all')
   const isManager = role === 'boss' || role === 'manager'
 
   useEffect(() => {
@@ -65,11 +66,22 @@ export default function TasksPage({ role, profile }: { role?: UserRole; profile?
   const done = myTasks.filter(t => t.status === 'completed').length
   const total = myTasks.length
 
-  const filtered = filter === 'all' ? myTasks
+  const filtered = (filter === 'all' ? myTasks
     : filter === 'active' ? myTasks.filter(t => t.status !== 'completed' && t.status !== 'cancelled')
     : myTasks.filter(t => t.status === 'completed')
+  ).filter(t => {
+    if (priorityFilter === 'all') return true
+    return (t.priority || 'medium') === priorityFilter
+  })
 
   const getProfileByUserId = (uid: string) => profiles.find(p => p.user_id === uid)
+
+  const getPriorityBadge = (priority?: string) => {
+    const p = priority || 'medium'
+    if (p === 'high') return { icon: '🔴', label: '緊急', color: 'bg-red-500/20 text-red-400' }
+    if (p === 'low') return { icon: '🟢', label: '低', color: 'bg-green-500/20 text-green-400' }
+    return { icon: '🟡', label: '一般', color: 'bg-yellow-500/20 text-yellow-400' }
+  }
 
   if (loading) {
     return (
@@ -147,13 +159,23 @@ export default function TasksPage({ role, profile }: { role?: UserRole; profile?
             </div>
           )}
 
-          <div className="flex gap-2 mb-4">
-            {[{ key: 'all', label: '全部' }, { key: 'active', label: '⚡ 進行中' }, { key: 'done', label: '✅ 已完成' }].map(f => (
-              <button key={f.key} onClick={() => setFilter(f.key)}
-                className={`px-4 py-2 rounded-xl text-sm transition-all ${
-                  filter === f.key ? 'bg-purple-500/20 text-purple-300 ring-1 ring-purple-400/30' : 'glass text-gray-400 hover:text-white'
-                }`}>{f.label}</button>
-            ))}
+          <div className="flex gap-2 mb-4 flex-wrap">
+            <div className="flex gap-1">
+              {[{ key: 'all', label: '全部' }, { key: 'active', label: '⚡ 進行中' }, { key: 'done', label: '✅ 已完成' }].map(f => (
+                <button key={f.key} onClick={() => setFilter(f.key)}
+                  className={`px-4 py-2 rounded-xl text-sm transition-all ${
+                    filter === f.key ? 'bg-purple-500/20 text-purple-300 ring-1 ring-purple-400/30' : 'glass text-gray-400 hover:text-white'
+                  }`}>{f.label}</button>
+              ))}
+            </div>
+            <div className="flex gap-1">
+              {[{ key: 'all', label: '優先度: 全部' }, { key: 'high', label: '🔴 緊急' }, { key: 'medium', label: '🟡 一般' }, { key: 'low', label: '🟢 低' }].map(f => (
+                <button key={f.key} onClick={() => setPriorityFilter(f.key)}
+                  className={`px-4 py-2 rounded-xl text-sm transition-all ${
+                    priorityFilter === f.key ? 'bg-blue-500/20 text-blue-300 ring-1 ring-blue-400/30' : 'glass text-gray-400 hover:text-white'
+                  }`}>{f.label}</button>
+              ))}
+            </div>
           </div>
 
           {filtered.length === 0 ? (
@@ -181,14 +203,19 @@ export default function TasksPage({ role, profile }: { role?: UserRole; profile?
                       {isDone && '✓'}
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className={`font-medium ${isDone ? 'line-through text-gray-500' : ''}`}>{t.title}</span>
+                        {(() => {
+                          const priorityBadge = getPriorityBadge(t.priority)
+                          return <span className={`text-[10px] px-2 py-0.5 rounded-full ${priorityBadge.color}`}>{priorityBadge.icon} {priorityBadge.label}</span>
+                        })()}
                         <span className={`text-[10px] px-2 py-0.5 rounded-full ${
                           t.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400'
                           : t.status === 'in_progress' ? 'bg-blue-500/20 text-blue-400'
                           : t.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400'
                           : 'bg-red-500/20 text-red-400'
                         }`}>{t.status === 'pending' ? '待處理' : t.status === 'in_progress' ? '進行中' : t.status === 'completed' ? '已完成' : '已取消'}</span>
+                        {t.category && <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">{t.category}</span>}
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
                         來自 {assigner?.avatar || '👤'} {t.assigned_by_name}

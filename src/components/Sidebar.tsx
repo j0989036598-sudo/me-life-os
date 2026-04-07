@@ -18,7 +18,9 @@ const ALL_NAV = [
   { id: 'skills', icon: '🌳', label: '技能樹', badge: undefined },
   { id: 'guild', icon: '⚔️', label: '公會', badge: undefined },
   { id: 'market', icon: '🏪', label: '市集', badge: undefined },
+  { id: 'rewards', icon: '🎁', label: '獎勵中心', badge: undefined },
   { id: 'team-logs', icon: '📋', label: '員工日誌', badge: undefined },
+  { id: 'performance', icon: '📊', label: '績效報表', badge: undefined },
   { id: 'task-delegate', icon: '📝', label: '任務委托', badge: undefined },
   { id: 'settings', icon: '⚙️', label: '個人設定', badge: undefined },
   { id: 'admin', icon: '👁️', label: '管理後台', badge: undefined },
@@ -52,12 +54,13 @@ export function DesktopSidebar({ page, setPage, user, role, allowedPages, onLogo
   const roleInfo = ROLE_LABELS[role]
 
   const mainNav = ALL_NAV.filter(n =>
-    allowedPages.includes(n.id) && n.id !== 'admin' && n.id !== 'settings' && n.id !== 'team-logs' && n.id !== 'task-delegate'
+    allowedPages.includes(n.id) && n.id !== 'admin' && n.id !== 'settings' && n.id !== 'team-logs' && n.id !== 'task-delegate' && n.id !== 'performance'
   )
   const hasAdmin = allowedPages.includes('admin')
   const hasSettings = allowedPages.includes('settings')
   const hasTeamLogs = allowedPages.includes('team-logs')
   const hasTaskDelegate = allowedPages.includes('task-delegate')
+  const hasPerformance = allowedPages.includes('performance')
 
   return (
     <div className="hidden md:flex w-64 min-h-screen bg-dark-800 border-r border-white/5 p-4 flex-col fixed left-0 top-0 z-20">
@@ -96,10 +99,11 @@ export function DesktopSidebar({ page, setPage, user, role, allowedPages, onLogo
           <NavItem key={n.id} icon={n.icon} label={n.label} active={page === n.id} onClick={() => setPage(n.id)} badge={n.badge} />
         ))}
 
-        {(hasTeamLogs || hasTaskDelegate) && (
+        {(hasTeamLogs || hasTaskDelegate || hasPerformance) && (
           <>
             <div className="border-t border-white/5 my-2" />
             {hasTeamLogs && <NavItem icon="📋" label="員工日誌" active={page === 'team-logs'} onClick={() => setPage('team-logs')} />}
+            {hasPerformance && <NavItem icon="📊" label="績效報表" active={page === 'performance'} onClick={() => setPage('performance')} />}
             {hasTaskDelegate && <NavItem icon="📝" label="任務委托" active={page === 'task-delegate'} onClick={() => setPage('task-delegate')} />}
           </>
         )}

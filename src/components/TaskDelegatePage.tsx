@@ -22,8 +22,12 @@ export default function TaskDelegatePage({ currentUserId, currentUserName, curre
   const [desc, setDesc] = useState('')
   const [xpReward, setXpReward] = useState(50)
   const [dueDate, setDueDate] = useState('')
+  const [priority, setPriority] = useState<'high' | 'medium' | 'low'>('medium')
+  const [category, setCategory] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  const CATEGORIES = ['行銷', '設計', '攝影', '剪輯', '企劃', '客服', '行政', '其他']
 
   const fetchData = async () => {
     setLoading(true)
@@ -74,6 +78,8 @@ export default function TaskDelegatePage({ currentUserId, currentUserName, curre
       description: desc.trim(),
       xp_reward: xpReward,
       due_date: dueDate || undefined,
+      priority: priority,
+      category: category || '其他',
     })
     setSubmitting(false)
     if (result) {
@@ -83,6 +89,8 @@ export default function TaskDelegatePage({ currentUserId, currentUserName, curre
       setAssignTo('')
       setDueDate('')
       setXpReward(50)
+      setPriority('medium')
+      setCategory('')
       getAllAssignedTasks().then(setTasks)
     } else {
       setMsg({ type: 'error', text: '指派失敗，請再試一次' })
@@ -245,6 +253,36 @@ export default function TaskDelegatePage({ currentUserId, currentUserName, curre
                   <label className="text-sm text-gray-400 mb-1.5 block">任務描述（選填）</label>
                   <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="更多任務細節..."
                     className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50 h-24 resize-none" />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-400 mb-1.5 block">優先度 *</label>
+                  <div className="flex gap-2">
+                    {[
+                      { value: 'high' as const, label: '🔴 緊急', color: 'bg-red-500/20 text-red-300 border-red-500/30' },
+                      { value: 'medium' as const, label: '🟡 一般', color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' },
+                      { value: 'low' as const, label: '🟢 低', color: 'bg-green-500/20 text-green-300 border-green-500/30' },
+                    ].map(p => (
+                      <button
+                        key={p.value}
+                        onClick={() => setPriority(p.value)}
+                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+                          priority === p.value ? `${p.color} ring-1 ring-offset-1` : 'glass text-gray-400 border-white/10'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-400 mb-1.5 block">任務分類 *</label>
+                  <select value={category} onChange={e => setCategory(e.target.value)}
+                    className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50">
+                    <option value="">選擇分類...</option>
+                    {CATEGORIES.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>

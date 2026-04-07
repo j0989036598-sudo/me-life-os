@@ -7,23 +7,24 @@ const SEASON_PASS = {
   season: 'S1',
   name: '開拓者賽季',
   tiers: [
-    { tier: 1, xpReq: 0, reward: '🎫 賽季徽章', claimed: false },
-    { tier: 2, xpReq: 500, reward: '🪙 200 Gold', claimed: false },
-    { tier: 3, xpReq: 1000, reward: '🔮 30 SP', claimed: false },
-    { tier: 4, xpReq: 1500, reward: '⚡ XP 爆發藥水', claimed: false },
-    { tier: 5, xpReq: 2000, reward: '💎 10 鑽石', claimed: false },
-    { tier: 6, xpReq: 2500, reward: '🌟 傳說稱號', claimed: false },
+    { tier: 1, seasonXpReq: 100, reward: '🎫 賽季徽章', icon: '🎫', rewardText: '賽季徽章', effect: 'cosmetic' },
+    { tier: 2, seasonXpReq: 200, reward: '🪙 500 Gold', icon: '🪙', rewardText: '500 金幣', effect: 'gold' },
+    { tier: 3, seasonXpReq: 300, reward: '🔮 10 SP', icon: '🔮', rewardText: '10 SP', effect: 'sp' },
+    { tier: 4, seasonXpReq: 400, reward: '⚡ 500 XP', icon: '⚡', rewardText: '500 XP', effect: 'xp' },
+    { tier: 5, seasonXpReq: 500, reward: '💎 5 鑽石', icon: '💎', rewardText: '5 鑽石', effect: 'diamond' },
+    { tier: 6, seasonXpReq: 600, reward: '🌟 傳說稱號', icon: '🌟', rewardText: '傳說稱號', effect: 'cosmetic' },
   ],
 }
 import { UserRole } from '@/app/page'
 import { supabase, getAllProfiles, getAssignedTasksForUser, getUserDailyLogs, getDailyLogsByDate, type Profile, type AssignedTask, type DailyLog } from '@/lib/supabase'
 
 export default function HomePage({ user, role, userId }: { user?: any; role?: UserRole; userId?: string }) {
-  const { state } = useGame()
+  const { state, addGold, addSp, addXp, addDiamond } = useGame()
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [myTasks, setMyTasks] = useState<AssignedTask[]>([])
   const [myLogs, setMyLogs] = useState<DailyLog[]>([])
   const [todayLogs, setTodayLogs] = useState<DailyLog[]>([])
+  const [claimedTiers, setClaimedTiers] = useState<Set<number>>(new Set())
   const today = new Date()
   const days = ['日', '一', '二', '三', '四', '五', '六']
   const dateStr = `${today.getMonth() + 1}/${today.getDate()}（${days[today.getDay()]}）`
@@ -51,6 +52,33 @@ export default function HomePage({ user, role, userId }: { user?: any; role?: Us
   const todayCheckedIn = new Set(todayLogs.map(l => l.user_id))
   const activeTasks = myTasks.filter(t => t.status !== 'completed' && t.status !== 'cancelled')
   const doneTasks = myTasks.filter(t => t.status === 'completed')
+
+  const handleClaimTier = (tier: typeof SEASON_PASS.tiers[0]) => {
+    if (claimedTiers.has(tier.tier)) return
+    if (state.seasonXp < tier.seasonXpReq) return
+
+    // Grant reward based on effect type
+    switch (tier.effect) {
+      case 'gold':
+        addGold(500)
+        break
+      case 'sp':
+        addSp(10)
+        break
+      case 'xp':
+        addXp(500)
+        break
+      case 'diamond':
+        addDiamond(5)
+        break
+      case 'cosmetic':
+        // Cosmetic rewards don't need special handling
+        break
+    }
+
+    // Mark tier as claimed
+    setClaimedTiers(prev => new Set([...prev, tier.tier]))
+  }
 
   return (
     <div className="animate-fade space-y-6">
@@ -141,24 +169,42 @@ export default function HomePage({ user, role, userId }: { user?: any; role?: Us
             <h3 className="font-bold">Season Pass {SEASON_PASS.season}</h3>
             <span className="text-xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">{SEASON_PASS.name}</span>
           </div>
-          <span className="text-xs text-gray-500">Tier {state.seasonTier}/6</span>
+          <span className="text-xs text-gray-500">{state.seasonXp.toLocaleString()} / {state.seasonXpMax.toLocaleString()} 賽季XP</span>
         </div>
         <div className="w-full h-2 bg-dark-600 rounded-full overflow-hidden mb-4">
           <div className="h-full bg-gradient-to-r from-amber-500 via-purple-500 to-emerald-500 rounded-full progress-bar" style={{ width: `${(state.seasonXp / state.seasonXpMax) * 100}%` }} />
         </div>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-          {SEASON_PASS.tiers.map((t, i) => (
-            <div key={i} className={`text-center p-3 rounded-xl transition-all ${
-              t.claimed ? 'bg-emerald-500/10 border border-emerald-500/20'
-              : i < state.seasonTier ? 'bg-amber-500/10 border border-amber-500/20 cursor-pointer hover:scale-105'
-              : 'bg-dark-700/50 border border-white/5 opacity-50'
-            }`}>
-              <div className="text-xs text-gray-500 mb-1">Tier {t.tier}</div>
-              <div className="text-lg mb-1">{t.reward.split(' ')[0]}</div>
-              <div className="text-[10px] text-gray-400">{t.reward.split(' ').slice(1).join(' ')}</div>
-              {t.claimed && <div className="text-[10px] text-emerald-400 mt-1">✓ 已領取</div>}
-            </div>
-          ))}
+          {SEASON_PASS.tiers.map((tier) => {
+            const isClaimed = claimedTiers.has(tier.tier)
+            const isUnlocked = state.seasonXp >= tier.seasonXpReq
+            const canClaim = isUnlocked && !isClaimed
+
+            return (
+              <div key={tier.tier} className={`text-center p-3 rounded-xl transition-all relative ${
+                isClaimed ? 'bg-emerald-500/10 border border-emerald-500/20'
+                : canClaim ? 'bg-amber-500/15 border border-amber-500/30 cursor-pointer hover:scale-105 hover:bg-amber-500/20'
+                : 'bg-dark-700/50 border border-white/5 opacity-40'
+              }`}>
+                {canClaim && (
+                  <div className="absolute -top-2 -right-2 w-5 h-5 bg-emerald-400 rounded-full animate-pulse" />
+                )}
+                <div className="text-xs text-gray-500 mb-1">Tier {tier.tier}</div>
+                <div className="text-lg mb-1">{tier.icon}</div>
+                <div className="text-[10px] text-gray-400 truncate">{tier.rewardText}</div>
+                {isClaimed && <div className="text-[10px] text-emerald-400 mt-1">✅ 已領取</div>}
+                {!isClaimed && !isUnlocked && (
+                  <div className="text-[10px] text-gray-500 mt-1">🔒</div>
+                )}
+                {canClaim && (
+                  <button onClick={() => handleClaimTier(tier)}
+                    className="mt-2 w-full py-1 px-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-[9px] font-bold rounded transition-all">
+                    領取
+                  </button>
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
 

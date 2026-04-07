@@ -44,6 +44,44 @@ export default function TeamLogsPage() {
     return `${d.getMonth()+1}/${d.getDate()}（${days[d.getDay()]}）`
   })()
 
+  // Calculate monthly attendance stats
+  const currentYear = new Date(selectedDate).getFullYear()
+  const currentMonth = new Date(selectedDate).getMonth()
+  const workdaysThisMonth = (() => {
+    let count = 0
+    const lastDay = new Date(currentYear, currentMonth + 1, 0).getDate()
+    for (let i = 1; i <= lastDay; i++) {
+      const d = new Date(currentYear, currentMonth, i)
+      const dayOfWeek = d.getDay()
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) count++
+    }
+    return count
+  })()
+
+  const memberAttendance = profiles
+    .filter(p => p.role === 'member')
+    .map(p => {
+      let daysLogged = 0
+      for (let i = 1; i <= new Date(currentYear, currentMonth + 1, 0).getDate(); i++) {
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`
+        if (logs.some(l => l.user_id === p.user_id && l.date === dateStr)) {
+          daysLogged++
+        }
+      }
+      const percentage = workdaysThisMonth > 0 ? (daysLogged / workdaysThisMonth) * 100 : 0
+      return { profile: p, daysLogged, percentage }
+    })
+
+  const teamAvgAttendance = memberAttendance.length > 0
+    ? memberAttendance.reduce((sum, m) => sum + m.percentage, 0) / memberAttendance.length
+    : 0
+
+  const getAttendanceColor = (percentage: number) => {
+    if (percentage >= 90) return 'text-emerald-400'
+    if (percentage >= 70) return 'text-yellow-400'
+    return 'text-red-400'
+  }
+
   return (
     <div className="animate-fade">
       <div className="flex items-center gap-3 mb-6">
@@ -52,6 +90,38 @@ export default function TeamLogsPage() {
           <h2 className="text-2xl font-black">員工日誌總覽</h2>
           <p className="text-gray-400 text-sm">查看團隊成員的賢者之書</p>
         </div>
+      </div>
+
+      {/* 月度出勤率摘要 */}
+      <div className="glass rounded-2xl p-5 mb-6 border border-white/5">
+        <h3 className="font-bold text-sm text-amber-300 mb-4">📊 本月出勤統計</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="flex items-center justify-between p-3 bg-dark-700/50 rounded-xl">
+            <span className="text-sm text-gray-400">團隊平均出勤率</span>
+            <span className={`text-xl font-bold ${getAttendanceColor(teamAvgAttendance)}`}>{teamAvgAttendance.toFixed(1)}%</span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-dark-700/50 rounded-xl">
+            <span className="text-sm text-gray-400">本月工作日數</span>
+            <span className="text-xl font-bold text-gray-300">{workdaysThisMonth} 天</span>
+          </div>
+        </div>
+        {memberAttendance.length > 0 && (
+          <div className="space-y-2">
+            <div className="text-xs text-gray-500 mb-2">個人出勤率：</div>
+            {memberAttendance.map(m => (
+              <div key={m.profile.user_id} className="flex items-center gap-2 text-xs">
+                <span className="text-lg">{m.profile.avatar}</span>
+                <span className="text-gray-400 w-16">{m.profile.name}</span>
+                <div className="flex-1 h-1.5 bg-dark-600 rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full transition-all ${
+                    m.percentage >= 90 ? 'bg-emerald-400' : m.percentage >= 70 ? 'bg-yellow-400' : 'bg-red-400'
+                  }`} style={{ width: `${m.percentage}%` }} />
+                </div>
+                <span className={`w-12 text-right ${getAttendanceColor(m.percentage)}`}>{m.percentage.toFixed(0)}%</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 日期選擇 */}
