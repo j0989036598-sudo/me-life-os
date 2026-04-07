@@ -113,8 +113,8 @@ function AppContent() {
                       />
               <main className="md:ml-64 p-4 md:p-8 pb-24 md:pb-8 min-h-screen">
                       <PageComponent user={MOCK_USER} role={role} />
-              </main>main>
-        </div>div>
+              </main>
+        </div>
       )
 }
 
@@ -122,6 +122,6 @@ export default function App() {
     return (
           <GameProvider>
                 <AppContent />
-          </GameProvider>GameProvider>
+          </GameProvider>
         )
-}</div>
+}
