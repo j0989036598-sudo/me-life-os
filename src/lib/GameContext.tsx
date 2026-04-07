@@ -26,6 +26,7 @@ interface GameContextType {
   spendGold: (amount: number) => boolean
   spendDiamond: (amount: number) => boolean
   spendSp: (amount: number) => boolean
+  resetState: () => void
 }
 
 const DEFAULT_STATE: GameState = {
@@ -110,8 +111,13 @@ export function GameProvider({ userId, children }: { userId?: string; children: 
     return true
   }
 
+  const resetState = () => {
+    setState(DEFAULT_STATE)
+    syncToSupabase(DEFAULT_STATE)
+  }
+
   return (
-    <GameContext.Provider value={{ state, ready, addXp, addGold, addSp, addDiamond, spendGold, spendDiamond, spendSp }}>
+    <GameContext.Provider value={{ state, ready, addXp, addGold, addSp, addDiamond, spendGold, spendDiamond, spendSp, resetState }}>
       {children}
     </GameContext.Provider>
   )

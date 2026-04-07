@@ -673,3 +673,54 @@ export async function addTaskComment(comment: Omit<TaskComment, 'id' | 'created_
   if (error) { console.error('addTaskComment error:', error); return false }
   return true
 }
+
+// ─── 帳號重置（清除所有紀錄與數值）──────────────────────────
+
+export async function resetAllUserData(userId: string): Promise<{ success: boolean; errors: string[] }> {
+  const errors: string[] = []
+
+  // 1. 重置 user_game_stats 歸零
+  const { error: e1 } = await supabase.from('user_game_stats').upsert([{
+    user_id: userId, xp: 0, xp_max: 100, sp: 0, gold: 0, diamond: 0,
+    level: 1, streak: 0, streak_last_date: null, season_tier: 0, season_xp: 0,
+  }], { onConflict: 'user_id' })
+  if (e1) errors.push('game_stats: ' + e1.message)
+
+  // 2. 刪除所有日誌
+  const { error: e2 } = await supabase.from('daily_logs').delete().eq('user_id', userId)
+  if (e2) errors.push('daily_logs: ' + e2.message)
+
+  // 3. 刪除被指派的任務（指派給此人的）
+  const { error: e3 } = await supabase.from('assigned_tasks').delete().eq('assigned_to', userId)
+  if (e3) errors.push('assigned_tasks_to: ' + e3.message)
+
+  // 4. 刪除此人指派出去的任務
+  const { error: e4 } = await supabase.from('assigned_tasks').delete().eq('assigned_by', userId)
+  if (e4) errors.push('assigned_tasks_by: ' + e4.message)
+
+  // 5. 刪除技能樹
+  const { error: e5 } = await supabase.from('user_skills').delete().eq('user_id', userId)
+  if (e5) errors.push('user_skills: ' + e5.message)
+
+  // 6. 刪除背包物品
+  const { error: e6 } = await supabase.from('user_inventory').delete().eq('user_id', userId)
+  if (e6) errors.push('user_inventory: ' + e6.message)
+
+  // 7. 刪除抽卡收藏
+  const { error: e7 } = await supabase.from('user_gacha_collection').delete().eq('user_id', userId)
+  if (e7) errors.push('user_gacha_collection: ' + e7.message)
+
+  // 8. 刪除節拍器任務
+  const { error: e8 } = await supabase.from('user_recurring_tasks').delete().eq('user_id', userId)
+  if (e8) errors.push('user_recurring_tasks: ' + e8.message)
+
+  // 9. 刪除獎勵兌換紀錄
+  const { error: e9 } = await supabase.from('reward_redemptions').delete().eq('user_id', userId)
+  if (e9) errors.push('reward_redemptions: ' + e9.message)
+
+  // 10. 刪除任務留言
+  const { error: e10 } = await supabase.from('task_comments').delete().eq('user_id', userId)
+  if (e10) errors.push('task_comments: ' + e10.message)
+
+  return { success: errors.length === 0, errors }
+}
