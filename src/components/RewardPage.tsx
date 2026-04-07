@@ -479,7 +479,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
                 <label className="text-xs font-bold text-gray-400 block mb-1">分類</label>
                 <select
                   value={newRewardCategory}
-                  onChange={e => setNewRewardCategory(e.target.value as any)}
+                  onChange={e => setNewRewardCategory(e.target.value as 'leave' | 'bonus' | 'gift' | 'custom')}
                   className="w-full bg-dark-700 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-400"
                 >
                   <option value="leave">假期</option>

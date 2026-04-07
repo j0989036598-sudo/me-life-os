@@ -65,6 +65,15 @@ export default function PerformancePage({ role }: { role: UserRole }) {
 
       const startDate = getStartDate()
 
+      // Count expected log days in range (weekdays only)
+      let expectedDays = 0
+      for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
+        const dayOfWeek = new Date(d).getDay()
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+          expectedDays++
+        }
+      }
+
       const memberStats: MemberStats[] = profiles.map(profile => {
         const userTasks = tasks.filter(t => t.assigned_to === profile.user_id)
         const userTasksInRange = userTasks.filter(t => new Date(t.created_at) >= startDate)
@@ -76,16 +85,6 @@ export default function PerformancePage({ role }: { role: UserRole }) {
           const logDate = new Date(l.date)
           return logDate >= startDate
         })
-
-        // Count expected log days in range
-        let expectedDays = 0
-        for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
-          const dayOfWeek = new Date(d).getDay()
-          if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-            // Exclude weekends
-            expectedDays++
-          }
-        }
 
         const stats = gameStatsMap.get(profile.user_id)
 
