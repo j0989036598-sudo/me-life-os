@@ -116,10 +116,9 @@ export function DesktopSidebar({ page, setPage, user, role, allowedPages, onLogo
 }
 
 // ─── 手機版底部 Tab Bar ──────────────────────────────────────────
-export function BottomTabBar({ page, setPage, allowedPages }: {
-  page: string; setPage: (page: string) => void; allowedPages: string[]
+export function BottomTabBar({ page, setPage, allowedPages, onLogout }: {
+  page: string; setPage: (page: string) => void; allowedPages: string[]; onLogout?: () => void
 }) {
-  // 手機只顯示最重要的 5 個
   const mobileNav = ALL_NAV.filter(n =>
     ['home', 'log', 'tasks', 'guild', 'market'].includes(n.id) && allowedPages.includes(n.id)
   )
@@ -129,7 +128,7 @@ export function BottomTabBar({ page, setPage, allowedPages }: {
       <div className="flex items-stretch">
         {mobileNav.map(n => (
           <button key={n.id} onClick={() => setPage(n.id)}
-            className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-all ${
+            className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-all relative ${
               page === n.id ? 'text-white' : 'text-gray-500'
             }`}>
             <span className={`text-xl transition-transform ${page === n.id ? 'scale-110' : ''}`}>{n.icon}</span>
@@ -137,15 +136,14 @@ export function BottomTabBar({ page, setPage, allowedPages }: {
             {page === n.id && <div className="absolute bottom-0 w-8 h-0.5 bg-purple-400 rounded-full" />}
           </button>
         ))}
-        {/* 更多 */}
-        <MobileMoreMenu page={page} setPage={setPage} allowedPages={allowedPages} />
+        <MobileMoreMenu page={page} setPage={setPage} allowedPages={allowedPages} onLogout={onLogout} />
       </div>
     </div>
   )
 }
 
-function MobileMoreMenu({ page, setPage, allowedPages }: {
-  page: string; setPage: (p: string) => void; allowedPages: string[]
+function MobileMoreMenu({ page, setPage, allowedPages, onLogout }: {
+  page: string; setPage: (p: string) => void; allowedPages: string[]; onLogout?: () => void
 }) {
   const { useState } = require('react')
   const [open, setOpen] = useState(false)
@@ -165,7 +163,7 @@ function MobileMoreMenu({ page, setPage, allowedPages }: {
       </button>
 
       {open && (
-        <div className="absolute bottom-full right-0 mb-2 w-44 bg-dark-800 border border-white/10 rounded-xl overflow-hidden shadow-2xl">
+        <div className="absolute bottom-full right-0 mb-2 w-48 bg-dark-800 border border-white/10 rounded-xl overflow-hidden shadow-2xl">
           {moreItems.map(n => (
             <button key={n.id} onClick={() => { setPage(n.id); setOpen(false) }}
               className={`flex items-center gap-3 w-full px-4 py-3 text-sm transition-all ${
@@ -174,6 +172,16 @@ function MobileMoreMenu({ page, setPage, allowedPages }: {
               <span>{n.icon}</span><span>{n.label}</span>
             </button>
           ))}
+          {/* 登出按鈕 */}
+          {onLogout && (
+            <>
+              <div className="border-t border-white/5" />
+              <button onClick={() => { onLogout(); setOpen(false) }}
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-all">
+                <span>🚪</span><span>切換角色</span>
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
