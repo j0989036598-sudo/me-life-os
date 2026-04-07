@@ -1,31 +1,65 @@
 'use client'
 
-import { useState } from 'react'
-import { MOCK_MARKET_ITEMS, MOCK_GACHA_POOL } from '@/lib/mockData'
+import { useState, useEffect } from 'react'
 import { useGame } from '@/lib/GameContext'
+import { getUserInventory, addToInventory, getUserGachaCollection, addGachaCard, type Profile } from '@/lib/supabase'
 
-export default function MarketPage() {
-  const { state, spendGold, spendDiamond } = useGame()
+// ── 商品定義（靜態資料，不需要存 DB） ──
+const MARKET_ITEMS = [
+  { id: 1, name: 'SP 加倍符', icon: '🔮', desc: '下次技能升級 SP 消耗減半', price: 500, currency: 'gold' as const, rarity: '普通' },
+  { id: 2, name: 'XP 爆發藥水', icon: '⚡', desc: '今日所有任務 XP 雙倍', price: 800, currency: 'gold' as const, rarity: '稀有' },
+  { id: 3, name: '高級洞見', icon: '💡', desc: '獲得一條隨機商業洞見', price: 300, currency: 'gold' as const, rarity: '普通' },
+  { id: 4, name: '境界跳升', icon: '🚀', desc: '直接獲得 500 XP', price: 15, currency: 'diamond' as const, rarity: '史詩' },
+  { id: 5, name: '連勝護盾', icon: '🛡️', desc: '保護連續打卡天數一次', price: 1200, currency: 'gold' as const, rarity: '稀有' },
+  { id: 6, name: '命運轉盤券', icon: '🎰', desc: '免費使用一次洞見抽卡', price: 10, currency: 'diamond' as const, rarity: '史詩' },
+]
+
+const GACHA_POOL = [
+  { name: '市場洞察：短影音紅利期', rarity: 'R', icon: '📊', desc: '短影音平台的流量紅利預計持續到 2027 年' },
+  { name: '心理洞察：峰終定律', rarity: 'SR', icon: '🧠', desc: '人們記住的是體驗的高峰和結尾' },
+  { name: '技術洞察：AI 工作流', rarity: 'SR', icon: '🤖', desc: '善用 AI 工具的人效率提升 10 倍' },
+  { name: '傳說洞察：第一性原理', rarity: 'SSR', icon: '⭐', desc: '把問題拆解到最基本的事實，從零推理' },
+  { name: '商業洞察：飛輪效應', rarity: 'R', icon: '💼', desc: '好的商業模式會形成正向循環' },
+  { name: '傳說洞察：複利思維', rarity: 'SSR', icon: '🌟', desc: '每天進步 1%，一年後你會強 37 倍' },
+]
+
+export default function MarketPage({ profile }: { profile: Profile }) {
+  const { state, spendGold, spendDiamond, addXp } = useGame()
   const [tab, setTab] = useState<'shop' | 'gacha'>('shop')
   const [buyAnim, setBuyAnim] = useState<number | null>(null)
-  const [gachaResult, setGachaResult] = useState<typeof MOCK_GACHA_POOL[0] | null>(null)
+  const [gachaResult, setGachaResult] = useState<typeof GACHA_POOL[0] | null>(null)
   const [gachaAnimating, setGachaAnimating] = useState(false)
   const [collection, setCollection] = useState<string[]>([])
+  const [purchaseCount, setPurchaseCount] = useState(0)
 
-  const handleBuy = (item: typeof MOCK_MARKET_ITEMS[0]) => {
+  // 載入已收藏的卡片和購買紀錄
+  useEffect(() => {
+    ;(async () => {
+      const cards = await getUserGachaCollection(profile.user_id)
+      setCollection(cards.map(c => c.card_name))
+      const inventory = await getUserInventory(profile.user_id)
+      setPurchaseCount(inventory.length)
+    })()
+  }, [profile.user_id])
+
+  const handleBuy = async (item: typeof MARKET_ITEMS[0]) => {
     const success = item.currency === 'gold' ? spendGold(item.price) : spendDiamond(item.price)
     if (success) {
+      await addToInventory({ user_id: profile.user_id, item_name: item.name, item_icon: item.icon })
+      setPurchaseCount(prev => prev + 1)
+      // 特殊道具效果
+      if (item.name === '境界跳升') addXp(500)
       setBuyAnim(item.id)
       setTimeout(() => setBuyAnim(null), 1500)
     }
   }
 
-  const handleGacha = () => {
+  const handleGacha = async () => {
     if (!spendGold(200)) return
     setGachaAnimating(true)
     setGachaResult(null)
-    setTimeout(() => {
-      const weights = MOCK_GACHA_POOL.map(g => g.rarity === 'SSR' ? 1 : g.rarity === 'SR' ? 3 : 6)
+    setTimeout(async () => {
+      const weights = GACHA_POOL.map(g => g.rarity === 'SSR' ? 1 : g.rarity === 'SR' ? 3 : 6)
       const total = weights.reduce((a, b) => a + b, 0)
       let r = Math.random() * total
       let idx = 0
@@ -33,11 +67,19 @@ export default function MarketPage() {
         r -= weights[i]
         if (r <= 0) { idx = i; break }
       }
-      const result = MOCK_GACHA_POOL[idx]
+      const result = GACHA_POOL[idx]
       setGachaResult(result)
       setGachaAnimating(false)
+      // 寫入 Supabase
+      await addGachaCard({
+        user_id: profile.user_id,
+        card_name: result.name,
+        card_icon: result.icon,
+        card_rarity: result.rarity,
+        card_desc: result.desc,
+      })
       if (!collection.includes(result.name)) {
-        setCollection([...collection, result.name])
+        setCollection(prev => [...prev, result.name])
       }
     }, 2000)
   }
@@ -57,7 +99,7 @@ export default function MarketPage() {
         <span className="text-3xl">🏪</span>
         <div className="flex-1">
           <h2 className="text-2xl font-black">市集</h2>
-          <p className="text-gray-400 text-sm">用金幣和鑽石兌換強化道具</p>
+          <p className="text-gray-400 text-sm">用金幣和鑽石兌換強化道具 · 已購買 {purchaseCount} 件</p>
         </div>
         <div className="flex gap-2 sm:gap-3">
           <div className="glass rounded-xl px-3 sm:px-4 py-2 text-sm">
@@ -87,7 +129,7 @@ export default function MarketPage() {
 
       {tab === 'shop' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {MOCK_MARKET_ITEMS.map(item => {
+          {MARKET_ITEMS.map(item => {
             const canAfford = item.currency === 'gold' ? state.gold >= item.price : state.diamond >= item.price
             return (
               <div key={item.id} className={`glass rounded-2xl p-5 transition-all relative overflow-hidden ${
@@ -164,10 +206,10 @@ export default function MarketPage() {
 
           {collection.length > 0 && (
             <div className="glass rounded-2xl p-6 text-left">
-              <h4 className="font-bold text-sm mb-3">📚 已收集的洞見 ({collection.length}/{MOCK_GACHA_POOL.length})</h4>
+              <h4 className="font-bold text-sm mb-3">📚 已收集的洞見 ({collection.length}/{GACHA_POOL.length})</h4>
               <div className="space-y-2">
                 {collection.map((name, i) => {
-                  const card = MOCK_GACHA_POOL.find(g => g.name === name)
+                  const card = GACHA_POOL.find(g => g.name === name)
                   return card ? (
                     <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-dark-700/50 text-sm">
                       <span>{card.icon}</span>

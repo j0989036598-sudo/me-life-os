@@ -1,8 +1,20 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { SEASON_PASS } from '@/lib/mockData'
 import { useGame } from '@/lib/GameContext'
+
+const SEASON_PASS = {
+  season: 'S1',
+  name: '開拓者賽季',
+  tiers: [
+    { tier: 1, xpReq: 0, reward: '🎫 賽季徽章', claimed: false },
+    { tier: 2, xpReq: 500, reward: '🪙 200 Gold', claimed: false },
+    { tier: 3, xpReq: 1000, reward: '🔮 30 SP', claimed: false },
+    { tier: 4, xpReq: 1500, reward: '⚡ XP 爆發藥水', claimed: false },
+    { tier: 5, xpReq: 2000, reward: '💎 10 鑽石', claimed: false },
+    { tier: 6, xpReq: 2500, reward: '🌟 傳說稱號', claimed: false },
+  ],
+}
 import { UserRole } from '@/app/page'
 import { supabase, getAllProfiles, getAssignedTasksForUser, getUserDailyLogs, getDailyLogsByDate, type Profile, type AssignedTask, type DailyLog } from '@/lib/supabase'
 
