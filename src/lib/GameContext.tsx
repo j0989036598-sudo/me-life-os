@@ -67,8 +67,8 @@ export function GameProvider({ userId, children }: { userId?: string; children: 
     })()
   }, [userId])
 
-  // ── 同步寫回 Supabase ──
-  const syncToSupabase = useCallback((next: GameState) => {
+  // ── 同步寫回 Supabase（含錯誤回滾） ──
+  const syncToSupabase = useCallback((next: GameState, prev: GameState) => {
     if (!userId) return
     upsertGameStats({
       user_id: userId, xp: next.xp, xp_max: next.xpMax,
@@ -76,6 +76,15 @@ export function GameProvider({ userId, children }: { userId?: string; children: 
       level: next.level, streak: next.streak,
       streak_last_date: new Date().toISOString().slice(0, 10),
       season_tier: next.seasonTier, season_xp: next.seasonXp,
+    }).then(result => {
+      if (!result) {
+        // 寫入失敗 → 回滾到前一個狀態
+        console.error('[GameContext] Supabase 同步失敗，回滾中...')
+        setState(prev)
+      }
+    }).catch(() => {
+      console.error('[GameContext] Supabase 同步異常，回滾中...')
+      setState(prev)
     })
   }, [userId])
 
@@ -86,34 +95,35 @@ export function GameProvider({ userId, children }: { userId?: string; children: 
       const newSeasonXp = Math.min(prev.seasonXp + amount, prev.seasonXpMax)
       const newSeasonTier = newSeasonXp >= prev.seasonXpMax ? prev.seasonTier + 1 : prev.seasonTier
       const next = { ...prev, xp: newXp, level: newLevel, xpMax: newXpMax, sp: newSp, seasonXp: newSeasonXp, seasonTier: newSeasonTier }
-      syncToSupabase(next)
+      syncToSupabase(next, prev)
       return next
     })
   }
 
-  const addGold = (amount: number) => setState(prev => { const next = { ...prev, gold: prev.gold + amount }; syncToSupabase(next); return next })
-  const addSp = (amount: number) => setState(prev => { const next = { ...prev, sp: prev.sp + amount }; syncToSupabase(next); return next })
-  const addDiamond = (amount: number) => setState(prev => { const next = { ...prev, diamond: prev.diamond + amount }; syncToSupabase(next); return next })
+  const addGold = (amount: number) => setState(prev => { const next = { ...prev, gold: prev.gold + amount }; syncToSupabase(next, prev); return next })
+  const addSp = (amount: number) => setState(prev => { const next = { ...prev, sp: prev.sp + amount }; syncToSupabase(next, prev); return next })
+  const addDiamond = (amount: number) => setState(prev => { const next = { ...prev, diamond: prev.diamond + amount }; syncToSupabase(next, prev); return next })
 
   const spendGold = (amount: number) => {
     if (state.gold < amount) return false
-    setState(prev => { const next = { ...prev, gold: prev.gold - amount }; syncToSupabase(next); return next })
+    setState(prev => { const next = { ...prev, gold: prev.gold - amount }; syncToSupabase(next, prev); return next })
     return true
   }
   const spendDiamond = (amount: number) => {
     if (state.diamond < amount) return false
-    setState(prev => { const next = { ...prev, diamond: prev.diamond - amount }; syncToSupabase(next); return next })
+    setState(prev => { const next = { ...prev, diamond: prev.diamond - amount }; syncToSupabase(next, prev); return next })
     return true
   }
   const spendSp = (amount: number) => {
     if (state.sp < amount) return false
-    setState(prev => { const next = { ...prev, sp: prev.sp - amount }; syncToSupabase(next); return next })
+    setState(prev => { const next = { ...prev, sp: prev.sp - amount }; syncToSupabase(next, prev); return next })
     return true
   }
 
   const resetState = () => {
+    const prev = state
     setState(DEFAULT_STATE)
-    syncToSupabase(DEFAULT_STATE)
+    syncToSupabase(DEFAULT_STATE, prev)
   }
 
   return (
