@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 import { supabase, getProfile, createProfile, type Profile, type UserRole } from '@/lib/supabase'
 import { isBossEmail } from '@/lib/roleConfig'
 
+// Re-export UserRole so other components can still import from here
+export type { UserRole } from '@/lib/supabase'
+
 interface LoginPageProps {
   onLogin: (profile: Profile) => void
 }
