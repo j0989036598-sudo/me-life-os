@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MOCK_USER } from '@/lib/mockData'
 import { GameProvider } from '@/lib/GameContext'
 import LoginPage, { UserRole } from '@/components/LoginPage'
@@ -16,7 +16,6 @@ import MarketPage from '@/components/MarketPage'
 import ExplorePage from '@/components/ExplorePage'
 import BasePage from '@/components/BasePage'
 
-// 各角色可使用的頁面
 const ROLE_PAGES: Record<UserRole, string[]> = {
   boss:    ['home', 'log', 'tasks', 'metronome', 'skills', 'explore', 'base', 'guild', 'market', 'admin'],
   manager: ['home', 'log', 'tasks', 'metronome', 'skills', 'explore', 'base', 'guild', 'market', 'admin'],
@@ -28,9 +27,51 @@ export type { UserRole }
 function AppContent() {
   const [role, setRole] = useState<UserRole | null>(null)
   const [page, setPage] = useState('home')
+  const [ready, setReady] = useState(false)
+
+  // 初始化：先從 URL 參數讀角色，再從 localStorage 讀
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const urlRole = params.get('role') as UserRole | null
+    const validRoles: UserRole[] = ['boss', 'manager', 'member']
+
+    if (urlRole && validRoles.includes(urlRole)) {
+      // URL 有帶角色 → 直接登入並存到 localStorage
+      setRole(urlRole)
+      localStorage.setItem('melife_role', urlRole)
+    } else {
+      // 沒有 URL 參數 → 從 localStorage 讀取上次登入的角色
+      const saved = localStorage.getItem('melife_role') as UserRole | null
+      if (saved && validRoles.includes(saved)) {
+        setRole(saved)
+      }
+    }
+    setReady(true)
+  }, [])
+
+  // 登入：存到 localStorage
+  const handleLogin = (selectedRole: UserRole) => {
+    localStorage.setItem('melife_role', selectedRole)
+    setRole(selectedRole)
+    setPage('home')
+  }
+
+  // 登出：清除 localStorage 和 URL 參數
+  const handleLogout = () => {
+    localStorage.removeItem('melife_role')
+    // 清除 URL 參數
+    const url = new URL(window.location.href)
+    url.searchParams.delete('role')
+    window.history.replaceState({}, '', url.toString())
+    setRole(null)
+    setPage('home')
+  }
+
+  // 等待讀取完成再渲染，避免閃爍
+  if (!ready) return null
 
   if (!role) {
-    return <LoginPage onLogin={(selectedRole) => { setRole(selectedRole); setPage('home') }} />
+    return <LoginPage onLogin={handleLogin} />
   }
 
   const allowedPages = ROLE_PAGES[role]
@@ -48,28 +89,25 @@ function AppContent() {
     base:      BasePage,
   }
 
-  // 如果目前頁面不在權限內，自動跳回首頁
   const safePage = allowedPages.includes(page) ? page : 'home'
   const PageComponent = allPages[safePage] || HomePage
 
   return (
     <div className="min-h-screen bg-dark-900">
-      {/* 桌機版左側欄 */}
       <DesktopSidebar
         page={safePage}
         setPage={setPage}
         user={MOCK_USER}
         role={role}
         allowedPages={allowedPages}
-        onLogout={() => setRole(null)}
+        onLogout={handleLogout}
       />
-      {/* 手機版底部 Tab Bar */}
       <BottomTabBar
         page={safePage}
         setPage={setPage}
         allowedPages={allowedPages}
+        onLogout={handleLogout}
       />
-      {/* 主內容區：桌機 ml-64，手機無縮排；底部 padding 避免被 Tab Bar 遮住 */}
       <main className="md:ml-64 p-4 md:p-8 pb-24 md:pb-8 min-h-screen">
         <PageComponent user={MOCK_USER} role={role} />
       </main>
