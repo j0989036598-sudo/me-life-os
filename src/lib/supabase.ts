@@ -230,7 +230,7 @@ export async function createDailyLog(log: {
 }): Promise<DailyLog | null> {
   const { data, error } = await supabase
     .from('daily_logs')
-    .upsert([log], { onConflict: 'user_id,date' })
+    .insert([log])
     .select()
     .single()
   if (error) {
