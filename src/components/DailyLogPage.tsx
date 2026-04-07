@@ -20,7 +20,11 @@ export default function DailyLogPage({ role, profile }: { role?: UserRole; profi
   const [loadingHistory, setLoadingHistory] = useState(true)
   const [alreadySubmittedToday, setAlreadySubmittedToday] = useState(false)
 
-  const today = new Date().toISOString().slice(0, 10)
+  // 使用本地時區日期（避免 UTC 在台灣凌晨 0~8 點顯示前一天）
+  const today = (() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+  })()
 
   // 載入歷史日誌 + 檢查今天是否已提交
   useEffect(() => {

@@ -14,17 +14,13 @@ export default function TeamLogsPage() {
 
   const fetchLogs = async (date: string) => {
     setLoading(true)
-    const formattedDate = date.replace(/-/g, '/')
-    const shortDate = `${parseInt(date.split('-')[1])}/${parseInt(date.split('-')[2])}`
-    const [p, l1, l2] = await Promise.all([
+    // date 格式是 YYYY-MM-DD，直接用這個格式查（與 DailyLogPage 儲存格式一致）
+    const [p, l] = await Promise.all([
       getAllProfiles(),
-      getDailyLogsByDate(formattedDate),
-      getDailyLogsByDate(shortDate),
+      getDailyLogsByDate(date),
     ])
     setProfiles(p)
-    const allLogs = [...l1, ...l2]
-    const unique = allLogs.filter((log, idx, arr) => arr.findIndex(l => l.id === log.id) === idx)
-    setLogs(unique)
+    setLogs(l)
     setLoading(false)
   }
 
