@@ -1,10 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase, getAllProfiles, getAllInvited, inviteUser, removeInvited, updateUserRole, type Profile, type InvitedUser, type UserRole } from '@/lib/supabase'
+import { supabase, getAllProfiles, getAllInvited, inviteUser, removeInvited, updateUserRole, deleteProfile, removeInvitedByEmail, type Profile, type InvitedUser, type UserRole } from '@/lib/supabase'
 
 const DEPARTMENT_OPTIONS = ['行銷部', '業務部', '設計部', '工程部', '客服部', '財務部', '人資部', '管理部', '其他']
-
 type AdminTab = 'members' | 'invite' | 'invited'
 
 export default function AdminPage() {
@@ -12,7 +11,6 @@ export default function AdminPage() {
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [invited, setInvited] = useState<InvitedUser[]>([])
   const [loading, setLoading] = useState(true)
-
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteJobTitle, setInviteJobTitle] = useState('')
   const [inviteDept, setInviteDept] = useState('行銷部')
@@ -30,40 +28,26 @@ export default function AdminPage() {
       setLoading(false)
     }
     fetchData()
-
     const channel = supabase.channel('admin-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
-        getAllProfiles().then(setProfiles)
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'invited_users' }, () => {
-        getAllInvited().then(setInvited)
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => { getAllProfiles().then(setProfiles) })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'invited_users' }, () => { getAllInvited().then(setInvited) })
       .subscribe()
-
     return () => { supabase.removeChannel(channel) }
   }, [])
 
   const handleInvite = async () => {
     if (!inviteEmail.trim() || !inviteJobTitle.trim()) {
-      setInviteMsg({ type: 'error', text: 'Email 和職稱為必填' })
-      return
+      setInviteMsg({ type: 'error', text: 'Email 和職稱為必填' }); return
     }
-    setInviting(true)
-    setInviteMsg(null)
+    setInviting(true); setInviteMsg(null)
     const result = await inviteUser({
-      email: inviteEmail.trim().toLowerCase(),
-      job_title: inviteJobTitle.trim(),
-      department: inviteDept,
-      role: inviteRole,
-      invited_by: '老闆',
-      note: inviteNote,
+      email: inviteEmail.trim().toLowerCase(), job_title: inviteJobTitle.trim(),
+      department: inviteDept, role: inviteRole, invited_by: '老闆', note: inviteNote,
     })
     setInviting(false)
     if (result) {
       setInviteMsg({ type: 'success', text: `✅ 已邀請 ${inviteEmail}` })
-      setInviteEmail('')
-      setInviteJobTitle('')
-      setInviteNote('')
+      setInviteEmail(''); setInviteJobTitle(''); setInviteNote('')
       getAllInvited().then(setInvited)
     } else {
       setInviteMsg({ type: 'error', text: '邀請失敗，請確認 Email 格式是否正確' })
@@ -81,10 +65,17 @@ export default function AdminPage() {
     getAllProfiles().then(setProfiles)
   }
 
-  const tabClass = (t: AdminTab) =>
-    `px-4 py-2 text-sm font-medium rounded-xl transition-all ${
-      tab === t ? 'bg-purple-500/20 text-purple-300' : 'text-gray-500 hover:text-gray-300'
-    }`
+  const handleFireEmployee = async (userId: string, email: string, name: string) => {
+    if (!confirm(`⚠️ 確定要開除「${name}」嗎？\n\n此操作將：\n• 刪除此員工的帳號\n• 該 Gmail 將無法再登入系統\n\n此操作無法復原！`)) return
+    await deleteProfile(userId)
+    await removeInvitedByEmail(email)
+    getAllProfiles().then(setProfiles)
+    getAllInvited().then(setInvited)
+  }
+
+  const tabClass = (t: AdminTab) => `px-4 py-2 text-sm font-medium rounded-xl transition-all ${
+    tab === t ? 'bg-purple-500/20 text-purple-300' : 'text-gray-500 hover:text-gray-300'
+  }`
 
   return (
     <div className="animate-fade">
@@ -112,85 +103,63 @@ export default function AdminPage() {
       </div>
 
       <div className="flex gap-2 mb-4 p-1 glass rounded-xl w-fit">
-        <button className={tabClass('members')} onClick={() => setTab('members')}>
-          🧑‍🤝‍🧑 成員列表 ({profiles.length})
-        </button>
-        <button className={tabClass('invite')} onClick={() => setTab('invite')}>
-          ➕ 邀請員工
-        </button>
-        <button className={tabClass('invited')} onClick={() => setTab('invited')}>
-          📋 邀請名單 ({invited.length})
-        </button>
+        <button className={tabClass('members')} onClick={() => setTab('members')}>🧑‍🤝‍🧑 成員列表 ({profiles.length})</button>
+        <button className={tabClass('invite')} onClick={() => setTab('invite')}>➕ 邀請員工</button>
+        <button className={tabClass('invited')} onClick={() => setTab('invited')}>📋 邀請名單 ({invited.length})</button>
       </div>
 
       {loading ? (
         <div className="glass rounded-2xl p-12 text-center text-gray-500">
-          <div className="text-4xl mb-3 animate-pulse">⏳</div>
-          <p>載入中...</p>
+          <div className="text-4xl mb-3 animate-pulse">⏳</div><p>載入中...</p>
         </div>
       ) : (
         <>
           {tab === 'members' && (
             <div className="glass rounded-2xl overflow-hidden">
               {profiles.length === 0 ? (
-                <div className="p-12 text-center text-gray-500">
-                  <div className="text-4xl mb-3">🏰</div>
-                  <p>尚無成員加入，先邀請員工吧！</p>
-                </div>
+                <div className="p-12 text-center text-gray-500"><div className="text-4xl mb-3">🏰</div><p>尚無成員加入，先邀請員工吧！</p></div>
               ) : (
                 <>
-                  <div className="p-4 border-b border-white/5">
-                    <h3 className="font-bold text-sm">全體成員（{profiles.length} 人）</h3>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <div className="min-w-[600px]">
-                      <div className="grid grid-cols-5 text-xs text-gray-500 px-4 py-3 border-b border-white/5 font-medium">
-                        <span>成員</span><span>職稱 / 部門</span>
-                        <span className="text-center">加入日期</span>
-                        <span className="text-center">角色</span>
-                        <span className="text-center">調整角色</span>
-                      </div>
-                      {profiles.map(p => (
-                        <div key={p.id} className="grid grid-cols-5 items-center px-4 py-3 border-b border-white/5 hover:bg-dark-700/50 transition-all">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xl">{p.avatar}</span>
-                            <div>
-                              <div className="text-sm font-medium">{p.name}</div>
-                              <div className="text-xs text-gray-500 truncate max-w-[100px]">{p.email}</div>
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-sm">{p.job_title}</div>
-                            <div className="text-xs text-gray-500">{p.department}</div>
-                          </div>
-                          <div className="text-center text-xs text-gray-400">
-                            {new Date(p.created_at).toLocaleDateString('zh-TW')}
-                          </div>
-                          <div className="text-center">
-                            <span className={`text-xs px-2 py-1 rounded-full font-bold ${
-                              p.role === 'boss' ? 'bg-amber-500/10 text-amber-400' :
-                              p.role === 'manager' ? 'bg-blue-500/10 text-blue-400' :
-                              'bg-purple-500/10 text-purple-400'
-                            }`}>
-                              {p.role === 'boss' ? '👑 老闆' : p.role === 'manager' ? '🛡️ 主管' : '⚔️ 員工'}
-                            </span>
-                          </div>
-                          <div className="text-center">
-                            {p.role !== 'boss' && (
-                              <select
-                                value={p.role}
-                                onChange={e => handleRoleChange(p.user_id, e.target.value as UserRole)}
-                                className="text-xs bg-dark-700 border border-white/10 rounded-lg px-2 py-1 text-gray-300 focus:outline-none"
-                              >
-                                <option value="member">員工</option>
-                                <option value="manager">主管</option>
-                              </select>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                  <div className="p-4 border-b border-white/5"><h3 className="font-bold text-sm">全體成員（{profiles.length} 人）</h3></div>
+                  <div className="overflow-x-auto"><div className="min-w-[700px]">
+                    <div className="grid grid-cols-6 text-xs text-gray-500 px-4 py-3 border-b border-white/5 font-medium">
+                      <span>成員</span><span>職稱 / 部門</span><span className="text-center">加入日期</span>
+                      <span className="text-center">角色</span><span className="text-center">調整角色</span><span className="text-center">操作</span>
                     </div>
-                  </div>
+                    {profiles.map(p => (
+                      <div key={p.id} className="grid grid-cols-6 items-center px-4 py-3 border-b border-white/5 hover:bg-dark-700/50 transition-all">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{p.avatar}</span>
+                          <div><div className="text-sm font-medium">{p.name}</div><div className="text-xs text-gray-500 truncate max-w-[100px]">{p.email}</div></div>
+                        </div>
+                        <div><div className="text-sm">{p.job_title}</div><div className="text-xs text-gray-500">{p.department}</div></div>
+                        <div className="text-center text-xs text-gray-400">{new Date(p.created_at).toLocaleDateString('zh-TW')}</div>
+                        <div className="text-center">
+                          <span className={`text-xs px-2 py-1 rounded-full font-bold ${
+                            p.role === 'boss' ? 'bg-amber-500/10 text-amber-400'
+                            : p.role === 'manager' ? 'bg-blue-500/10 text-blue-400'
+                            : 'bg-purple-500/10 text-purple-400'
+                          }`}>{p.role === 'boss' ? '👑 老闆' : p.role === 'manager' ? '🛡️ 主管' : '⚔️ 員工'}</span>
+                        </div>
+                        <div className="text-center">
+                          {p.role !== 'boss' && (
+                            <select value={p.role} onChange={e => handleRoleChange(p.user_id, e.target.value as UserRole)}
+                              className="text-xs bg-dark-700 border border-white/10 rounded-lg px-2 py-1 text-gray-300 focus:outline-none">
+                              <option value="member">員工</option><option value="manager">主管</option>
+                            </select>
+                          )}
+                        </div>
+                        <div className="text-center">
+                          {p.role !== 'boss' && (
+                            <button onClick={() => handleFireEmployee(p.user_id, p.email, p.name)}
+                              className="text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 px-2 py-1 rounded-lg transition-all">
+                              🚫 開除
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div></div>
                 </>
               )}
             </div>
@@ -201,24 +170,19 @@ export default function AdminPage() {
               <h3 className="font-bold mb-5">➕ 邀請新員工</h3>
               {inviteMsg && (
                 <div className={`rounded-xl p-3 mb-4 text-sm text-center ${
-                  inviteMsg.type === 'success'
-                    ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
-                    : 'bg-red-500/10 text-red-300 border border-red-500/20'
-                }`}>
-                  {inviteMsg.text}
-                </div>
+                  inviteMsg.type === 'success' ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                  : 'bg-red-500/10 text-red-300 border border-red-500/20'
+                }`}>{inviteMsg.text}</div>
               )}
               <div className="space-y-4">
                 <div>
                   <label className="text-sm text-gray-400 mb-1.5 block">員工 Gmail *</label>
-                  <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
-                    placeholder="example@gmail.com"
+                  <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="example@gmail.com"
                     className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50" />
                 </div>
                 <div>
                   <label className="text-sm text-gray-400 mb-1.5 block">職稱 *</label>
-                  <input type="text" value={inviteJobTitle} onChange={e => setInviteJobTitle(e.target.value)}
-                    placeholder="例：資深設計師"
+                  <input type="text" value={inviteJobTitle} onChange={e => setInviteJobTitle(e.target.value)} placeholder="例：資深設計師"
                     className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -233,15 +197,13 @@ export default function AdminPage() {
                     <label className="text-sm text-gray-400 mb-1.5 block">角色</label>
                     <select value={inviteRole} onChange={e => setInviteRole(e.target.value as UserRole)}
                       className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50">
-                      <option value="member">⚔️ 員工</option>
-                      <option value="manager">🛡️ 主管</option>
+                      <option value="member">⚔️ 員工</option><option value="manager">🛡️ 主管</option>
                     </select>
                   </div>
                 </div>
                 <div>
                   <label className="text-sm text-gray-400 mb-1.5 block">備註（選填）</label>
-                  <input type="text" value={inviteNote} onChange={e => setInviteNote(e.target.value)}
-                    placeholder="例：新進員工、試用期 3 個月"
+                  <input type="text" value={inviteNote} onChange={e => setInviteNote(e.target.value)} placeholder="例：新進員工、試用期 3 個月"
                     className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50" />
                 </div>
                 <button onClick={handleInvite} disabled={inviting}
@@ -256,15 +218,10 @@ export default function AdminPage() {
           {tab === 'invited' && (
             <div className="glass rounded-2xl overflow-hidden">
               {invited.length === 0 ? (
-                <div className="p-12 text-center text-gray-500">
-                  <div className="text-4xl mb-3">📋</div>
-                  <p>尚無待加入邀請</p>
-                </div>
+                <div className="p-12 text-center text-gray-500"><div className="text-4xl mb-3">📋</div><p>尚無待加入邀請</p></div>
               ) : (
                 <>
-                  <div className="p-4 border-b border-white/5">
-                    <h3 className="font-bold text-sm">邀請名單（{invited.length} 人尚未登入）</h3>
-                  </div>
+                  <div className="p-4 border-b border-white/5"><h3 className="font-bold text-sm">邀請名單（{invited.length} 人尚未登入）</h3></div>
                   {invited.map(inv => (
                     <div key={inv.id} className="flex items-center gap-4 px-4 py-3 border-b border-white/5 hover:bg-dark-700/50 transition-all">
                       <div className="flex-1 min-w-0">
@@ -274,13 +231,9 @@ export default function AdminPage() {
                         </div>
                         {inv.note && <div className="text-xs text-gray-600 mt-0.5">📝 {inv.note}</div>}
                       </div>
-                      <div className="text-xs text-gray-600 whitespace-nowrap">
-                        {new Date(inv.created_at).toLocaleDateString('zh-TW')}
-                      </div>
+                      <div className="text-xs text-gray-600 whitespace-nowrap">{new Date(inv.created_at).toLocaleDateString('zh-TW')}</div>
                       <button onClick={() => handleRemoveInvite(inv.id, inv.email)}
-                        className="text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 px-2 py-1 rounded-lg transition-all">
-                        ✕ 移除
-                      </button>
+                        className="text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 px-2 py-1 rounded-lg transition-all">✕ 移除</button>
                     </div>
                   ))}
                 </>
