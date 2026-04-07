@@ -30,16 +30,16 @@ const GameContext = createContext<GameContextType | null>(null)
 
 export function GameProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<GameState>({
-    xp: 2450,
-    xpMax: 3000,
-    sp: 180,
-    gold: 3200,
-    diamond: 45,
-    level: 12,
-    streak: 7,
-    seasonTier: 3,
-    seasonXp: 1850,
-    seasonXpMax: 2500,
+    xp: 0,
+    xpMax: 100,
+    sp: 0,
+    gold: 0,
+    diamond: 0,
+    level: 1,
+    streak: 0,
+    seasonTier: 0,
+    seasonXp: 0,
+    seasonXpMax: 500,
   })
 
   const addXp = (amount: number) => {
@@ -48,14 +48,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
       let newLevel = prev.level
       let newXpMax = prev.xpMax
       let newSp = prev.sp
+
       while (newXp >= newXpMax) {
         newXp -= newXpMax
         newLevel++
         newXpMax = Math.floor(newXpMax * 1.2)
         newSp += 5
       }
+
       const newSeasonXp = Math.min(prev.seasonXp + amount, prev.seasonXpMax)
       const newSeasonTier = newSeasonXp >= prev.seasonXpMax ? prev.seasonTier + 1 : prev.seasonTier
+
       return { ...prev, xp: newXp, level: newLevel, xpMax: newXpMax, sp: newSp, seasonXp: newSeasonXp, seasonTier: newSeasonTier }
     })
   }
@@ -69,11 +72,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, gold: prev.gold - amount }))
     return true
   }
+
   const spendDiamond = (amount: number) => {
     if (state.diamond < amount) return false
     setState(prev => ({ ...prev, diamond: prev.diamond - amount }))
     return true
   }
+
   const spendSp = (amount: number) => {
     if (state.sp < amount) return false
     setState(prev => ({ ...prev, sp: prev.sp - amount }))
