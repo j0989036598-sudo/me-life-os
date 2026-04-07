@@ -44,11 +44,11 @@ function AppContent({ profile, onLogout, onProfileUpdate }: { profile: Profile; 
       case 'home': return <HomePage user={sidebarUser} role={role} userId={profile.user_id} />
       case 'log': return <DailyLogPage role={role} profile={profile} />
       case 'tasks': return <TasksPage role={role} profile={profile} />
-      case 'skills': return <SkillsPage />
+      case 'skills': return <SkillsPage profile={profile} />
       case 'guild': return <RankPage role={role} />
       case 'admin': return <AdminPage />
-      case 'metronome': return <MetronomePage />
-      case 'market': return <MarketPage />
+      case 'metronome': return <MetronomePage profile={profile} />
+      case 'market': return <MarketPage profile={profile} />
       case 'settings': return <SettingsPage profile={profile} onProfileUpdate={onProfileUpdate} />
       case 'team-logs': return <TeamLogsPage />
       case 'task-delegate': return <TaskDelegatePage currentUserId={profile.user_id} currentUserName={profile.name} currentRole={role} />
