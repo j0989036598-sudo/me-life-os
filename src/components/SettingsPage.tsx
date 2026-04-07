@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { updateProfile, type Profile } from '@/lib/supabase'
+import { updateProfile, resetAllUserData, type Profile } from '@/lib/supabase'
+import { useGame } from '@/lib/GameContext'
 
 const AVATAR_OPTIONS = ['⚔️', '🛡️', '🏹', '🪄', '🔮', '🦅', '🐉', '🌟', '⚡', '🔥', '🌊', '🌸', '🎯', '🏆', '💎', '🌙']
 
@@ -15,6 +16,7 @@ interface SettingsPageProps {
 }
 
 export default function SettingsPage({ profile, onProfileUpdate }: SettingsPageProps) {
+  const { state, resetState } = useGame()
   const [name, setName] = useState(profile.name)
   const [avatar, setAvatar] = useState(profile.avatar)
   const [jobTitle, setJobTitle] = useState(profile.job_title)
@@ -22,6 +24,12 @@ export default function SettingsPage({ profile, onProfileUpdate }: SettingsPageP
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // 重置帳號相關狀態
+  const [resetStep, setResetStep] = useState<0 | 1 | 2>(0) // 0=未啟動, 1=第一次確認, 2=第二次確認
+  const [resetConfirmText, setResetConfirmText] = useState('')
+  const [resetting, setResetting] = useState(false)
+  const [resetResult, setResetResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const hasChanges = name !== profile.name || avatar !== profile.avatar ||
     jobTitle !== profile.job_title || department !== profile.department
@@ -46,6 +54,27 @@ export default function SettingsPage({ profile, onProfileUpdate }: SettingsPageP
     }
   }
 
+  const handleResetAccount = async () => {
+    setResetting(true)
+    setResetResult(null)
+
+    const result = await resetAllUserData(profile.user_id)
+
+    if (result.success) {
+      // 同步重置本地 GameContext
+      resetState()
+      setResetResult({ type: 'success', text: '✅ 帳號已完全重置！所有數值歸零、所有紀錄已清除。重新整理頁面後生效。' })
+      setResetStep(0)
+      setResetConfirmText('')
+    } else {
+      setResetResult({ type: 'error', text: `部分重置失敗：${result.errors.join(', ')}` })
+    }
+
+    setResetting(false)
+  }
+
+  const CONFIRM_KEYWORD = '確認重置'
+
   return (
     <div className="animate-fade max-w-xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
@@ -65,6 +94,16 @@ export default function SettingsPage({ profile, onProfileUpdate }: SettingsPageP
       {error && (
         <div className="glass rounded-xl p-4 mb-4 border border-red-500/30 bg-red-500/5 text-red-300 text-sm text-center">
           ⚠️ {error}
+        </div>
+      )}
+
+      {resetResult && (
+        <div className={`glass rounded-xl p-4 mb-4 border text-sm text-center ${
+          resetResult.type === 'success'
+            ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-300'
+            : 'border-red-500/30 bg-red-500/5 text-red-300'
+        }`}>
+          {resetResult.text}
         </div>
       )}
 
@@ -141,7 +180,7 @@ export default function SettingsPage({ profile, onProfileUpdate }: SettingsPageP
       </div>
 
       {/* 唯讀資訊 */}
-      <div className="glass rounded-2xl p-6 mb-6">
+      <div className="glass rounded-2xl p-6 mb-4">
         <h3 className="font-bold mb-4 text-gray-400">🔒 帳號資訊（不可修改）</h3>
         <div className="space-y-3">
           <div className="flex justify-between text-sm">
@@ -170,7 +209,7 @@ export default function SettingsPage({ profile, onProfileUpdate }: SettingsPageP
       <button
         onClick={handleSave}
         disabled={saving || !hasChanges}
-        className={`w-full py-3.5 rounded-2xl font-bold text-sm transition-all ${
+        className={`w-full py-3.5 rounded-2xl font-bold text-sm transition-all mb-6 ${
           hasChanges && !saving
             ? 'bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white shadow-lg shadow-purple-500/20'
             : 'bg-dark-700 text-gray-600 cursor-not-allowed'
@@ -178,6 +217,125 @@ export default function SettingsPage({ profile, onProfileUpdate }: SettingsPageP
       >
         {saving ? '儲存中...' : hasChanges ? '💾 儲存變更' : '（尚未修改）'}
       </button>
+
+      {/* ═══ 危險區域：帳號重置 ═══ */}
+      <div className="glass rounded-2xl p-6 border border-red-500/20 bg-red-500/5">
+        <h3 className="font-bold mb-2 text-red-400">⚠️ 危險操作</h3>
+        <p className="text-xs text-gray-500 mb-4">以下操作將無法復原，請謹慎操作</p>
+
+        {/* 當前數值預覽 */}
+        {resetStep > 0 && (
+          <div className="bg-dark-800/80 rounded-xl p-4 mb-4 border border-red-500/10">
+            <div className="text-xs text-gray-400 mb-2">即將清除的數據：</div>
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <div className="text-center">
+                <div className="text-amber-400 font-bold">Lv.{state.level}</div>
+                <div className="text-gray-600">等級</div>
+              </div>
+              <div className="text-center">
+                <div className="text-blue-400 font-bold">{state.xp} XP</div>
+                <div className="text-gray-600">經驗值</div>
+              </div>
+              <div className="text-center">
+                <div className="text-yellow-400 font-bold">{state.gold}</div>
+                <div className="text-gray-600">金幣</div>
+              </div>
+              <div className="text-center">
+                <div className="text-cyan-400 font-bold">{state.diamond}</div>
+                <div className="text-gray-600">鑽石</div>
+              </div>
+              <div className="text-center">
+                <div className="text-purple-400 font-bold">{state.sp}</div>
+                <div className="text-gray-600">技能點</div>
+              </div>
+              <div className="text-center">
+                <div className="text-orange-400 font-bold">{state.streak}</div>
+                <div className="text-gray-600">連勝</div>
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-white/5 text-xs text-red-400/80 text-center">
+              + 所有日誌、任務、技能、背包、抽卡、兌換紀錄
+            </div>
+          </div>
+        )}
+
+        {/* Step 0：初始按鈕 */}
+        {resetStep === 0 && (
+          <button
+            onClick={() => setResetStep(1)}
+            className="w-full py-3 rounded-xl text-sm font-bold text-red-400/70 border border-red-500/20 hover:border-red-500/40 hover:bg-red-500/10 transition-all"
+          >
+            🔄 重置此帳號（歸零所有數值、清空所有紀錄）
+          </button>
+        )}
+
+        {/* Step 1：第一次確認 */}
+        {resetStep === 1 && (
+          <div className="space-y-3">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
+              <div className="text-2xl mb-2">🚨</div>
+              <div className="text-red-300 font-bold text-sm mb-1">你確定要重置帳號嗎？</div>
+              <div className="text-xs text-red-400/60">
+                此操作將清除所有等級、金幣、鑽石、日誌、任務、技能、背包、抽卡收藏、兌換紀錄
+              </div>
+              <div className="text-xs text-red-400 font-bold mt-2">⚠️ 此操作無法復原 ⚠️</div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setResetStep(0); setResetConfirmText('') }}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold glass text-gray-300 hover:bg-dark-600 transition-all"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => setResetStep(2)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all"
+              >
+                我確定，繼續
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2：第二次確認（需輸入關鍵字） */}
+        {resetStep === 2 && (
+          <div className="space-y-3">
+            <div className="bg-red-500/15 border border-red-500/40 rounded-xl p-4 text-center">
+              <div className="text-3xl mb-2">💀</div>
+              <div className="text-red-300 font-bold mb-1">最後確認！</div>
+              <div className="text-xs text-red-400/70 mb-3">
+                請在下方輸入「<span className="text-red-300 font-bold">{CONFIRM_KEYWORD}</span>」來執行帳號重置
+              </div>
+              <input
+                type="text"
+                value={resetConfirmText}
+                onChange={e => setResetConfirmText(e.target.value)}
+                placeholder={`請輸入「${CONFIRM_KEYWORD}」`}
+                className="w-full bg-dark-800 border border-red-500/30 rounded-lg px-4 py-2.5 text-sm text-center text-white placeholder-gray-600 focus:outline-none focus:border-red-500/60 transition-colors"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setResetStep(0); setResetConfirmText('') }}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold glass text-gray-300 hover:bg-dark-600 transition-all"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleResetAccount}
+                disabled={resetConfirmText !== CONFIRM_KEYWORD || resetting}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  resetConfirmText === CONFIRM_KEYWORD && !resetting
+                    ? 'bg-red-600 text-white hover:bg-red-500 shadow-lg shadow-red-500/30'
+                    : 'bg-dark-700 text-gray-600 cursor-not-allowed'
+                }`}
+              >
+                {resetting ? '重置中...' : '💀 永久重置帳號'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
