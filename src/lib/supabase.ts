@@ -61,6 +61,8 @@ export interface AssignedTask {
   due_date: string | null
   created_at: string
   completed_at: string | null
+  priority: 'high' | 'medium' | 'low'
+  category: string
 }
 
 // ─── Profile CRUD ────────────────────────────────────────────────────
@@ -289,6 +291,8 @@ export async function createAssignedTask(task: {
   description?: string
   xp_reward?: number
   due_date?: string | null
+  priority?: 'high' | 'medium' | 'low'
+  category?: string
 }): Promise<AssignedTask | null> {
   const { data, error } = await supabase
     .from('assigned_tasks')
@@ -297,6 +301,8 @@ export async function createAssignedTask(task: {
       description: task.description || '',
       xp_reward: task.xp_reward || 0,
       due_date: task.due_date || null,
+      priority: task.priority || 'medium',
+      category: task.category || '',
     }])
     .select()
     .single()
@@ -565,5 +571,105 @@ export async function addGachaCard(card: { user_id: string; card_name: string; c
     .from('user_gacha_collection')
     .upsert([card], { onConflict: 'user_id,card_name' })
   if (error) { console.error('addGachaCard error:', error); return false }
+  return true
+}
+
+// ─── Reward Redemption 獎勵兌換 ──────────────────────────────────────
+
+export interface RewardItem {
+  id: string
+  name: string
+  description: string
+  icon: string
+  cost_gold: number
+  cost_diamond: number
+  category: 'leave' | 'bonus' | 'gift' | 'custom'
+  active: boolean
+  created_by: string
+  created_at: string
+}
+
+export interface RewardRedemption {
+  id: string
+  user_id: string
+  user_name: string
+  reward_id: string
+  reward_name: string
+  reward_icon: string
+  cost_gold: number
+  cost_diamond: number
+  status: 'pending' | 'approved' | 'rejected'
+  reviewed_by: string | null
+  reviewed_at: string | null
+  note: string
+  created_at: string
+}
+
+export async function getRewardItems(): Promise<RewardItem[]> {
+  const { data, error } = await supabase.from('reward_items').select('*').eq('active', true).order('cost_gold', { ascending: true })
+  if (error) { console.error('getRewardItems error:', error); return [] }
+  return data as RewardItem[]
+}
+
+export async function createRewardItem(item: Omit<RewardItem, 'id' | 'created_at'>): Promise<boolean> {
+  const { error } = await supabase.from('reward_items').insert([item])
+  if (error) { console.error('createRewardItem error:', error); return false }
+  return true
+}
+
+export async function updateRewardItem(id: string, updates: Partial<RewardItem>): Promise<boolean> {
+  const { error } = await supabase.from('reward_items').update(updates).eq('id', id)
+  if (error) { console.error('updateRewardItem error:', error); return false }
+  return true
+}
+
+export async function deleteRewardItem(id: string): Promise<boolean> {
+  const { error } = await supabase.from('reward_items').delete().eq('id', id)
+  if (error) { console.error('deleteRewardItem error:', error); return false }
+  return true
+}
+
+export async function getRedemptions(filters?: { user_id?: string; status?: string }): Promise<RewardRedemption[]> {
+  let query = supabase.from('reward_redemptions').select('*').order('created_at', { ascending: false })
+  if (filters?.user_id) query = query.eq('user_id', filters.user_id)
+  if (filters?.status) query = query.eq('status', filters.status)
+  const { data, error } = await query
+  if (error) { console.error('getRedemptions error:', error); return [] }
+  return data as RewardRedemption[]
+}
+
+export async function createRedemption(redemption: Omit<RewardRedemption, 'id' | 'created_at' | 'reviewed_by' | 'reviewed_at'>): Promise<boolean> {
+  const { error } = await supabase.from('reward_redemptions').insert([redemption])
+  if (error) { console.error('createRedemption error:', error); return false }
+  return true
+}
+
+export async function reviewRedemption(id: string, status: 'approved' | 'rejected', reviewedBy: string): Promise<boolean> {
+  const { error } = await supabase.from('reward_redemptions').update({ status, reviewed_by: reviewedBy, reviewed_at: new Date().toISOString() }).eq('id', id)
+  if (error) { console.error('reviewRedemption error:', error); return false }
+  return true
+}
+
+// ─── Task Comments 任務留言 ──────────────────────────────────────
+
+export interface TaskComment {
+  id: string
+  task_id: string
+  user_id: string
+  user_name: string
+  user_avatar: string
+  content: string
+  created_at: string
+}
+
+export async function getTaskComments(taskId: string): Promise<TaskComment[]> {
+  const { data, error } = await supabase.from('task_comments').select('*').eq('task_id', taskId).order('created_at', { ascending: true })
+  if (error) { console.error('getTaskComments error:', error); return [] }
+  return data as TaskComment[]
+}
+
+export async function addTaskComment(comment: Omit<TaskComment, 'id' | 'created_at'>): Promise<boolean> {
+  const { error } = await supabase.from('task_comments').insert([comment])
+  if (error) { console.error('addTaskComment error:', error); return false }
   return true
 }
