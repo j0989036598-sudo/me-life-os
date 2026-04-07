@@ -1,10 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase, getProfile, createProfile, checkInvited, type Profile, type UserRole, type InvitedUser } from '@/lib/supabase'
+import { supabase, getProfile, createProfile, checkInvited, removeInvitedByEmail, type Profile, type UserRole, type InvitedUser } from '@/lib/supabase'
 import { isBossEmail } from '@/lib/roleConfig'
 
-// Re-export UserRole so other components can still import from here
 export type { UserRole } from '@/lib/supabase'
 
 interface LoginPageProps {
@@ -20,13 +19,11 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const [loading, setLoading] = useState(true)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [showUnauthorized, setShowUnauthorized] = useState(false)
   const [pendingUserId, setPendingUserId] = useState<string | null>(null)
   const [pendingEmail, setPendingEmail] = useState<string | null>(null)
   const [inviteInfo, setInviteInfo] = useState<InvitedUser | null>(null)
-
   const [formName, setFormName] = useState('')
   const [formJobTitle, setFormJobTitle] = useState('')
   const [formDepartment, setFormDepartment] = useState('行銷部')
@@ -38,117 +35,68 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
         await handleAuthenticatedUser(session.user.id, session.user.email || '')
-      } else {
-        setLoading(false)
-      }
+      } else { setLoading(false) }
     }
     checkSession()
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         await handleAuthenticatedUser(session.user.id, session.user.email || '')
       }
     })
-
     return () => subscription.unsubscribe()
   }, [])
 
   const handleAuthenticatedUser = async (userId: string, email: string) => {
-    setLoading(true)
-    setError(null)
-
+    setLoading(true); setError(null)
     const profile = await getProfile(userId)
-    if (profile) {
-      onLogin(profile)
-      return
-    }
-
+    if (profile) { onLogin(profile); return }
     if (isBossEmail(email)) {
-      setPendingUserId(userId)
-      setPendingEmail(email)
-      setShowCreateForm(true)
-      setLoading(false)
-      return
+      setPendingUserId(userId); setPendingEmail(email); setShowCreateForm(true); setLoading(false); return
     }
-
     const invite = await checkInvited(email)
-    if (!invite) {
-      setPendingEmail(email)
-      setShowUnauthorized(true)
-      setLoading(false)
-      return
-    }
-
-    setPendingUserId(userId)
-    setPendingEmail(email)
-    setInviteInfo(invite)
-    setFormJobTitle(invite.job_title)
-    setFormDepartment(invite.department)
-    setShowCreateForm(true)
-    setLoading(false)
+    if (!invite) { setPendingEmail(email); setShowUnauthorized(true); setLoading(false); return }
+    setPendingUserId(userId); setPendingEmail(email); setInviteInfo(invite)
+    setFormJobTitle(invite.job_title); setFormDepartment(invite.department)
+    setShowCreateForm(true); setLoading(false)
   }
 
   const handleGoogleLogin = async () => {
-    setGoogleLoading(true)
-    setError(null)
+    setGoogleLoading(true); setError(null)
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin },
+      provider: 'google', options: { redirectTo: window.location.origin },
     })
-    if (error) {
-      setError('Google 登入失敗，請再試一次')
-      setGoogleLoading(false)
-    }
+    if (error) { setError('Google 登入失敗，請再試一次'); setGoogleLoading(false) }
   }
 
   const handleCreateProfile = async () => {
     if (!pendingUserId || !pendingEmail) return
     if (!formName.trim()) { setError('請輸入你的姓名'); return }
     if (!formJobTitle.trim()) { setError('請輸入你的職位'); return }
-
-    setFormSubmitting(true)
-    setError(null)
-
-    const role: UserRole = isBossEmail(pendingEmail)
-      ? 'boss'
-      : (inviteInfo?.role || 'member')
-
+    setFormSubmitting(true); setError(null)
+    const role: UserRole = isBossEmail(pendingEmail) ? 'boss' : (inviteInfo?.role || 'member')
     const profile = await createProfile({
-      user_id: pendingUserId,
-      email: pendingEmail,
-      name: formName.trim(),
-      job_title: formJobTitle.trim(),
-      department: formDepartment,
-      avatar: formAvatar,
-      role,
+      user_id: pendingUserId, email: pendingEmail,
+      name: formName.trim(), job_title: formJobTitle.trim(),
+      department: formDepartment, avatar: formAvatar, role,
     })
-
     if (profile) {
+      // Auto-remove from invited_users after successful profile creation
+      await removeInvitedByEmail(pendingEmail)
       onLogin(profile)
-    } else {
-      setError('建立角色失敗，請再試一次')
-      setFormSubmitting(false)
-    }
+    } else { setError('建立角色失敗，請再試一次'); setFormSubmitting(false) }
   }
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    setShowCreateForm(false)
-    setShowUnauthorized(false)
-    setPendingUserId(null)
-    setPendingEmail(null)
-    setInviteInfo(null)
-    setError(null)
-    setLoading(false)
+    setShowCreateForm(false); setShowUnauthorized(false)
+    setPendingUserId(null); setPendingEmail(null); setInviteInfo(null)
+    setError(null); setLoading(false)
   }
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4 animate-pulse">⚔️</div>
-          <p className="text-gray-400 text-sm">載入中...</p>
-        </div>
+        <div className="text-center"><div className="text-4xl mb-4 animate-pulse">⚔️</div><p className="text-gray-400 text-sm">載入中...</p></div>
       </div>
     )
   }
@@ -159,19 +107,9 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         <div className="w-full max-w-sm text-center">
           <div className="text-5xl mb-4">🚫</div>
           <h2 className="text-xl font-bold text-white mb-2">尚未獲得授權</h2>
-          <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-            你的帳號尚未被加入系統。<br />
-            請聯繫老闆將你的 Gmail 加入白名單後再試。
-          </p>
-          <div className="bg-gray-900 rounded-xl px-4 py-3 mb-6 text-sm text-gray-500 break-all">
-            {pendingEmail}
-          </div>
-          <button
-            onClick={handleLogout}
-            className="text-sm text-gray-500 hover:text-red-400 transition-colors underline underline-offset-2"
-          >
-            切換帳號 / 登出
-          </button>
+          <p className="text-gray-400 text-sm mb-6 leading-relaxed">你的帳號尚未被加入系統。<br />請聯繫老闆將你的 Gmail 加入白名單後再試。</p>
+          <div className="bg-gray-900 rounded-xl px-4 py-3 mb-6 text-sm text-gray-500 break-all">{pendingEmail}</div>
+          <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-red-400 transition-colors underline underline-offset-2">切換帳號 / 登出</button>
         </div>
       </div>
     )
@@ -186,82 +124,40 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             <h1 className="text-2xl font-bold text-white">建立你的角色</h1>
             <p className="text-gray-400 text-sm mt-1">{pendingEmail}</p>
           </div>
-
           <div className="bg-gray-900 rounded-2xl p-6 space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">選擇頭像</label>
               <div className="grid grid-cols-6 gap-2">
                 {AVATAR_OPTIONS.map((emoji) => (
-                  <button
-                    key={emoji}
-                    onClick={() => setFormAvatar(emoji)}
-                    className={`text-2xl p-2 rounded-lg transition-all ${
-                      formAvatar === emoji
-                        ? 'bg-indigo-600 ring-2 ring-indigo-400 scale-110'
-                        : 'bg-gray-800 hover:bg-gray-700'
-                    }`}
-                  >
-                    {emoji}
-                  </button>
+                  <button key={emoji} onClick={() => setFormAvatar(emoji)} className={`text-2xl p-2 rounded-lg transition-all ${
+                    formAvatar === emoji ? 'bg-indigo-600 ring-2 ring-indigo-400 scale-110' : 'bg-gray-800 hover:bg-gray-700'
+                  }`}>{emoji}</button>
                 ))}
               </div>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                姓名 <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                value={formName}
-                onChange={(e) => setFormName(e.target.value)}
-                placeholder="例：王小明"
-                className="w-full bg-gray-800 text-white rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              />
+              <label className="block text-sm font-medium text-gray-300 mb-1">姓名 <span className="text-red-400">*</span></label>
+              <input type="text" value={formName} onChange={e => setFormName(e.target.value)} placeholder="例：王小明"
+                className="w-full bg-gray-800 text-white rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                職位 <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                value={formJobTitle}
-                onChange={(e) => setFormJobTitle(e.target.value)}
-                placeholder="例：社群行銷專員"
-                className="w-full bg-gray-800 text-white rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              />
+              <label className="block text-sm font-medium text-gray-300 mb-1">職位 <span className="text-red-400">*</span></label>
+              <input type="text" value={formJobTitle} onChange={e => setFormJobTitle(e.target.value)} placeholder="例：社群行銷專員"
+                className="w-full bg-gray-800 text-white rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">部門</label>
-              <select
-                value={formDepartment}
-                onChange={(e) => setFormDepartment(e.target.value)}
-                className="w-full bg-gray-800 text-white rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              >
-                {DEPARTMENT_OPTIONS.map((dept) => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
+              <select value={formDepartment} onChange={e => setFormDepartment(e.target.value)}
+                className="w-full bg-gray-800 text-white rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                {DEPARTMENT_OPTIONS.map(dept => <option key={dept} value={dept}>{dept}</option>)}
               </select>
             </div>
-
             {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-
-            <button
-              onClick={handleCreateProfile}
-              disabled={formSubmitting}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
-            >
+            <button onClick={handleCreateProfile} disabled={formSubmitting}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors">
               {formSubmitting ? '建立中...' : '完成，進入系統 →'}
             </button>
-
-            <button
-              onClick={handleLogout}
-              className="block mx-auto text-xs text-gray-600 hover:text-red-400 transition-colors underline underline-offset-2"
-            >
-              切換帳號 / 登出
-            </button>
+            <button onClick={handleLogout} className="block mx-auto text-xs text-gray-600 hover:text-red-400 transition-colors underline underline-offset-2">切換帳號 / 登出</button>
           </div>
         </div>
       </div>
@@ -276,11 +172,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         <p className="text-gray-500 text-sm mb-10">內部管理系統</p>
         <div className="bg-gray-900 rounded-2xl p-6">
           <p className="text-gray-400 text-sm mb-6">使用公司 Google 帳號登入</p>
-          <button
-            onClick={handleGoogleLogin}
-            disabled={googleLoading}
-            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 disabled:bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-colors"
-          >
+          <button onClick={handleGoogleLogin} disabled={googleLoading}
+            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 disabled:bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-colors">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
