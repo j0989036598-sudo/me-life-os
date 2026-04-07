@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { MOCK_DAILY_LOGS } from '@/lib/mockData'
+import { MOCK_DAILY_LOGS, MOCK_MEMBERS } from '@/lib/mockData'
 import { useGame } from '@/lib/GameContext'
+import { UserRole } from '@/components/LoginPage'
 
-export default function DailyLogPage() {
+export default function DailyLogPage({ role }: { role?: UserRole }) {
   const { addXp, addGold } = useGame()
   const [mood, setMood] = useState('')
   const [energy, setEnergy] = useState(0)
@@ -13,6 +14,9 @@ export default function DailyLogPage() {
   const [wins, setWins] = useState('')
   const [blocks, setBlocks] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [viewingMember, setViewingMember] = useState<string | null>(null)
+
+  const isManager = role === 'boss' || role === 'manager'
 
   const moods = [
     { emoji: '😴', label: '疲憊' },
@@ -58,10 +62,66 @@ export default function DailyLogPage() {
         </div>
       </div>
 
+      {/* 管理者：成員日誌瀏覽器 */}
+      {isManager && (
+        <div className="glass rounded-2xl p-5 mt-4 mb-2 border border-amber-500/20 bg-amber-500/5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-sm font-bold text-amber-300">
+              {role === 'boss' ? '👑' : '🛡️'} 查看成員日誌
+            </span>
+            {viewingMember && (
+              <button onClick={() => setViewingMember(null)}
+                className="ml-auto text-xs text-gray-500 hover:text-white px-3 py-1 glass rounded-lg transition-all">
+                ✕ 關閉
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {MOCK_MEMBERS.map((m, i) => (
+              <button key={i} onClick={() => setViewingMember(viewingMember === m.name ? null : m.name)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all ${
+                  viewingMember === m.name
+                    ? 'bg-amber-500/20 border border-amber-400/40 text-amber-300'
+                    : 'bg-dark-700/50 border border-white/5 text-gray-400 hover:text-white'
+                }`}>
+                <span>{m.avatar}</span>
+                <span>{m.name}</span>
+                {m.dailyLog
+                  ? <span className="text-emerald-400 text-xs">📖</span>
+                  : <span className="text-gray-600 text-xs">○</span>}
+              </button>
+            ))}
+          </div>
+
+          {/* 選中成員的日誌 */}
+          {viewingMember && (
+            <div className="mt-4 space-y-3">
+              <p className="text-xs text-gray-500">顯示 {viewingMember} 的最近日誌</p>
+              {MOCK_DAILY_LOGS.slice(0, 3).map((log, i) => (
+                <div key={i} className="glass rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xl">{log.mood}</span>
+                    <span className="text-xs text-gray-500">{log.date}</span>
+                    <div className="flex gap-0.5 ml-auto">
+                      {[...Array(5)].map((_, j) => (
+                        <div key={j} className={`w-1.5 h-3 rounded-full ${j < log.energy ? 'bg-amber-400' : 'bg-dark-600'}`} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="text-sm font-medium mb-1">{log.highlight}</div>
+                  <div className="text-xs text-gray-500 mb-2">🗡️ {log.quest}</div>
+                  {log.wins !== '無' && <div className="text-xs text-emerald-400">⚔️ {log.wins}</div>}
+                  {log.blocks !== '無' && <div className="text-xs text-red-400 mt-0.5">🚧 {log.blocks}</div>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         {/* Main Form */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Mood */}
           <div className="glass rounded-2xl p-6">
             <label className="block text-sm font-bold mb-3 text-purple-300">💫 今日靈魂狀態</label>
             <div className="flex gap-2 flex-wrap">
@@ -77,7 +137,6 @@ export default function DailyLogPage() {
             </div>
           </div>
 
-          {/* Energy */}
           <div className="glass rounded-2xl p-6">
             <label className="block text-sm font-bold mb-3 text-amber-300">⚡ 能量值</label>
             <div className="flex gap-2">
@@ -92,7 +151,6 @@ export default function DailyLogPage() {
             </div>
           </div>
 
-          {/* Quest + Highlight */}
           <div className="glass rounded-2xl p-6 space-y-4">
             <div>
               <label className="block text-sm font-bold mb-2 text-emerald-300">🗡️ 今日主線任務</label>
@@ -108,7 +166,6 @@ export default function DailyLogPage() {
             </div>
           </div>
 
-          {/* Wins and Blocks */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="glass rounded-2xl p-6">
               <label className="block text-sm font-bold mb-2 text-emerald-300">⚔️ 戰功（做得好的）</label>
@@ -130,7 +187,7 @@ export default function DailyLogPage() {
           </button>
         </div>
 
-        {/* History Sidebar */}
+        {/* History */}
         <div className="space-y-3">
           <h3 className="font-bold text-sm text-gray-400 mb-2">📜 歷史卷軸</h3>
           {MOCK_DAILY_LOGS.map((log, i) => (

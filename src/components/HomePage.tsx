@@ -1,23 +1,83 @@
 'use client'
 
-import { MOCK_TASKS, MOCK_DAILY_LOGS, SEASON_PASS } from '@/lib/mockData'
+import { MOCK_TASKS, MOCK_DAILY_LOGS, SEASON_PASS, MOCK_MEMBERS } from '@/lib/mockData'
 import { useGame } from '@/lib/GameContext'
+import { UserRole } from '@/components/LoginPage'
 
-export default function HomePage({ user }: { user?: any }) {
+export default function HomePage({ user, role }: { user?: any; role?: UserRole }) {
   const { state } = useGame()
   const today = new Date()
   const days = ['日', '一', '二', '三', '四', '五', '六']
   const dateStr = `${today.getMonth() + 1}/${today.getDate()}（${days[today.getDay()]}）`
+  const isManager = role === 'boss' || role === 'manager'
+
+  // 團隊統計
+  const totalMembers = MOCK_MEMBERS.length
+  const checkedIn = MOCK_MEMBERS.filter(m => m.todayDone).length
+  const loggedToday = MOCK_MEMBERS.filter(m => m.dailyLog).length
+  const totalMonthXp = MOCK_MEMBERS.reduce((s, m) => s + m.monthXp, 0)
 
   return (
     <div className="animate-fade space-y-6">
-      {/* Character Card */}
+
+      {/* ── 管理者專屬：團隊今日總覽 ── */}
+      {isManager && (
+        <div className="glass rounded-2xl p-5 border border-purple-500/20 bg-gradient-to-r from-purple-500/5 to-amber-500/5">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-lg">{role === 'boss' ? '👑' : '🛡️'}</span>
+            <h3 className="font-bold text-sm text-purple-300">
+              {role === 'boss' ? '老闆視角 · 全公司今日狀態' : '主管視角 · 團隊今日狀態'}
+            </h3>
+            <span className="ml-auto text-xs text-gray-500">{dateStr}</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-dark-700/50 rounded-xl p-3 text-center">
+              <div className="text-2xl font-black text-emerald-400">{checkedIn}/{totalMembers}</div>
+              <div className="text-xs text-gray-500 mt-1">今日打卡</div>
+              <div className="w-full h-1 bg-dark-600 rounded-full mt-2">
+                <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${(checkedIn/totalMembers)*100}%` }} />
+              </div>
+            </div>
+            <div className="bg-dark-700/50 rounded-xl p-3 text-center">
+              <div className="text-2xl font-black text-blue-400">{loggedToday}/{totalMembers}</div>
+              <div className="text-xs text-gray-500 mt-1">日誌封印</div>
+              <div className="w-full h-1 bg-dark-600 rounded-full mt-2">
+                <div className="h-full bg-blue-400 rounded-full" style={{ width: `${(loggedToday/totalMembers)*100}%` }} />
+              </div>
+            </div>
+            <div className="bg-dark-700/50 rounded-xl p-3 text-center">
+              <div className="text-2xl font-black text-amber-400">{totalMonthXp.toLocaleString()}</div>
+              <div className="text-xs text-gray-500 mt-1">本月團隊 XP</div>
+            </div>
+            <div className="bg-dark-700/50 rounded-xl p-3 text-center">
+              <div className="text-2xl font-black text-fire-400">
+                {MOCK_MEMBERS.filter(m => m.streak >= 7).length}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">連續 7 天以上</div>
+            </div>
+          </div>
+
+          {/* 成員今日狀態快覽 */}
+          <div className="mt-4 flex flex-wrap gap-2">
+            {MOCK_MEMBERS.map((m, i) => (
+              <div key={i} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all ${
+                m.todayDone ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-300' : 'bg-dark-700/50 border border-white/5 text-gray-500'
+              }`}>
+                <span>{m.avatar}</span>
+                <span>{m.name}</span>
+                {m.todayDone ? <span>✅</span> : <span>⏳</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── 個人角色卡 ── */}
       <div className="glass rounded-2xl p-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-500/10 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2" />
 
         <div className="relative flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
-          {/* Avatar */}
           <div className="flex flex-col items-center">
             <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-500/30 to-amber-500/30 flex items-center justify-center text-5xl border border-white/10">
               {user?.avatar}
@@ -27,16 +87,20 @@ export default function HomePage({ user }: { user?: any }) {
             </div>
           </div>
 
-          {/* Info */}
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-2xl font-black">{user?.name}</h1>
               <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">Lv.{state.level}</span>
               <span className="text-fire-400 text-sm font-bold">🔥 {state.streak} 天</span>
             </div>
-            <p className="text-gray-400 text-sm mb-4">今天是 {dateStr}</p>
+            <p className="text-gray-400 text-sm mb-4">
+              {isManager ? (
+                <span className="text-purple-300 text-xs">
+                  {role === 'boss' ? '👑 最高指揮官' : '🛡️ 隊長'} · 今天是 {dateStr}
+                </span>
+              ) : `今天是 ${dateStr}`}
+            </p>
 
-            {/* Stats Row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="bg-dark-700/50 rounded-xl p-3 text-center">
                 <div className="text-xs text-gray-500 mb-1">XP</div>
@@ -63,7 +127,7 @@ export default function HomePage({ user }: { user?: any }) {
         </div>
       </div>
 
-      {/* Season Pass */}
+      {/* ── Season Pass ── */}
       <div className="glass rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -92,9 +156,8 @@ export default function HomePage({ user }: { user?: any }) {
         </div>
       </div>
 
-      {/* Two columns */}
+      {/* ── 下方兩欄 ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Today Tasks */}
         <div className="glass rounded-2xl p-6">
           <h3 className="font-bold mb-4 flex items-center gap-2">
             ⚡ 今日任務 <span className="text-xs text-gray-500">{MOCK_TASKS.filter(t => t.done).length}/{MOCK_TASKS.length}</span>
@@ -106,9 +169,7 @@ export default function HomePage({ user }: { user?: any }) {
               }`}>
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px] ${
                   t.done ? 'border-emerald-400 bg-emerald-400 text-dark-900' : 'border-gray-600'
-                }`}>
-                  {t.done && '✓'}
-                </div>
+                }`}>{t.done && '✓'}</div>
                 <div className="flex-1 min-w-0">
                   <div className={`text-sm truncate ${t.done ? 'line-through text-gray-500' : ''}`}>{t.title}</div>
                 </div>
@@ -118,7 +179,6 @@ export default function HomePage({ user }: { user?: any }) {
           </div>
         </div>
 
-        {/* Recent Logs */}
         <div className="glass rounded-2xl p-6">
           <h3 className="font-bold mb-4 flex items-center gap-2">📖 最近日誌</h3>
           <div className="space-y-2">
