@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  background: #0a0e1a;
+  color: #e5e7eb;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #111827; }
+::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+
+.glass {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glow-gold { box-shadow: 0 0 20px rgba(251, 191, 36, 0.15); }
+.glow-xp { box-shadow: 0 0 20px rgba(139, 92, 246, 0.15); }
+.glow-sp { box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); }
+
+.progress-bar { transition: width 1s ease-out; }
+
+/* Rarity glows */
+.rarity-ssr { box-shadow: 0 0 30px rgba(251, 191, 36, 0.3); }
+.rarity-sr { box-shadow: 0 0 20px rgba(139, 92, 246, 0.2); }

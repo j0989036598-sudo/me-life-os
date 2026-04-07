@@ -1,0 +1,144 @@
+'use client'
+
+import { MOCK_TASKS, MOCK_DAILY_LOGS, SEASON_PASS } from '@/lib/mockData'
+import { useGame } from '@/lib/GameContext'
+
+export default function HomePage({ user }: { user?: any }) {
+  const { state } = useGame()
+  const today = new Date()
+  const days = ['日', '一', '二', '三', '四', '五', '六']
+  const dateStr = `${today.getMonth() + 1}/${today.getDate()}（${days[today.getDay()]}）`
+
+  return (
+    <div className="animate-fade space-y-6">
+      {/* Character Card */}
+      <div className="glass rounded-2xl p-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-500/10 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2" />
+
+        <div className="relative flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+          {/* Avatar */}
+          <div className="flex flex-col items-center">
+            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-500/30 to-amber-500/30 flex items-center justify-center text-5xl border border-white/10">
+              {user?.avatar}
+            </div>
+            <div className="mt-2 px-3 py-1 bg-amber-500/20 rounded-full text-xs text-amber-400 font-bold">
+              {user?.title}
+            </div>
+          </div>
+
+          {/* Info */}
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-2xl font-black">{user?.name}</h1>
+              <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">Lv.{state.level}</span>
+              <span className="text-fire-400 text-sm font-bold">🔥 {state.streak} 天</span>
+            </div>
+            <p className="text-gray-400 text-sm mb-4">今天是 {dateStr}</p>
+
+            {/* Stats Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-dark-700/50 rounded-xl p-3 text-center">
+                <div className="text-xs text-gray-500 mb-1">XP</div>
+                <div className="text-lg font-bold text-xp-400">✦ {state.xp.toLocaleString()}</div>
+                <div className="w-full h-1.5 bg-dark-600 rounded-full mt-1.5 overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-xp-500 to-xp-400 rounded-full progress-bar" style={{ width: `${(state.xp / state.xpMax) * 100}%` }} />
+                </div>
+                <div className="text-[10px] text-gray-600 mt-0.5">{state.xp}/{state.xpMax}</div>
+              </div>
+              <div className="bg-dark-700/50 rounded-xl p-3 text-center">
+                <div className="text-xs text-gray-500 mb-1">SP</div>
+                <div className="text-lg font-bold text-sp-400">🔮 {state.sp}</div>
+              </div>
+              <div className="bg-dark-700/50 rounded-xl p-3 text-center">
+                <div className="text-xs text-gray-500 mb-1">Gold</div>
+                <div className="text-lg font-bold text-gold-400">🪙 {state.gold.toLocaleString()}</div>
+              </div>
+              <div className="bg-dark-700/50 rounded-xl p-3 text-center">
+                <div className="text-xs text-gray-500 mb-1">鑽石</div>
+                <div className="text-lg font-bold text-blue-400">💎 {state.diamond}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Season Pass */}
+      <div className="glass rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🎫</span>
+            <h3 className="font-bold">Season Pass {SEASON_PASS.season}</h3>
+            <span className="text-xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">{SEASON_PASS.name}</span>
+          </div>
+          <span className="text-xs text-gray-500">Tier {state.seasonTier}/6</span>
+        </div>
+        <div className="w-full h-2 bg-dark-600 rounded-full overflow-hidden mb-4">
+          <div className="h-full bg-gradient-to-r from-amber-500 via-purple-500 to-emerald-500 rounded-full progress-bar" style={{ width: `${(state.seasonXp / state.seasonXpMax) * 100}%` }} />
+        </div>
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+          {SEASON_PASS.tiers.map((t, i) => (
+            <div key={i} className={`text-center p-3 rounded-xl transition-all ${
+              t.claimed ? 'bg-emerald-500/10 border border-emerald-500/20' :
+              i < state.seasonTier ? 'bg-amber-500/10 border border-amber-500/20 cursor-pointer hover:scale-105' :
+              'bg-dark-700/50 border border-white/5 opacity-50'
+            }`}>
+              <div className="text-xs text-gray-500 mb-1">Tier {t.tier}</div>
+              <div className="text-lg mb-1">{t.reward.split(' ')[0]}</div>
+              <div className="text-[10px] text-gray-400">{t.reward.split(' ').slice(1).join(' ')}</div>
+              {t.claimed && <div className="text-[10px] text-emerald-400 mt-1">✓ 已領取</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Two columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Today Tasks */}
+        <div className="glass rounded-2xl p-6">
+          <h3 className="font-bold mb-4 flex items-center gap-2">
+            ⚡ 今日任務 <span className="text-xs text-gray-500">{MOCK_TASKS.filter(t => t.done).length}/{MOCK_TASKS.length}</span>
+          </h3>
+          <div className="space-y-2">
+            {MOCK_TASKS.slice(0, 4).map((t) => (
+              <div key={t.id} className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+                t.done ? 'bg-emerald-500/5 border border-emerald-500/10' : 'bg-dark-700/50 border border-white/5'
+              }`}>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px] ${
+                  t.done ? 'border-emerald-400 bg-emerald-400 text-dark-900' : 'border-gray-600'
+                }`}>
+                  {t.done && '✓'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className={`text-sm truncate ${t.done ? 'line-through text-gray-500' : ''}`}>{t.title}</div>
+                </div>
+                <div className="text-xs text-xp-400 whitespace-nowrap">+{t.xp} XP</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Logs */}
+        <div className="glass rounded-2xl p-6">
+          <h3 className="font-bold mb-4 flex items-center gap-2">📖 最近日誌</h3>
+          <div className="space-y-2">
+            {MOCK_DAILY_LOGS.slice(0, 4).map((log, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-dark-700/50 border border-white/5">
+                <div className="text-2xl">{log.mood}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">{log.highlight}</div>
+                  <div className="text-xs text-gray-500">{log.date} · {log.quest}</div>
+                </div>
+                <div className="flex gap-0.5">
+                  {[...Array(5)].map((_, j) => (
+                    <div key={j} className={`w-1.5 h-4 rounded-full ${j < log.energy ? 'bg-amber-400' : 'bg-dark-600'}`} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
