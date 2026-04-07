@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useGame } from '@/lib/GameContext'
 import {
+  supabase,
   getRewardItems,
   createRewardItem,
   updateRewardItem,
@@ -69,6 +70,14 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
       await Promise.all([loadRewards(), loadRedemptions()])
       setLoading(false)
     })()
+
+    // ── Realtime 訂閱：獎勵商品 + 兌換申請即時同步 ──
+    const channel = supabase.channel('reward-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reward_items' }, () => loadRewards())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reward_redemptions' }, () => loadRedemptions())
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [])
 
   const handleRedeem = async (reward: RewardItem) => {

@@ -18,7 +18,7 @@ const SEASON_PASS = {
 import { UserRole } from '@/app/page'
 import { supabase, getAllProfiles, getAssignedTasksForUser, getUserDailyLogs, getDailyLogsByDate, type Profile, type AssignedTask, type DailyLog } from '@/lib/supabase'
 
-export default function HomePage({ user, role, userId }: { user?: any; role?: UserRole; userId?: string }) {
+export default function HomePage({ user, role, userId }: { user?: { avatar: string; name: string }; role?: UserRole; userId?: string }) {
   const { state, addGold, addSp, addXp, addDiamond } = useGame()
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [myTasks, setMyTasks] = useState<AssignedTask[]>([])
