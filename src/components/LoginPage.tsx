@@ -41,14 +41,12 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // 檢查已登入的 session（處理 OAuth callback 返回）
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user?.email) {
         handleAuthenticatedUser(session.user.email)
       }
     })
 
-    // 監聽 auth 狀態變化
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user?.email) {
         handleAuthenticatedUser(session.user.email)
@@ -67,10 +65,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     const roles = getRolesForEmail(email)
     setUserEmail(email)
     if (roles.length === 1) {
-      // 只有一個角色 → 直接進入
       onLogin(roles[0])
     } else {
-      // 多個角色 → 顯示選擇畫面
       setAvailableRoles(roles)
     }
   }
@@ -90,7 +86,14 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     }
   }
 
-  // 角色選擇畫面（同一 email 有多個角色）
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    setUserEmail(null)
+    setAvailableRoles([])
+    setError(null)
+  }
+
+  // 角色選擇畫面
   if (userEmail && availableRoles.length > 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-dark-900 relative overflow-hidden">
@@ -136,6 +139,12 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             })}
           </div>
           <p className="text-center text-gray-700 text-xs mt-4">v3.0 · 穎流行銷內部系統</p>
+          <button
+            onClick={handleLogout}
+            className="block mx-auto mt-3 text-xs text-gray-600 hover:text-red-400 transition-colors underline underline-offset-2"
+          >
+            切換帳號 / 登出
+          </button>
         </div>
       </div>
     )
