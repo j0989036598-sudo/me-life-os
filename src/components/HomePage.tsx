@@ -77,7 +77,7 @@ export default function HomePage({ user, role, userId }: { user?: any; role?: Us
     }
 
     // Mark tier as claimed
-    setClaimedTiers(prev => new Set([...prev, tier.tier]))
+    setClaimedTiers(prev => new Set(Array.from(prev).concat([tier.tier])))
   }
 
   return (
