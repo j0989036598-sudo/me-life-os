@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MOCK_USER } from '@/lib/mockData'
 import { GameProvider } from '@/lib/GameContext'
 import { supabase, getProfile, type Profile, type UserRole } from '@/lib/supabase'
 import LoginPage from '@/components/LoginPage'
@@ -16,13 +15,14 @@ import MetronomePage from '@/components/MetronomePage'
 import MarketPage from '@/components/MarketPage'
 import ExplorePage from '@/components/ExplorePage'
 import BasePage from '@/components/BasePage'
+import SettingsPage from '@/components/SettingsPage'
 
 export type { UserRole }
 
 const ROLE_PAGES: Record<UserRole, string[]> = {
-  boss: ['home', 'log', 'tasks', 'metronome', 'skills', 'explore', 'base', 'guild', 'market', 'admin'],
-  manager: ['home', 'log', 'tasks', 'metronome', 'skills', 'explore', 'base', 'guild', 'market', 'admin'],
-  member: ['home', 'log', 'tasks', 'metronome', 'skills', 'explore', 'base', 'guild', 'market'],
+  boss:    ['home', 'log', 'tasks', 'metronome', 'skills', 'explore', 'base', 'guild', 'market', 'settings', 'admin'],
+  manager: ['home', 'log', 'tasks', 'metronome', 'skills', 'explore', 'base', 'guild', 'market', 'settings', 'admin'],
+  member:  ['home', 'log', 'tasks', 'metronome', 'skills', 'explore', 'base', 'guild', 'market', 'settings'],
 }
 
 function AppContent() {
@@ -34,9 +34,7 @@ function AppContent() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         const p = await getProfile(session.user.id)
-        if (p) {
-          setProfile(p)
-        }
+        if (p) setProfile(p)
       }
       setReady(true)
     })
@@ -53,6 +51,10 @@ function AppContent() {
     setPage('home')
   }
 
+  const handleProfileUpdate = (updated: Profile) => {
+    setProfile(updated)
+  }
+
   if (!ready) return null
 
   if (!profile) {
@@ -61,29 +63,50 @@ function AppContent() {
 
   const role = profile.role
   const allowedPages = ROLE_PAGES[role]
+  const safePage = allowedPages.includes(page) ? page : 'home'
 
-  const allPages: Record<string, React.ComponentType<any>> = {
-    home: HomePage,
-    log: DailyLogPage,
-    tasks: TasksPage,
-    skills: SkillsPage,
-    guild: RankPage,
-    admin: AdminPage,
-    metronome: MetronomePage,
-    market: MarketPage,
-    explore: ExplorePage,
-    base: BasePage,
+  const sidebarUser = {
+    avatar: profile.avatar,
+    name: profile.name,
+    level: 1,
+    title: profile.job_title || profile.department || '冒險者',
   }
 
-  const safePage = allowedPages.includes(page) ? page : 'home'
-  const PageComponent = allPages[safePage] || HomePage
+  const renderPage = () => {
+    switch (safePage) {
+      case 'home':      return <HomePage user={sidebarUser} role={role} />
+      case 'log':       return <DailyLogPage />
+      case 'tasks':     return <TasksPage />
+      case 'skills':    return <SkillsPage />
+      case 'guild':     return <RankPage role={role} />
+      case 'admin':     return <AdminPage />
+      case 'metronome': return <MetronomePage />
+      case 'market':    return <MarketPage />
+      case 'explore':   return <ExplorePage />
+      case 'base':      return <BasePage />
+      case 'settings':  return <SettingsPage profile={profile} onProfileUpdate={handleProfileUpdate} />
+      default:          return <HomePage user={sidebarUser} role={role} />
+    }
+  }
 
   return (
     <div className="min-h-screen bg-dark-900">
-      <DesktopSidebar page={safePage} setPage={setPage} user={MOCK_USER} role={role} allowedPages={allowedPages} onLogout={handleLogout} />
-      <BottomTabBar page={safePage} setPage={setPage} allowedPages={allowedPages} onLogout={handleLogout} />
+      <DesktopSidebar
+        page={safePage}
+        setPage={setPage}
+        user={sidebarUser}
+        role={role}
+        allowedPages={allowedPages}
+        onLogout={handleLogout}
+      />
+      <BottomTabBar
+        page={safePage}
+        setPage={setPage}
+        allowedPages={allowedPages}
+        onLogout={handleLogout}
+      />
       <main className="md:ml-64 p-4 md:p-8 pb-24 md:pb-8 min-h-screen">
-        <PageComponent user={MOCK_USER} role={role} />
+        {renderPage()}
       </main>
     </div>
   )
