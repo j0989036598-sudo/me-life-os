@@ -13,8 +13,6 @@ import RankPage from '@/components/RankPage'
 import AdminPage from '@/components/AdminPage'
 import MetronomePage from '@/components/MetronomePage'
 import MarketPage from '@/components/MarketPage'
-import ExplorePage from '@/components/ExplorePage'
-import BasePage from '@/components/BasePage'
 import SettingsPage from '@/components/SettingsPage'
 import TeamLogsPage from '@/components/TeamLogsPage'
 import TaskDelegatePage from '@/components/TaskDelegatePage'
@@ -22,32 +20,13 @@ import TaskDelegatePage from '@/components/TaskDelegatePage'
 export type { UserRole }
 
 const ROLE_PAGES: Record<UserRole, string[]> = {
-  boss:    ['home', 'log', 'tasks', 'metronome', 'skills', 'explore', 'base', 'guild', 'market', 'team-logs', 'task-delegate', 'settings', 'admin'],
-  manager: ['home', 'log', 'tasks', 'metronome', 'skills', 'explore', 'base', 'guild', 'market', 'team-logs', 'task-delegate', 'settings', 'admin'],
-  member:  ['home', 'log', 'tasks', 'metronome', 'skills', 'explore', 'base', 'guild', 'market', 'task-delegate', 'settings'],
+  boss:    ['home', 'log', 'tasks', 'metronome', 'skills', 'guild', 'market', 'team-logs', 'task-delegate', 'settings', 'admin'],
+  manager: ['home', 'log', 'tasks', 'metronome', 'skills', 'guild', 'market', 'team-logs', 'task-delegate', 'settings', 'admin'],
+  member:  ['home', 'log', 'tasks', 'metronome', 'skills', 'guild', 'market', 'task-delegate', 'settings'],
 }
 
-function AppContent() {
-  const [profile, setProfile] = useState<Profile | null>(null)
+function AppContent({ profile, onLogout, onProfileUpdate }: { profile: Profile; onLogout: () => void; onProfileUpdate: (p: Profile) => void }) {
   const [page, setPage] = useState('home')
-  const [ready, setReady] = useState(false)
-
-  useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const p = await getProfile(session.user.id)
-        if (p) setProfile(p)
-      }
-      setReady(true)
-    })
-  }, [])
-
-  const handleLogin = (p: Profile) => { setProfile(p); setPage('home') }
-  const handleLogout = async () => { await supabase.auth.signOut(); setProfile(null); setPage('home') }
-  const handleProfileUpdate = (updated: Profile) => { setProfile(updated) }
-
-  if (!ready) return null
-  if (!profile) return <LoginPage onLogin={handleLogin} />
 
   const role = profile.role
   const allowedPages = ROLE_PAGES[role]
@@ -62,27 +41,25 @@ function AppContent() {
 
   const renderPage = () => {
     switch (safePage) {
-      case 'home': return <HomePage user={sidebarUser} role={role} />
-      case 'log': return <DailyLogPage />
-      case 'tasks': return <TasksPage />
+      case 'home': return <HomePage user={sidebarUser} role={role} userId={profile.user_id} />
+      case 'log': return <DailyLogPage role={role} profile={profile} />
+      case 'tasks': return <TasksPage role={role} profile={profile} />
       case 'skills': return <SkillsPage />
       case 'guild': return <RankPage role={role} />
       case 'admin': return <AdminPage />
       case 'metronome': return <MetronomePage />
       case 'market': return <MarketPage />
-      case 'explore': return <ExplorePage />
-      case 'base': return <BasePage />
-      case 'settings': return <SettingsPage profile={profile} onProfileUpdate={handleProfileUpdate} />
+      case 'settings': return <SettingsPage profile={profile} onProfileUpdate={onProfileUpdate} />
       case 'team-logs': return <TeamLogsPage />
       case 'task-delegate': return <TaskDelegatePage currentUserId={profile.user_id} currentUserName={profile.name} currentRole={role} />
-      default: return <HomePage user={sidebarUser} role={role} />
+      default: return <HomePage user={sidebarUser} role={role} userId={profile.user_id} />
     }
   }
 
   return (
     <div className="min-h-screen bg-dark-900">
-      <DesktopSidebar page={safePage} setPage={setPage} user={sidebarUser} role={role} allowedPages={allowedPages} onLogout={handleLogout} />
-      <BottomTabBar page={safePage} setPage={setPage} allowedPages={allowedPages} onLogout={handleLogout} />
+      <DesktopSidebar page={safePage} setPage={setPage} user={sidebarUser} role={role} allowedPages={allowedPages} onLogout={onLogout} />
+      <BottomTabBar page={safePage} setPage={setPage} allowedPages={allowedPages} onLogout={onLogout} />
       <main className="md:ml-64 p-4 md:p-8 pb-24 md:pb-8 min-h-screen">
         {renderPage()}
       </main>
@@ -91,9 +68,29 @@ function AppContent() {
 }
 
 export default function App() {
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const p = await getProfile(session.user.id)
+        if (p) setProfile(p)
+      }
+      setReady(true)
+    })
+  }, [])
+
+  const handleLogin = (p: Profile) => setProfile(p)
+  const handleLogout = async () => { await supabase.auth.signOut(); setProfile(null) }
+  const handleProfileUpdate = (updated: Profile) => setProfile(updated)
+
+  if (!ready) return null
+  if (!profile) return <LoginPage onLogin={handleLogin} />
+
   return (
-    <GameProvider>
-      <AppContent />
+    <GameProvider userId={profile.user_id}>
+      <AppContent profile={profile} onLogout={handleLogout} onProfileUpdate={handleProfileUpdate} />
     </GameProvider>
   )
 }
