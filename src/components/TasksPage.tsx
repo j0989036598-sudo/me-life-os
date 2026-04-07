@@ -1,32 +1,84 @@
 'use client'
 
-import { useState } from 'react'
-import { MOCK_TASKS, MOCK_MEMBERS } from '@/lib/mockData'
+import { useState, useEffect } from 'react'
 import { useGame } from '@/lib/GameContext'
-import { UserRole } from '@/components/LoginPage'
+import { supabase, getAssignedTasksForUser, getAllAssignedTasks, getAllProfiles, updateAssignedTaskStatus, type AssignedTask, type Profile, type UserRole } from '@/lib/supabase'
 
-export default function TasksPage({ role }: { role?: UserRole }) {
+export default function TasksPage({ role, profile }: { role?: UserRole; profile?: Profile }) {
   const { addXp, addGold } = useGame()
-  const [tasks, setTasks] = useState(MOCK_TASKS)
-  const [filter, setFilter] = useState('all')
-  const [rewardAnim, setRewardAnim] = useState<number | null>(null)
+  const [myTasks, setMyTasks] = useState<AssignedTask[]>([])
+  const [allTasks, setAllTasks] = useState<AssignedTask[]>([])
+  const [profiles, setProfiles] = useState<Profile[]>([])
+  const [loading, setLoading] = useState(true)
+  const [rewardAnim, setRewardAnim] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'personal' | 'team'>('personal')
-
+  const [filter, setFilter] = useState('all')
   const isManager = role === 'boss' || role === 'manager'
 
-  const toggle = (id: number) => {
-    const task = tasks.find(t => t.id === id)
-    if (task && !task.done) {
-      addXp(task.xp)
-      addGold(task.gold)
-      setRewardAnim(id)
+  useEffect(() => {
+    if (!profile?.user_id) return
+    ;(async () => {
+      setLoading(true)
+      const [mine, allP] = await Promise.all([
+        getAssignedTasksForUser(profile.user_id),
+        getAllProfiles(),
+      ])
+      setMyTasks(mine)
+      setProfiles(allP)
+      if (isManager) {
+        const all = await getAllAssignedTasks()
+        setAllTasks(all)
+      }
+      setLoading(false)
+    })()
+
+    const channel = supabase.channel('tasks-page-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'assigned_tasks' }, async () => {
+        if (profile?.user_id) {
+          const mine = await getAssignedTasksForUser(profile.user_id)
+          setMyTasks(mine)
+          if (isManager) {
+            const all = await getAllAssignedTasks()
+            setAllTasks(all)
+          }
+        }
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [profile?.user_id, isManager])
+
+  const handleComplete = async (task: AssignedTask) => {
+    if (task.status === 'completed') return
+    const ok = await updateAssignedTaskStatus(task.id, 'completed')
+    if (ok && task.xp_reward > 0) {
+      addXp(task.xp_reward)
+      addGold(Math.floor(task.xp_reward / 2))
+      setRewardAnim(task.id)
       setTimeout(() => setRewardAnim(null), 1500)
     }
-    setTasks(tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t)))
   }
 
-  const done = tasks.filter((t) => t.done).length
-  const filtered = filter === 'all' ? tasks : filter === 'main' ? tasks.filter(t => t.type === 'main') : tasks.filter(t => t.type === 'side')
+  const handleStart = async (taskId: string) => {
+    await updateAssignedTaskStatus(taskId, 'in_progress')
+  }
+
+  const done = myTasks.filter(t => t.status === 'completed').length
+  const total = myTasks.length
+
+  const filtered = filter === 'all' ? myTasks
+    : filter === 'active' ? myTasks.filter(t => t.status !== 'completed' && t.status !== 'cancelled')
+    : myTasks.filter(t => t.status === 'completed')
+
+  const getProfileByUserId = (uid: string) => profiles.find(p => p.user_id === uid)
+
+  if (loading) {
+    return (
+      <div className="animate-fade text-center py-20">
+        <div className="text-4xl mb-3 animate-pulse">⏳</div>
+        <p className="text-gray-500">載入任務中...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="animate-fade">
@@ -35,142 +87,129 @@ export default function TasksPage({ role }: { role?: UserRole }) {
           <span className="text-3xl">⚡</span>
           <div>
             <h2 className="text-2xl font-black">任務中心</h2>
-            <p className="text-gray-400 text-sm">完成任務獲得 XP 和金幣</p>
+            <p className="text-gray-400 text-sm">完成被指派的任務獲得 XP 和金幣</p>
           </div>
         </div>
         <div className="glass rounded-xl px-5 py-3 text-center">
-          <div className="text-2xl font-bold text-emerald-400">{done}/{tasks.length}</div>
+          <div className="text-2xl font-bold text-emerald-400">{done}/{total}</div>
           <div className="text-xs text-gray-500">已完成</div>
         </div>
       </div>
 
-      {/* 管理者 Tab 切換 */}
       {isManager && (
         <div className="flex gap-2 mb-5">
           <button onClick={() => setActiveTab('personal')}
             className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
               activeTab === 'personal' ? 'bg-purple-500/20 text-purple-300 ring-1 ring-purple-400/30' : 'glass text-gray-400'
-            }`}>
-            ⚔️ 我的任務
-          </button>
+            }`}>⚔️ 我的任務</button>
           <button onClick={() => setActiveTab('team')}
             className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
               activeTab === 'team' ? 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-400/30' : 'glass text-gray-400'
-            }`}>
-            👥 全員任務
-          </button>
+            }`}>👥 全員任務</button>
         </div>
       )}
 
-      {/* 全員任務視圖（管理者限定） */}
       {isManager && activeTab === 'team' ? (
         <div className="space-y-5">
           <div className="glass rounded-2xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-sm text-amber-300">📊 今日全員完成概覽</h3>
-            </div>
+            <h3 className="font-bold text-sm text-amber-300 mb-3">📊 全員任務完成概覽</h3>
             <div className="space-y-3">
-              {MOCK_MEMBERS.map((m, i) => {
-                const memberDone = Math.floor(Math.random() * 5) + 1
-                const memberTotal = 6
+              {profiles.filter(p => p.role === 'member').map((p) => {
+                const memberTasks = allTasks.filter(t => t.assigned_to === p.user_id)
+                const memberDone = memberTasks.filter(t => t.status === 'completed').length
+                const memberTotal = memberTasks.length
+                const pct = memberTotal > 0 ? memberDone / memberTotal : 0
                 return (
-                  <div key={i} className="flex items-center gap-3">
-                    <span className="text-xl">{m.avatar}</span>
+                  <div key={p.user_id} className="flex items-center gap-3">
+                    <span className="text-xl">{p.avatar}</span>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium">{m.name}</span>
+                        <span className="text-sm font-medium">{p.name}</span>
                         <span className="text-xs text-gray-500">{memberDone}/{memberTotal}</span>
                       </div>
                       <div className="w-full h-2 bg-dark-600 rounded-full overflow-hidden">
                         <div className={`h-full rounded-full transition-all ${
-                          memberDone/memberTotal >= 0.8 ? 'bg-emerald-400' :
-                          memberDone/memberTotal >= 0.5 ? 'bg-amber-400' : 'bg-red-400'
-                        }`} style={{ width: `${(memberDone/memberTotal)*100}%` }} />
+                          pct >= 0.8 ? 'bg-emerald-400' : pct >= 0.5 ? 'bg-amber-400' : 'bg-red-400'
+                        }`} style={{ width: `${pct * 100}%` }} />
                       </div>
-                    </div>
-                    <div className={`text-xs px-2 py-0.5 rounded-full ${
-                      m.todayDone ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
-                    }`}>
-                      {m.todayDone ? '已打卡' : '未打卡'}
                     </div>
                   </div>
                 )
               })}
             </div>
           </div>
-
-          {/* 未完成提醒 */}
-          <div className="glass rounded-2xl p-4">
-            <h3 className="font-bold text-sm text-red-300 mb-3">⚠️ 今日未打卡成員</h3>
-            <div className="flex flex-wrap gap-2">
-              {MOCK_MEMBERS.filter(m => !m.todayDone).map((m, i) => (
-                <div key={i} className="flex items-center gap-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-sm">
-                  <span>{m.avatar}</span>
-                  <span className="text-red-300">{m.name}</span>
-                </div>
-              ))}
-              {MOCK_MEMBERS.filter(m => !m.todayDone).length === 0 && (
-                <span className="text-emerald-400 text-sm">🎉 全員都打卡了！</span>
-              )}
-            </div>
-          </div>
         </div>
       ) : (
-        /* 個人任務視圖 */
         <>
-          <div className="w-full h-3 bg-dark-700 rounded-full overflow-hidden mb-6">
-            <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full progress-bar" style={{ width: `${(done / tasks.length) * 100}%` }} />
-          </div>
+          {total > 0 && (
+            <div className="w-full h-3 bg-dark-700 rounded-full overflow-hidden mb-6">
+              <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full progress-bar" style={{ width: `${total > 0 ? (done / total) * 100 : 0}%` }} />
+            </div>
+          )}
 
           <div className="flex gap-2 mb-4">
-            {[
-              { key: 'all', label: '全部' },
-              { key: 'main', label: '🗡️ 主線' },
-              { key: 'side', label: '📜 支線' },
-            ].map(f => (
+            {[{ key: 'all', label: '全部' }, { key: 'active', label: '⚡ 進行中' }, { key: 'done', label: '✅ 已完成' }].map(f => (
               <button key={f.key} onClick={() => setFilter(f.key)}
                 className={`px-4 py-2 rounded-xl text-sm transition-all ${
                   filter === f.key ? 'bg-purple-500/20 text-purple-300 ring-1 ring-purple-400/30' : 'glass text-gray-400 hover:text-white'
-                }`}>
-                {f.label}
-              </button>
+                }`}>{f.label}</button>
             ))}
           </div>
 
-          <div className="space-y-3">
-            {filtered.map((t) => (
-              <div key={t.id} onClick={() => toggle(t.id)}
-                className={`relative flex items-center gap-4 p-5 rounded-2xl cursor-pointer transition-all duration-300 ${
-                  t.done ? 'glass border border-emerald-500/20 bg-emerald-500/5' : 'glass hover:border-white/10'
-                }`}>
-                {rewardAnim === t.id && (
-                  <div className="absolute inset-0 flex items-center justify-center animate-fade">
-                    <span className="text-lg font-bold text-xp-400 animate-float">+{t.xp} XP ✦</span>
+          {filtered.length === 0 ? (
+            <div className="glass rounded-2xl p-12 text-center text-gray-500">
+              <div className="text-4xl mb-3">📋</div>
+              <p>尚無任務，等老闆指派吧！</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filtered.map((t) => {
+                const isDone = t.status === 'completed'
+                const assigner = getProfileByUserId(t.assigned_by)
+                return (
+                  <div key={t.id} className={`relative flex items-center gap-4 p-5 rounded-2xl transition-all duration-300 ${
+                    isDone ? 'glass border border-emerald-500/20 bg-emerald-500/5' : 'glass hover:border-white/10'
+                  }`}>
+                    {rewardAnim === t.id && (
+                      <div className="absolute inset-0 flex items-center justify-center animate-fade z-10">
+                        <span className="text-lg font-bold text-xp-400 animate-float">+{t.xp_reward} XP ✦</span>
+                      </div>
+                    )}
+                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
+                      isDone ? 'border-emerald-400 bg-emerald-400 text-dark-900 text-lg' : 'border-gray-600'
+                    }`} onClick={() => !isDone && t.status === 'in_progress' && handleComplete(t)}>
+                      {isDone && '✓'}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-medium ${isDone ? 'line-through text-gray-500' : ''}`}>{t.title}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                          t.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400'
+                          : t.status === 'in_progress' ? 'bg-blue-500/20 text-blue-400'
+                          : t.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400'
+                          : 'bg-red-500/20 text-red-400'
+                        }`}>{t.status === 'pending' ? '待處理' : t.status === 'in_progress' ? '進行中' : t.status === 'completed' ? '已完成' : '已取消'}</span>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        來自 {assigner?.avatar || '👤'} {t.assigned_by_name}
+                        {t.due_date && <span className="ml-2">📅 {t.due_date}</span>}
+                      </div>
+                      {t.description && <div className="text-xs text-gray-400 mt-1">{t.description}</div>}
+                    </div>
+                    <div className="text-right flex flex-col gap-1">
+                      {t.xp_reward > 0 && <div className="text-sm text-xp-400 font-bold">+{t.xp_reward} XP</div>}
+                      {!isDone && t.status === 'pending' && (
+                        <button onClick={() => handleStart(t.id)} className="text-xs text-blue-400 hover:bg-blue-500/10 px-2 py-1 rounded-lg">開始</button>
+                      )}
+                      {!isDone && t.status === 'in_progress' && (
+                        <button onClick={() => handleComplete(t)} className="text-xs text-emerald-400 hover:bg-emerald-500/10 px-2 py-1 rounded-lg">完成</button>
+                      )}
+                    </div>
                   </div>
-                )}
-                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${
-                  t.done ? 'border-emerald-400 bg-emerald-400 text-dark-900 text-lg' : 'border-gray-600'
-                }`}>
-                  {t.done && '✓'}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className={`font-medium ${t.done ? 'line-through text-gray-500' : ''}`}>{t.title}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${t.type === 'main' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                      {t.type === 'main' ? '主線' : '支線'}
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    <span className="px-2 py-0.5 bg-dark-600 rounded-full">{t.category}</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-xp-400 font-bold">+{t.xp} XP</div>
-                  <div className="text-sm text-gold-400">+{t.gold} 🪙</div>
-                </div>
-              </div>
-            ))}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </>
       )}
     </div>

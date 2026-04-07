@@ -1,36 +1,48 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MOCK_TASKS, MOCK_DAILY_LOGS, SEASON_PASS } from '@/lib/mockData'
+import { SEASON_PASS } from '@/lib/mockData'
 import { useGame } from '@/lib/GameContext'
 import { UserRole } from '@/app/page'
-import { supabase, getAllProfiles, type Profile } from '@/lib/supabase'
+import { supabase, getAllProfiles, getAssignedTasksForUser, getUserDailyLogs, getDailyLogsByDate, type Profile, type AssignedTask, type DailyLog } from '@/lib/supabase'
 
-export default function HomePage({ user, role }: { user?: any; role?: UserRole }) {
+export default function HomePage({ user, role, userId }: { user?: any; role?: UserRole; userId?: string }) {
   const { state } = useGame()
   const [profiles, setProfiles] = useState<Profile[]>([])
+  const [myTasks, setMyTasks] = useState<AssignedTask[]>([])
+  const [myLogs, setMyLogs] = useState<DailyLog[]>([])
+  const [todayLogs, setTodayLogs] = useState<DailyLog[]>([])
   const today = new Date()
   const days = ['日', '一', '二', '三', '四', '五', '六']
   const dateStr = `${today.getMonth() + 1}/${today.getDate()}（${days[today.getDay()]}）`
+  const todayStr = today.toISOString().slice(0, 10)
   const isManager = role === 'boss' || role === 'manager'
 
   useEffect(() => {
+    if (!userId) return
+    // 載入我的任務 + 日誌
+    getAssignedTasksForUser(userId).then(setMyTasks)
+    getUserDailyLogs(userId).then(setMyLogs)
+
     if (isManager) {
       getAllProfiles().then(setProfiles)
+      getDailyLogsByDate(todayStr).then(setTodayLogs)
       const channel = supabase.channel('home-realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
-          getAllProfiles().then(setProfiles)
-        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => getAllProfiles().then(setProfiles))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_logs' }, () => getDailyLogsByDate(todayStr).then(setTodayLogs))
         .subscribe()
       return () => { supabase.removeChannel(channel) }
     }
-  }, [isManager])
+  }, [userId, isManager, todayStr])
 
   const totalMembers = profiles.length
+  const todayCheckedIn = new Set(todayLogs.map(l => l.user_id))
+  const activeTasks = myTasks.filter(t => t.status !== 'completed' && t.status !== 'cancelled')
+  const doneTasks = myTasks.filter(t => t.status === 'completed')
 
   return (
     <div className="animate-fade space-y-6">
-      {/* ── 管理者專屬：團隊今日總覽 ── */}
+      {/* ── 管理者專屬 ── */}
       {isManager && totalMembers > 0 && (
         <div className="glass rounded-2xl p-5 border border-purple-500/20 bg-gradient-to-r from-purple-500/5 to-amber-500/5">
           <div className="flex items-center gap-2 mb-4">
@@ -46,25 +58,26 @@ export default function HomePage({ user, role }: { user?: any; role?: UserRole }
               <div className="text-xs text-gray-500 mt-1">團隊成員</div>
             </div>
             <div className="bg-dark-700/50 rounded-xl p-3 text-center">
-              <div className="text-2xl font-black text-blue-400">{profiles.filter(p => p.role === 'manager').length}</div>
-              <div className="text-xs text-gray-500 mt-1">主管人數</div>
+              <div className="text-2xl font-black text-blue-400">{todayCheckedIn.size}</div>
+              <div className="text-xs text-gray-500 mt-1">今日打卡</div>
             </div>
             <div className="bg-dark-700/50 rounded-xl p-3 text-center">
-              <div className="text-2xl font-black text-amber-400">{profiles.filter(p => p.role === 'member').length}</div>
-              <div className="text-xs text-gray-500 mt-1">員工人數</div>
+              <div className="text-2xl font-black text-amber-400">{totalMembers - todayCheckedIn.size}</div>
+              <div className="text-xs text-gray-500 mt-1">未打卡</div>
             </div>
             <div className="bg-dark-700/50 rounded-xl p-3 text-center">
-              <div className="text-2xl font-black text-purple-400">{new Set(profiles.map(p => p.department)).size}</div>
-              <div className="text-xs text-gray-500 mt-1">部門數量</div>
+              <div className="text-2xl font-black text-purple-400">{totalMembers > 0 ? Math.round((todayCheckedIn.size / totalMembers) * 100) : 0}%</div>
+              <div className="text-xs text-gray-500 mt-1">打卡率</div>
             </div>
           </div>
-          {/* 成員快覽 */}
           <div className="mt-4 flex flex-wrap gap-2">
             {profiles.map((p) => (
-              <div key={p.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+              <div key={p.id} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border ${
+                todayCheckedIn.has(p.user_id) ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : 'bg-red-500/10 border-red-500/20 text-red-300'
+              }`}>
                 <span>{p.avatar}</span>
                 <span>{p.name}</span>
-                <span>✅</span>
+                <span>{todayCheckedIn.has(p.user_id) ? '✅' : '○'}</span>
               </div>
             ))}
           </div>
@@ -80,9 +93,7 @@ export default function HomePage({ user, role }: { user?: any; role?: UserRole }
             <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-500/30 to-amber-500/30 flex items-center justify-center text-5xl border border-white/10">
               {user?.avatar}
             </div>
-            <div className="mt-2 px-3 py-1 bg-amber-500/20 rounded-full text-xs text-amber-400 font-bold">
-              {user?.title}
-            </div>
+            <div className="mt-2 px-3 py-1 bg-amber-500/20 rounded-full text-xs text-amber-400 font-bold">{user?.title}</div>
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1">
@@ -91,11 +102,7 @@ export default function HomePage({ user, role }: { user?: any; role?: UserRole }
               <span className="text-fire-400 text-sm font-bold">🔥 {state.streak} 天</span>
             </div>
             <p className="text-gray-400 text-sm mb-4">
-              {isManager ? (
-                <span className="text-purple-300 text-xs">
-                  {role === 'boss' ? '👑 最高指揮官' : '🛡️ 隊長'} · 今天是 {dateStr}
-                </span>
-              ) : `今天是 ${dateStr}`}
+              {isManager ? <span className="text-purple-300 text-xs">{role === 'boss' ? '👑 最高指揮官' : '🛡️ 隊長'} · 今天是 {dateStr}</span> : `今天是 ${dateStr}`}
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="bg-dark-700/50 rounded-xl p-3 text-center">
@@ -106,18 +113,9 @@ export default function HomePage({ user, role }: { user?: any; role?: UserRole }
                 </div>
                 <div className="text-[10px] text-gray-600 mt-0.5">{state.xp}/{state.xpMax}</div>
               </div>
-              <div className="bg-dark-700/50 rounded-xl p-3 text-center">
-                <div className="text-xs text-gray-500 mb-1">SP</div>
-                <div className="text-lg font-bold text-sp-400">🔮 {state.sp}</div>
-              </div>
-              <div className="bg-dark-700/50 rounded-xl p-3 text-center">
-                <div className="text-xs text-gray-500 mb-1">Gold</div>
-                <div className="text-lg font-bold text-gold-400">🪙 {state.gold.toLocaleString()}</div>
-              </div>
-              <div className="bg-dark-700/50 rounded-xl p-3 text-center">
-                <div className="text-xs text-gray-500 mb-1">鑽石</div>
-                <div className="text-lg font-bold text-blue-400">💎 {state.diamond}</div>
-              </div>
+              <div className="bg-dark-700/50 rounded-xl p-3 text-center"><div className="text-xs text-gray-500 mb-1">SP</div><div className="text-lg font-bold text-sp-400">🔮 {state.sp}</div></div>
+              <div className="bg-dark-700/50 rounded-xl p-3 text-center"><div className="text-xs text-gray-500 mb-1">Gold</div><div className="text-lg font-bold text-gold-400">🪙 {state.gold.toLocaleString()}</div></div>
+              <div className="bg-dark-700/50 rounded-xl p-3 text-center"><div className="text-xs text-gray-500 mb-1">鑽石</div><div className="text-lg font-bold text-blue-400">💎 {state.diamond}</div></div>
             </div>
           </div>
         </div>
@@ -156,43 +154,48 @@ export default function HomePage({ user, role }: { user?: any; role?: UserRole }
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass rounded-2xl p-6">
           <h3 className="font-bold mb-4 flex items-center gap-2">
-            ⚡ 今日任務 <span className="text-xs text-gray-500">{MOCK_TASKS.filter(t => t.done).length}/{MOCK_TASKS.length}</span>
+            ⚡ 待完成任務 <span className="text-xs text-gray-500">{doneTasks.length}/{myTasks.length}</span>
           </h3>
-          <div className="space-y-2">
-            {MOCK_TASKS.slice(0, 4).map((t) => (
-              <div key={t.id} className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
-                t.done ? 'bg-emerald-500/5 border border-emerald-500/10' : 'bg-dark-700/50 border border-white/5'
-              }`}>
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px] ${
-                  t.done ? 'border-emerald-400 bg-emerald-400 text-dark-900' : 'border-gray-600'
-                }`}>{t.done && '✓'}</div>
-                <div className="flex-1 min-w-0">
-                  <div className={`text-sm truncate ${t.done ? 'line-through text-gray-500' : ''}`}>{t.title}</div>
+          {activeTasks.length === 0 ? (
+            <div className="text-center text-gray-500 py-6 text-sm">🎉 沒有待完成的任務！</div>
+          ) : (
+            <div className="space-y-2">
+              {activeTasks.slice(0, 4).map((t) => (
+                <div key={t.id} className="flex items-center gap-3 p-3 rounded-xl bg-dark-700/50 border border-white/5">
+                  <div className="w-5 h-5 rounded-full border-2 border-gray-600" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm truncate">{t.title}</div>
+                    <div className="text-[10px] text-gray-500">來自 {t.assigned_by_name}</div>
+                  </div>
+                  {t.xp_reward > 0 && <div className="text-xs text-xp-400 whitespace-nowrap">+{t.xp_reward} XP</div>}
                 </div>
-                <div className="text-xs text-xp-400 whitespace-nowrap">+{t.xp} XP</div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="glass rounded-2xl p-6">
           <h3 className="font-bold mb-4 flex items-center gap-2">📖 最近日誌</h3>
-          <div className="space-y-2">
-            {MOCK_DAILY_LOGS.slice(0, 4).map((log, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-dark-700/50 border border-white/5">
-                <div className="text-2xl">{log.mood}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">{log.highlight}</div>
-                  <div className="text-xs text-gray-500">{log.date} · {log.quest}</div>
+          {myLogs.length === 0 ? (
+            <div className="text-center text-gray-500 py-6 text-sm">📖 尚無日誌紀錄</div>
+          ) : (
+            <div className="space-y-2">
+              {myLogs.slice(0, 4).map((log) => (
+                <div key={log.id} className="flex items-center gap-3 p-3 rounded-xl bg-dark-700/50 border border-white/5">
+                  <div className="text-2xl">{log.mood}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{log.highlight || '(無亮點)'}</div>
+                    <div className="text-xs text-gray-500">{log.date} · {log.quest}</div>
+                  </div>
+                  <div className="flex gap-0.5">
+                    {[...Array(5)].map((_, j) => (
+                      <div key={j} className={`w-1.5 h-4 rounded-full ${j < log.energy ? 'bg-amber-400' : 'bg-dark-600'}`} />
+                    ))}
+                  </div>
                 </div>
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, j) => (
-                    <div key={j} className={`w-1.5 h-4 rounded-full ${j < log.energy ? 'bg-amber-400' : 'bg-dark-600'}`} />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

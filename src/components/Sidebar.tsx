@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useGame } from '@/lib/GameContext'
 import { UserRole } from '@/app/page'
 
@@ -15,8 +16,6 @@ const ALL_NAV = [
   { id: 'tasks', icon: '⚡', label: '任務中心', badge: undefined },
   { id: 'metronome', icon: '⏱️', label: '節拍器', badge: undefined },
   { id: 'skills', icon: '🌳', label: '技能樹', badge: undefined },
-  { id: 'explore', icon: '🗺️', label: '探險', badge: undefined },
-  { id: 'base', icon: '🏰', label: '基地', badge: undefined },
   { id: 'guild', icon: '⚔️', label: '公會', badge: undefined },
   { id: 'market', icon: '🏪', label: '市集', badge: undefined },
   { id: 'team-logs', icon: '📋', label: '員工日誌', badge: undefined },
@@ -156,7 +155,7 @@ export function BottomTabBar({ page, setPage, allowedPages, onLogout }: {
 function MobileMoreMenu({ page, setPage, allowedPages, onLogout }: {
   page: string; setPage: (p: string) => void; allowedPages: string[]; onLogout?: () => void
 }) {
-  const { useState } = require('react')
+  // useState is already imported at file top
   const [open, setOpen] = useState(false)
   const moreItems = ALL_NAV.filter(n =>
     !['home', 'log', 'tasks', 'guild', 'market'].includes(n.id) && allowedPages.includes(n.id)

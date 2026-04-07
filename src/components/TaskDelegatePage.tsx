@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase, getAllProfiles, getAllAssignedTasks, createAssignedTask, updateAssignedTaskStatus, deleteAssignedTask, type Profile, type AssignedTask } from '@/lib/supabase'
+import { useGame } from '@/lib/GameContext'
+import { supabase, getAllProfiles, getAllAssignedTasks, createAssignedTask, updateAssignedTaskStatus, deleteAssignedTask, upsertGameStats, getGameStats, type Profile, type AssignedTask } from '@/lib/supabase'
 
 interface TaskDelegatePageProps {
   currentUserId: string
@@ -90,6 +91,21 @@ export default function TaskDelegatePage({ currentUserId, currentUserName, curre
 
   const handleStatusChange = async (taskId: string, status: AssignedTask['status']) => {
     await updateAssignedTaskStatus(taskId, status)
+    // 完成任務時，更新被指派者的 game stats（加 XP）
+    if (status === 'completed') {
+      const task = tasks.find(t => t.id === taskId)
+      if (task && task.xp_reward > 0) {
+        const stats = await getGameStats(task.assigned_to)
+        if (stats) {
+          let newXp = stats.xp + task.xp_reward
+          let newLevel = stats.level
+          let newXpMax = stats.xp_max
+          let newSp = stats.sp
+          while (newXp >= newXpMax) { newXp -= newXpMax; newLevel++; newXpMax = Math.floor(newXpMax * 1.2); newSp += 5 }
+          await upsertGameStats({ ...stats, xp: newXp, level: newLevel, xp_max: newXpMax, sp: newSp, gold: stats.gold + Math.floor(task.xp_reward / 2) })
+        }
+      }
+    }
     getAllAssignedTasks().then(setTasks)
   }
 
