@@ -417,3 +417,153 @@ export async function upsertGameStats(stats: Partial<UserGameStats> & { user_id:
   }
   return data as UserGameStats
 }
+
+export async function getAllGameStats(): Promise<UserGameStats[]> {
+  const { data, error } = await supabase
+    .from('user_game_stats')
+    .select('*')
+    .order('xp', { ascending: false })
+  if (error) { console.error('getAllGameStats error:', error); return [] }
+  return data as UserGameStats[]
+}
+
+// ─── RecurringTask（節拍器）CRUD ─────────────────────────────
+
+export interface RecurringTask {
+  id: string
+  user_id: string
+  name: string
+  icon: string
+  description: string
+  period: 'weekly' | 'monthly' | 'quarterly'
+  due_label: string
+  xp_reward: number
+  streak: number
+  done_this_period: boolean
+  last_completed_at: string | null
+  created_at: string
+}
+
+export async function getUserRecurringTasks(userId: string): Promise<RecurringTask[]> {
+  const { data, error } = await supabase
+    .from('user_recurring_tasks')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true })
+  if (error) { console.error('getUserRecurringTasks error:', error); return [] }
+  return data as RecurringTask[]
+}
+
+export async function insertRecurringTasks(tasks: Array<Omit<RecurringTask, 'id' | 'created_at'>>): Promise<boolean> {
+  const { error } = await supabase.from('user_recurring_tasks').insert(tasks)
+  if (error) { console.error('insertRecurringTasks error:', error); return false }
+  return true
+}
+
+export async function updateRecurringTask(taskId: string, updates: Partial<RecurringTask>): Promise<boolean> {
+  const { error } = await supabase
+    .from('user_recurring_tasks')
+    .update(updates)
+    .eq('id', taskId)
+  if (error) { console.error('updateRecurringTask error:', error); return false }
+  return true
+}
+
+// ─── UserSkill（技能樹）CRUD ────────────────────────────────
+
+export interface UserSkill {
+  id: string
+  user_id: string
+  name: string
+  icon: string
+  description: string
+  category: string
+  tier: number
+  level: number
+  max_level: number
+  sp_cost: number
+  unlocked: boolean
+  created_at: string
+}
+
+export async function getUserSkills(userId: string): Promise<UserSkill[]> {
+  const { data, error } = await supabase
+    .from('user_skills')
+    .select('*')
+    .eq('user_id', userId)
+    .order('tier', { ascending: true })
+  if (error) { console.error('getUserSkills error:', error); return [] }
+  return data as UserSkill[]
+}
+
+export async function insertUserSkills(skills: Array<Omit<UserSkill, 'id' | 'created_at'>>): Promise<boolean> {
+  const { error } = await supabase.from('user_skills').insert(skills)
+  if (error) { console.error('insertUserSkills error:', error); return false }
+  return true
+}
+
+export async function updateUserSkill(skillId: string, updates: Partial<UserSkill>): Promise<boolean> {
+  const { error } = await supabase
+    .from('user_skills')
+    .update(updates)
+    .eq('id', skillId)
+  if (error) { console.error('updateUserSkill error:', error); return false }
+  return true
+}
+
+// ─── UserInventory（背包）CRUD ──────────────────────────────
+
+export interface UserInventoryItem {
+  id: string
+  user_id: string
+  item_name: string
+  item_icon: string
+  quantity: number
+  purchased_at: string
+}
+
+export async function getUserInventory(userId: string): Promise<UserInventoryItem[]> {
+  const { data, error } = await supabase
+    .from('user_inventory')
+    .select('*')
+    .eq('user_id', userId)
+    .order('purchased_at', { ascending: false })
+  if (error) { console.error('getUserInventory error:', error); return [] }
+  return data as UserInventoryItem[]
+}
+
+export async function addToInventory(item: { user_id: string; item_name: string; item_icon: string }): Promise<boolean> {
+  const { error } = await supabase.from('user_inventory').insert([{ ...item, quantity: 1 }])
+  if (error) { console.error('addToInventory error:', error); return false }
+  return true
+}
+
+// ─── UserGachaCollection（抽卡收藏）CRUD ────────────────────
+
+export interface UserGachaCard {
+  id: string
+  user_id: string
+  card_name: string
+  card_icon: string
+  card_rarity: string
+  card_desc: string
+  obtained_at: string
+}
+
+export async function getUserGachaCollection(userId: string): Promise<UserGachaCard[]> {
+  const { data, error } = await supabase
+    .from('user_gacha_collection')
+    .select('*')
+    .eq('user_id', userId)
+    .order('obtained_at', { ascending: false })
+  if (error) { console.error('getUserGachaCollection error:', error); return [] }
+  return data as UserGachaCard[]
+}
+
+export async function addGachaCard(card: { user_id: string; card_name: string; card_icon: string; card_rarity: string; card_desc: string }): Promise<boolean> {
+  const { error } = await supabase
+    .from('user_gacha_collection')
+    .upsert([card], { onConflict: 'user_id,card_name' })
+  if (error) { console.error('addGachaCard error:', error); return false }
+  return true
+}
