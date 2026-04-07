@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase, getProfile, createProfile, type Profile, type UserRole } from '@/lib/supabase'
+import { supabase, getProfile, createProfile, checkInvited, type Profile, type UserRole, type InvitedUser } from '@/lib/supabase'
 import { isBossEmail } from '@/lib/roleConfig'
 
 // Re-export UserRole so other components can still import from here
@@ -12,7 +12,6 @@ interface LoginPageProps {
 }
 
 const AVATAR_OPTIONS = ['⚔️', '🛡️', '🎯', '🔮', '⚡', '🌟', '🎪', '🦊', '🐉', '🌙', '🔥', '💎']
-
 const DEPARTMENT_OPTIONS = [
   '行銷部', '業務部', '設計部', '工程部', '客服部', '財務部', '人資部', '管理部', '其他'
 ]
@@ -22,10 +21,12 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // 角色創建表單狀態
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [showUnauthorized, setShowUnauthorized] = useState(false)
   const [pendingUserId, setPendingUserId] = useState<string | null>(null)
   const [pendingEmail, setPendingEmail] = useState<string | null>(null)
+  const [inviteInfo, setInviteInfo] = useState<InvitedUser | null>(null)
+
   const [formName, setFormName] = useState('')
   const [formJobTitle, setFormJobTitle] = useState('')
   const [formDepartment, setFormDepartment] = useState('行銷部')
@@ -41,7 +42,6 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         setLoading(false)
       }
     }
-
     checkSession()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -58,15 +58,34 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     setError(null)
 
     const profile = await getProfile(userId)
-
     if (profile) {
       onLogin(profile)
-    } else {
+      return
+    }
+
+    if (isBossEmail(email)) {
       setPendingUserId(userId)
       setPendingEmail(email)
       setShowCreateForm(true)
       setLoading(false)
+      return
     }
+
+    const invite = await checkInvited(email)
+    if (!invite) {
+      setPendingEmail(email)
+      setShowUnauthorized(true)
+      setLoading(false)
+      return
+    }
+
+    setPendingUserId(userId)
+    setPendingEmail(email)
+    setInviteInfo(invite)
+    setFormJobTitle(invite.job_title)
+    setFormDepartment(invite.department)
+    setShowCreateForm(true)
+    setLoading(false)
   }
 
   const handleGoogleLogin = async () => {
@@ -74,9 +93,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     setError(null)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: window.location.origin,
-      },
+      options: { redirectTo: window.location.origin },
     })
     if (error) {
       setError('Google 登入失敗，請再試一次')
@@ -86,19 +103,15 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
   const handleCreateProfile = async () => {
     if (!pendingUserId || !pendingEmail) return
-    if (!formName.trim()) {
-      setError('請輸入你的姓名')
-      return
-    }
-    if (!formJobTitle.trim()) {
-      setError('請輸入你的職位')
-      return
-    }
+    if (!formName.trim()) { setError('請輸入你的姓名'); return }
+    if (!formJobTitle.trim()) { setError('請輸入你的職位'); return }
 
     setFormSubmitting(true)
     setError(null)
 
-    const role: UserRole = isBossEmail(pendingEmail) ? 'boss' : 'member'
+    const role: UserRole = isBossEmail(pendingEmail)
+      ? 'boss'
+      : (inviteInfo?.role || 'member')
 
     const profile = await createProfile({
       user_id: pendingUserId,
@@ -121,8 +134,10 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const handleLogout = async () => {
     await supabase.auth.signOut()
     setShowCreateForm(false)
+    setShowUnauthorized(false)
     setPendingUserId(null)
     setPendingEmail(null)
+    setInviteInfo(null)
     setError(null)
     setLoading(false)
   }
@@ -133,6 +148,30 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         <div className="text-center">
           <div className="text-4xl mb-4 animate-pulse">⚔️</div>
           <p className="text-gray-400 text-sm">載入中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (showUnauthorized) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm text-center">
+          <div className="text-5xl mb-4">🚫</div>
+          <h2 className="text-xl font-bold text-white mb-2">尚未獲得授權</h2>
+          <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+            你的帳號尚未被加入系統。<br />
+            請聯繫老闆將你的 Gmail 加入白名單後再試。
+          </p>
+          <div className="bg-gray-900 rounded-xl px-4 py-3 mb-6 text-sm text-gray-500 break-all">
+            {pendingEmail}
+          </div>
+          <button
+            onClick={handleLogout}
+            className="text-sm text-gray-500 hover:text-red-400 transition-colors underline underline-offset-2"
+          >
+            切換帳號 / 登出
+          </button>
         </div>
       </div>
     )
@@ -207,9 +246,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               </select>
             </div>
 
-            {error && (
-              <p className="text-red-400 text-sm text-center">{error}</p>
-            )}
+            {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
             <button
               onClick={handleCreateProfile}
@@ -237,10 +274,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         <div className="text-6xl mb-4">⚔️</div>
         <h1 className="text-3xl font-bold text-white mb-1">穎流行銷</h1>
         <p className="text-gray-500 text-sm mb-10">內部管理系統</p>
-
         <div className="bg-gray-900 rounded-2xl p-6">
           <p className="text-gray-400 text-sm mb-6">使用公司 Google 帳號登入</p>
-
           <button
             onClick={handleGoogleLogin}
             disabled={googleLoading}
@@ -254,10 +289,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             </svg>
             {googleLoading ? '登入中...' : '使用 Google 登入'}
           </button>
-
-          {error && (
-            <p className="text-red-400 text-sm mt-4">{error}</p>
-          )}
+          {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
         </div>
       </div>
     </div>
