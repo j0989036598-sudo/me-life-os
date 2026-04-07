@@ -375,3 +375,45 @@ export async function deleteAssignedTask(taskId: string): Promise<boolean> {
   }
   return true
 }
+
+// ─── UserGameStats CRUD ──────────────────────────────────────────
+
+export interface UserGameStats {
+  user_id: string
+  xp: number
+  xp_max: number
+  sp: number
+  gold: number
+  diamond: number
+  level: number
+  streak: number
+  streak_last_date: string | null
+  season_tier: number
+  season_xp: number
+}
+
+export async function getGameStats(userId: string): Promise<UserGameStats | null> {
+  const { data, error } = await supabase
+    .from('user_game_stats')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (error) {
+    console.error('getGameStats error:', error)
+    return null
+  }
+  return data as UserGameStats | null
+}
+
+export async function upsertGameStats(stats: Partial<UserGameStats> & { user_id: string }): Promise<UserGameStats | null> {
+  const { data, error } = await supabase
+    .from('user_game_stats')
+    .upsert([stats], { onConflict: 'user_id' })
+    .select()
+    .single()
+  if (error) {
+    console.error('upsertGameStats error:', error)
+    return null
+  }
+  return data as UserGameStats
+}
