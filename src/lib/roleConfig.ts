@@ -3,6 +3,7 @@ import { UserRole } from '@/components/LoginPage'
 export const EMAIL_ROLES: Record<string, UserRole[]> = {
   'j0989036598@gmail.com': ['boss', 'manager', 'member'],
   'tombbb14413@gmail.com': ['boss', 'manager', 'member'],
+  'jack.8981289812qqq@gmail.com': ['member'],
 }
 
 export function getRolesForEmail(email: string): UserRole[] {
