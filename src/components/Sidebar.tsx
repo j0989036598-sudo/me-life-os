@@ -12,6 +12,7 @@ const ROLE_LABELS: Record<UserRole, { label: string; color: string; icon: string
 
 const ALL_NAV = [
   { id: 'home', icon: '🏠', label: '首頁', badge: undefined },
+  { id: 'dashboard', icon: '📊', label: '儀表板', badge: undefined },
   { id: 'log', icon: '📖', label: '賢者之書', badge: undefined },
   { id: 'tasks', icon: '⚡', label: '任務中心', badge: undefined },
   { id: 'metronome', icon: '⏱️', label: '節拍器', badge: undefined },
@@ -20,7 +21,7 @@ const ALL_NAV = [
   { id: 'market', icon: '🏪', label: '市集', badge: undefined },
   { id: 'rewards', icon: '🎁', label: '獎勵中心', badge: undefined },
   { id: 'team-logs', icon: '📋', label: '員工日誌', badge: undefined },
-  { id: 'performance', icon: '📊', label: '績效報表', badge: undefined },
+  { id: 'performance', icon: '📈', label: '績效報表', badge: undefined },
   { id: 'task-delegate', icon: '📝', label: '任務委托', badge: undefined },
   { id: 'settings', icon: '⚙️', label: '個人設定', badge: undefined },
   { id: 'admin', icon: '👁️', label: '管理後台', badge: undefined },
@@ -54,13 +55,14 @@ export function DesktopSidebar({ page, setPage, user, role, allowedPages, onLogo
   const roleInfo = ROLE_LABELS[role]
 
   const mainNav = ALL_NAV.filter(n =>
-    allowedPages.includes(n.id) && n.id !== 'admin' && n.id !== 'settings' && n.id !== 'team-logs' && n.id !== 'task-delegate' && n.id !== 'performance'
+    allowedPages.includes(n.id) && n.id !== 'admin' && n.id !== 'settings' && n.id !== 'team-logs' && n.id !== 'task-delegate' && n.id !== 'performance' && n.id !== 'dashboard'
   )
   const hasAdmin = allowedPages.includes('admin')
   const hasSettings = allowedPages.includes('settings')
   const hasTeamLogs = allowedPages.includes('team-logs')
   const hasTaskDelegate = allowedPages.includes('task-delegate')
   const hasPerformance = allowedPages.includes('performance')
+  const hasDashboard = allowedPages.includes('dashboard')
 
   return (
     <div className="hidden md:flex w-64 min-h-screen bg-dark-800 border-r border-white/5 p-4 flex-col fixed left-0 top-0 z-20">
@@ -99,11 +101,13 @@ export function DesktopSidebar({ page, setPage, user, role, allowedPages, onLogo
           <NavItem key={n.id} icon={n.icon} label={n.label} active={page === n.id} onClick={() => setPage(n.id)} badge={n.badge} />
         ))}
 
-        {(hasTeamLogs || hasTaskDelegate || hasPerformance) && (
+        {(hasDashboard || hasTeamLogs || hasTaskDelegate || hasPerformance) && (
           <>
             <div className="border-t border-white/5 my-2" />
+            <div className="px-3 py-1 text-[10px] text-gray-600 uppercase tracking-wider">管理工具</div>
+            {hasDashboard && <NavItem icon="📊" label="儀表板" active={page === 'dashboard'} onClick={() => setPage('dashboard')} />}
             {hasTeamLogs && <NavItem icon="📋" label="員工日誌" active={page === 'team-logs'} onClick={() => setPage('team-logs')} />}
-            {hasPerformance && <NavItem icon="📊" label="績效報表" active={page === 'performance'} onClick={() => setPage('performance')} />}
+            {hasPerformance && <NavItem icon="📈" label="績效報表" active={page === 'performance'} onClick={() => setPage('performance')} />}
             {hasTaskDelegate && <NavItem icon="📝" label="任務委托" active={page === 'task-delegate'} onClick={() => setPage('task-delegate')} />}
           </>
         )}
