@@ -72,11 +72,7 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
         name: p.name || '未命名',
         status: pres?.status || 'offline',
         character: char ? {
-          hairStyle: char.hair_style,
-          hairColor: char.hair_color,
-          skinTone: char.skin_tone,
-          outfitColor: char.outfit_color,
-          accessory: char.accessory,
+          spriteId: char.sprite_id ?? 'dog-chill',
         } : null,
       }
     })
@@ -121,11 +117,7 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
   const handleSaveCharacter = async (char: CharacterAppearance) => {
     if (!userId) return
     await upsertCharacterProfile(userId, {
-      hair_style: char.hairStyle,
-      hair_color: char.hairColor,
-      skin_tone: char.skinTone,
-      outfit_color: char.outfitColor,
-      accessory: char.accessory,
+      sprite_id: char.spriteId,
     })
     setHasCharacter(true)
     setShowCharCreator(false)
