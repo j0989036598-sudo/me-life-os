@@ -100,9 +100,7 @@ export default function SettingsPage({ profile, onProfileUpdate }: SettingsPageP
       </div>
 
       {resetResult && (
-        <div className="p-4 mb-4 border text-sm text-center" style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)', ...( resetResult.type === 'success'
-            ? { borderColor: 'rgba(52, 211, 153, 0.3)', background: 'rgba(16, 185, 129, 0.05)' }
-            : { borderColor: 'rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.05)' }), color: resetResult.type === 'success' ? 'rgb(209, 250, 229)' : 'rgb(254, 226, 226)' }}>
+        <div className="p-4 mb-4 border text-sm text-center" style={{ border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)', borderColor: resetResult.type === 'success' ? 'rgba(52, 211, 153, 0.3)' : 'rgba(239, 68, 68, 0.3)', background: resetResult.type === 'success' ? 'rgba(16, 185, 129, 0.05)' : 'rgba(239, 68, 68, 0.05)', color: resetResult.type === 'success' ? 'rgb(209, 250, 229)' : 'rgb(254, 226, 226)' }}>
           {resetResult.text}
         </div>
       )}
@@ -249,7 +247,7 @@ export default function SettingsPage({ profile, onProfileUpdate }: SettingsPageP
       </button>
 
       {/* ═══ 危險區域：帳號重置 ═══ */}
-      <div className="glass p-6" style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)', borderColor: 'rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.05)' }}>
+      <div className="glass p-6" style={{ border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)', borderColor: 'rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.05)' }}>
         <h3 style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '11px', color: 'var(--rpg-gold)' }} className="mb-2">⚠️ 危險操作</h3>
         <p className="text-xs text-gray-500 mb-4">以下操作將無法復原，請謹慎操作</p>
 
