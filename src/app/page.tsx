@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { GameProvider } from '@/lib/GameContext'
+import { useTheme } from '@/lib/ThemeContext'
 import { supabase, getProfile, type Profile, type UserRole } from '@/lib/supabase'
 import LoginPage from '@/components/LoginPage'
 import { DesktopSidebar, BottomTabBar } from '@/components/Sidebar'
@@ -31,6 +32,7 @@ const ROLE_PAGES: Record<UserRole, string[]> = {
 
 function AppContent({ profile, onLogout, onProfileUpdate }: { profile: Profile; onLogout: () => void; onProfileUpdate: (p: Profile) => void }) {
   const [page, setPage] = useState('home')
+  const { theme, toggleTheme } = useTheme()
 
   const role = profile.role
   const allowedPages = ROLE_PAGES[role]
@@ -90,7 +92,16 @@ function AppContent({ profile, onLogout, onProfileUpdate }: { profile: Profile; 
               safePage === 'admin' ? '👁️ 管理後台' : safePage
             }</span>
           </div>
-          <NotificationCenter userId={profile.user_id} onNavigate={setPage} />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg hover:bg-dark-600 transition-all text-lg"
+              title={theme === 'dark' ? '切換淺色模式' : '切換深色模式'}
+            >
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
+            <NotificationCenter userId={profile.user_id} onNavigate={setPage} />
+          </div>
         </div>
         <div className="p-4 md:p-8">
           {renderPage()}
