@@ -4,9 +4,9 @@ import { useState } from 'react'
 
 export interface CharacterAppearance {
   hairStyle: number
-  hairColor: number
+  hairColor: string
   skinTone: number
-  outfitColor: number
+  outfitColor: string
   accessory: number
 }
 
@@ -17,14 +17,14 @@ export interface OfficeMember {
   character: CharacterAppearance | null
 }
 
-// åº§ä½å¨åçä¸çä½ç½®ï¼ç¾åæ¯ï¼- å°æåçä¸­çæ¤å­ä½ç½®
+// 座位在圖片上的位置（百分比）- 對應圖片中的椅子位置
 const SEAT_POSITIONS = [
-  { x: 16, y: 64 },  // å·¦æ¡åæ¤
-  { x: 30, y: 72 },  // å·¦æ¡å¾æ¤
-  { x: 46, y: 78 },  // ä¸­éåæ¤
-  { x: 60, y: 62 },  // å³æ¡æ¤1
-  { x: 72, y: 70 },  // å³æ¡æ¤2
-  { x: 38, y: 56 },  // é¡å¤åº§ä½
+  { x: 16, y: 64 },  // 左桌前椅
+  { x: 30, y: 72 },  // 左桌後椅
+  { x: 46, y: 78 },  // 中間前椅
+  { x: 60, y: 62 },  // 右桌椅1
+  { x: 72, y: 70 },  // 右桌椅2
+  { x: 38, y: 56 },  // 額外座位
 ]
 
 const STATUS_CONFIG = {
@@ -50,7 +50,7 @@ export default function OfficeCanvas({ members }: OfficeCanvasProps) {
 
   return (
     <div className="w-full space-y-2">
-      {/* çæå */}
+      {/* 狀態列 */}
       <div className="flex items-center gap-4 text-xs text-gray-400">
         {(Object.entries(counts) as [keyof typeof counts, number][]).map(([status, count]) =>
           count > 0 ? (
@@ -62,18 +62,18 @@ export default function OfficeCanvas({ members }: OfficeCanvasProps) {
         )}
       </div>
 
-      {/* è¾¦å¬å®¤å + åå­æ¨ç±¤ */}
+      {/* 辦公室圖 + 名字標籤 */}
       <div className="relative w-full rounded-xl overflow-hidden bg-black" style={{ aspectRatio: '1 / 1' }}>
 
         <img
           src="/office-bg.jpg"
-          alt="ç©æµè¡é·èæ¬è¾¦å¬å®¤"
+          alt="穎流行銷虛擬辦公室"
           className="w-full h-full object-cover"
           style={{ imageRendering: 'pixelated' }}
           onLoad={() => setImgLoaded(true)}
         />
 
-        {/* åå­æ¨ç±¤ */}
+        {/* 名字標籤 */}
         {imgLoaded && members.map((member, i) => {
           const seat = SEAT_POSITIONS[i % SEAT_POSITIONS.length]
           const cfg  = STATUS_CONFIG[member.status] ?? STATUS_CONFIG.offline
@@ -103,7 +103,7 @@ export default function OfficeCanvas({ members }: OfficeCanvasProps) {
                 />
                 {member.name}
               </div>
-              {/* ç®­é ­ */}
+              {/* 箭頭 */}
               <div style={{
                 width: 0, height: 0,
                 borderLeft: '4px solid transparent',
@@ -114,19 +114,19 @@ export default function OfficeCanvas({ members }: OfficeCanvasProps) {
           )
         })}
 
-        {/* ç©ºçææç¤º */}
+        {/* 空狀態提示 */}
         {imgLoaded && members.length === 0 && (
           <div className="absolute inset-0 flex items-end justify-center pb-8">
             <span className="bg-black/60 backdrop-blur-sm text-gray-300 text-xs px-4 py-2 rounded-full">
-              ç®åæ²æäººå¨ç·ä¸
+              目前沒有人在線上
             </span>
           </div>
         )}
 
-        {/* è¼å¥ä¸­ */}
+        {/* 載入中 */}
         {!imgLoaded && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-gray-400 text-sm animate-pulse">è¾¦å¬å®¤è¼å¥ä¸­...</span>
+            <span className="text-gray-400 text-sm animate-pulse">辦公室載入中...</span>
           </div>
         )}
       </div>
