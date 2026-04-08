@@ -18,45 +18,52 @@ export interface OfficeMember {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 導航圖：節點 + 連線（只能在已連接的節點之間移動，不會穿越家具）
-// adj = 可以直接走過去的相鄰節點 index
+// 導航圖：節點 + 連線
+// adj = 可以直接走過去的相鄰節點 index（只走已連接的路，不穿家具）
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface NavNode { x: number; y: number; adj: number[] }
 
-// 辦公室走廊網格
-// 形狀：
-//  A - B - C    ← 主走廊（上方桌排下面）
-//      |
-//      D         ← 中央走廊（兩組下方桌之間）
-//      |
-//      E         ← 底部區域
+// 辦公室走廊（擴充版）
+//
+//  0 - 1 - 2 - 3    ← 主橫向走廊（上方桌排下方）
+//      |   |
+//      4 - 5        ← 中段走廊（下方桌群之間）
+//      |   |
+//      6   7        ← 底部
 //
 const OFFICE_NAV: NavNode[] = [
-  { x: 36, y: 50, adj: [1]       }, // 0: A 主走廊左
-  { x: 50, y: 50, adj: [0, 2, 3] }, // 1: B 主走廊中（十字路口）
-  { x: 66, y: 50, adj: [1]       }, // 2: C 主走廊右
-  { x: 50, y: 63, adj: [1, 4]    }, // 3: D 中央走廊中
-  { x: 50, y: 76, adj: [3]       }, // 4: E 底部中央
+  { x: 30, y: 50, adj: [1]          }, // 0 主走廊最左
+  { x: 42, y: 50, adj: [0, 2, 4]   }, // 1 主走廊左中（十字口）
+  { x: 54, y: 50, adj: [1, 3, 5]   }, // 2 主走廊右中（十字口）
+  { x: 66, y: 50, adj: [2]          }, // 3 主走廊最右
+  { x: 42, y: 62, adj: [1, 5, 6]   }, // 4 中段左
+  { x: 54, y: 62, adj: [2, 4, 7]   }, // 5 中段右
+  { x: 42, y: 74, adj: [4]          }, // 6 底部左
+  { x: 54, y: 74, adj: [5]          }, // 7 底部右
 ]
 
-// 休息區（海灘）沙地網格
-// 形狀：
-//  F - G - H    ← 上方沙地（躺椅前方）
-//  |   |
-//  I - J        ← 中央沙地
+// 休息區（海灘）沙地（擴充版）
+//
+//  0 - 1 - 2        ← 上方沙地（躺椅前）
+//  |   |   |
+//  3 - 4 - 5        ← 中央沙地
+//      |
+//      6            ← 下方走道
 //
 const REST_NAV: NavNode[] = [
-  { x: 36, y: 48, adj: [1, 3]    }, // 0: F 上方沙地左
-  { x: 50, y: 48, adj: [0, 2, 4] }, // 1: G 上方沙地中（路口）
-  { x: 62, y: 48, adj: [1]       }, // 2: H 上方沙地右
-  { x: 36, y: 60, adj: [0, 4]    }, // 3: I 中央沙地左
-  { x: 50, y: 60, adj: [1, 3]    }, // 4: J 中央沙地中
+  { x: 34, y: 47, adj: [1, 3]       }, // 0 上方左
+  { x: 48, y: 47, adj: [0, 2, 4]   }, // 1 上方中（路口）
+  { x: 62, y: 47, adj: [1, 5]       }, // 2 上方右
+  { x: 34, y: 59, adj: [0, 4]       }, // 3 中央左
+  { x: 48, y: 59, adj: [1, 3, 5, 6] }, // 4 中央中（路口）
+  { x: 62, y: 59, adj: [2, 4]       }, // 5 中央右
+  { x: 48, y: 70, adj: [4]           }, // 6 下方中
 ]
 
-// 初始位置（對齊導航圖節點）
-const OFFICE_STARTS = [0, 1, 2, 3, 4, 1] // 節點 index
-const REST_STARTS   = [0, 1, 2, 3, 4, 1]
+// 初始節點（分散各自出現在不同位置）
+const OFFICE_STARTS = [0, 1, 2, 3, 4, 5]
+const REST_STARTS   = [0, 1, 2, 3, 4, 5]
 
 const STATUS_CONFIG = {
   online:  { color: '#4ade80' },
@@ -65,17 +72,21 @@ const STATUS_CONFIG = {
   offline: { color: '#6b7280' },
 }
 
-const SPEED = 10 // % per second
+const SPEED    = 10  // % per second
+const JITTER   = 2.5 // 每次到達目標點時，在 ±2.5% 內隨機偏移，讓站位不那麼死板
 
 function rand(min: number, max: number) {
   return min + Math.random() * (max - min)
 }
 
+function jitter(val: number): number {
+  return val + (Math.random() - 0.5) * JITTER * 2
+}
+
 interface DogState {
-  nodeIndex: number   // 目前在哪個節點
+  nodeIndex: number
   x: number
   y: number
-  targetNodeIndex: number
   targetX: number
   targetY: number
   isMoving: boolean
@@ -102,8 +113,8 @@ export default function OfficeCanvas({
   const timeoutsRef       = useRef<ReturnType<typeof setTimeout>[]>([])
 
   const isRest  = bgImage.includes('rest')
-  const nav     = isRest ? REST_NAV     : OFFICE_NAV
-  const starts  = isRest ? REST_STARTS  : OFFICE_STARTS
+  const nav     = isRest ? REST_NAV    : OFFICE_NAV
+  const starts  = isRest ? REST_STARTS : OFFICE_STARTS
 
   useEffect(() => {
     const el = containerRef.current
@@ -122,8 +133,9 @@ export default function OfficeCanvas({
       const nodeIdx = starts[i % starts.length]
       const node = nav[nodeIdx]
       return {
-        nodeIndex: nodeIdx, x: node.x, y: node.y,
-        targetNodeIndex: nodeIdx, targetX: node.x, targetY: node.y,
+        nodeIndex: nodeIdx,
+        x: jitter(node.x), y: jitter(node.y),
+        targetX: node.x, targetY: node.y,
         isMoving: false, facingLeft: false, transitionMs: 0,
       }
     })
@@ -132,7 +144,7 @@ export default function OfficeCanvas({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [members.length, isRest])
 
-  // 沿著導航圖走到相鄰節點
+  // 移動排程：沿導航圖走到相鄰節點，並在目標點加入隨機抖動
   function scheduleDog(index: number, waitMs: number) {
     if (isRest) return
 
@@ -143,20 +155,28 @@ export default function OfficeCanvas({
       const currentNode = nav[dog.nodeIndex]
       if (!currentNode || currentNode.adj.length === 0) return
 
-      // 隨機選一個相鄰節點
-      const nextNodeIdx = currentNode.adj[Math.floor(Math.random() * currentNode.adj.length)]
-      const nextNode    = nav[nextNodeIdx]
+      // 隨機選相鄰節點
+      const nextNodeIdx = currentNode.adj[
+        Math.floor(Math.random() * currentNode.adj.length)
+      ]
+      const nextNode = nav[nextNodeIdx]
 
-      const dx = nextNode.x - dog.x
-      const dy = nextNode.y - dog.y
+      // 目標位置 = 節點座標 + 隨機抖動（讓每次站的地方不完全一樣）
+      const targetX = jitter(nextNode.x)
+      const targetY = jitter(nextNode.y)
+
+      const dx = targetX - dog.x
+      const dy = targetY - dog.y
       const dist = Math.sqrt(dx * dx + dy * dy)
       const transitionMs = Math.max(600, Math.round((dist / SPEED) * 1000))
 
       const moving: DogState = {
         ...dog,
-        targetNodeIndex: nextNodeIdx,
-        targetX: nextNode.x, targetY: nextNode.y,
-        isMoving: true, facingLeft: dx < 0, transitionMs,
+        nodeIndex: dog.nodeIndex, // 到達後才更新
+        targetX, targetY,
+        isMoving: true,
+        facingLeft: dx < 0,
+        transitionMs,
       }
       dogsRef.current = dogsRef.current.map((d, i) => i === index ? moving : d)
       setDogs([...dogsRef.current])
@@ -164,13 +184,18 @@ export default function OfficeCanvas({
       const arrive = setTimeout(() => {
         const arrived: DogState = {
           ...dogsRef.current[index],
-          nodeIndex: nextNodeIdx,
-          x: nextNode.x, y: nextNode.y,
+          nodeIndex: nextNodeIdx,  // 更新當前節點
+          x: targetX, y: targetY,
           isMoving: false, transitionMs: 0,
         }
         dogsRef.current = dogsRef.current.map((d, i) => i === index ? arrived : d)
         setDogs([...dogsRef.current])
-        scheduleDog(index, rand(1500, 4500))
+
+        // 隨機等待後繼續走：30% 機率停久一點（在原地待久些）
+        const pause = Math.random() < 0.3
+          ? rand(3000, 6000)   // 偶爾長待
+          : rand(800, 2500)    // 通常短停
+        scheduleDog(index, pause)
       }, transitionMs + 150)
 
       timeoutsRef.current.push(arrive)
@@ -183,7 +208,8 @@ export default function OfficeCanvas({
     if (!imgLoaded || members.length === 0) return
     timeoutsRef.current.forEach(clearTimeout)
     timeoutsRef.current = []
-    members.forEach((_, i) => scheduleDog(i, rand(500, 2500)))
+    // 各狗狗錯開啟動時間，避免全部同步移動
+    members.forEach((_, i) => scheduleDog(i, rand(300, 2000)))
     return () => timeoutsRef.current.forEach(clearTimeout)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imgLoaded, members.length, isRest])
