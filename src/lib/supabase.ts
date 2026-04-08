@@ -828,3 +828,87 @@ export async function createNotificationBatch(
   if (error) { console.error('createNotificationBatch error:', error); return false }
   return true
 }
+
+/* ═══════════════════════════════════════════════════════
+   角色外觀 & 在線狀態 (Office Visualization)
+   ═══════════════════════════════════════════════════════ */
+
+export interface CharacterProfile {
+  id: string
+  user_id: string
+  hair_style: number
+  hair_color: string
+  skin_tone: number
+  outfit_color: string
+  accessory: number
+  created_at: string
+  updated_at: string
+}
+
+export interface UserPresence {
+  user_id: string
+  status: 'online' | 'working' | 'idle' | 'offline'
+  last_action: string
+  last_seen: string
+  updated_at: string
+}
+
+// 取得所有角色外觀
+export async function getAllCharacterProfiles(): Promise<CharacterProfile[]> {
+  const { data, error } = await supabase
+    .from('character_profiles')
+    .select('*')
+  if (error) { console.error('getAllCharacterProfiles error:', error); return [] }
+  return (data || []) as CharacterProfile[]
+}
+
+// 取得單一用戶的角色
+export async function getCharacterProfile(userId: string): Promise<CharacterProfile | null> {
+  const { data, error } = await supabase
+    .from('character_profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .single()
+  if (error) return null
+  return data as CharacterProfile
+}
+
+// 建立或更新角色外觀
+export async function upsertCharacterProfile(userId: string, character: {
+  hair_style: number
+  hair_color: string
+  skin_tone: number
+  outfit_color: string
+  accessory: number
+}): Promise<CharacterProfile | null> {
+  const { data, error } = await supabase
+    .from('character_profiles')
+    .upsert({ user_id: userId, ...character }, { onConflict: 'user_id' })
+    .select()
+    .single()
+  if (error) { console.error('upsertCharacterProfile error:', error); return null }
+  return data as CharacterProfile
+}
+
+// 取得所有用戶在線狀態
+export async function getAllPresence(): Promise<UserPresence[]> {
+  const { data, error } = await supabase
+    .from('user_presence')
+    .select('*')
+  if (error) { console.error('getAllPresence error:', error); return [] }
+  return (data || []) as UserPresence[]
+}
+
+// 更新自己的在線狀態
+export async function updatePresence(userId: string, status: 'online' | 'working' | 'idle' | 'offline', lastAction?: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('user_presence')
+    .upsert({
+      user_id: userId,
+      status,
+      last_action: lastAction || '',
+      last_seen: new Date().toISOString(),
+    }, { onConflict: 'user_id' })
+  if (error) { console.error('updatePresence error:', error); return false }
+  return true
+}
