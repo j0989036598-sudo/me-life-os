@@ -166,12 +166,12 @@ export default function DashboardPage({ role }: { role: UserRole }) {
           </h1>
           <p className="text-gray-400 text-sm mt-1">即時掌握團隊狀態</p>
         </div>
-        <div className="flex gap-1 bg-dark-700 rounded-xl p-1">
+        <div className="flex gap-1 bg-dark-700 p-1">
           {(['today', 'week', 'month'] as const).map(range => (
             <button
               key={range}
               onClick={() => setTimeRange(range)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`px-3 py-1.5 text-xs font-medium transition-all ${
                 timeRange === range
                   ? 'bg-purple-500/30 text-purple-300'
                   : 'text-gray-400 hover:text-white'
@@ -201,14 +201,14 @@ export default function DashboardPage({ role }: { role: UserRole }) {
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* 打卡趨勢圖 */}
-        <div className="glass rounded-2xl p-5 border border-white/5">
+        <div className="glass p-5 border border-white/5">
           <h3 className="font-bold mb-4 flex items-center gap-2">📈 近 7 天打卡趨勢</h3>
           <div className="flex items-end gap-2 h-32">
             {stats.weeklyTrend.map((day, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
                 <span className="text-[10px] text-gray-400">{day.count}</span>
                 <div
-                  className={`w-full rounded-t-lg transition-all duration-500 ${
+                  className={`w-full transition-all duration-500 ${
                     day.count === 0
                       ? 'bg-gray-700/30 border border-dashed border-gray-600'
                       : 'bg-gradient-to-t from-purple-500/60 to-purple-400/40'
@@ -222,7 +222,7 @@ export default function DashboardPage({ role }: { role: UserRole }) {
         </div>
 
         {/* 心情分佈 */}
-        <div className="glass rounded-2xl p-5 border border-white/5">
+        <div className="glass p-5 border border-white/5">
           <h3 className="font-bold mb-4 flex items-center gap-2">😊 心情分佈</h3>
           {Object.keys(stats.moodDistribution).length > 0 ? (
             <div className="space-y-3">
@@ -235,9 +235,9 @@ export default function DashboardPage({ role }: { role: UserRole }) {
                   return (
                     <div key={mood} className="flex items-center gap-3">
                       <span className="text-2xl w-8 text-center">{mood}</span>
-                      <div className="flex-1 h-6 bg-dark-600 rounded-full overflow-hidden">
+                      <div className="flex-1 h-6 bg-dark-600 overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-amber-500/50 to-amber-400/30 rounded-full flex items-center px-2"
+                          className="h-full bg-gradient-to-r from-amber-500/50 to-amber-400/30 flex items-center px-2"
                           style={{ width: `${Math.max(pct, 8)}%` }}
                         >
                           <span className="text-[10px] text-white font-bold">{pct}%</span>
@@ -254,13 +254,13 @@ export default function DashboardPage({ role }: { role: UserRole }) {
         </div>
 
         {/* 排行榜 */}
-        <div className="glass rounded-2xl p-5 border border-white/5">
+        <div className="glass p-5 border border-white/5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold flex items-center gap-2">🏆 排行榜 TOP 5</h3>
           </div>
           <div className="space-y-2">
             {stats.topPerformers.map((p, i) => (
-              <div key={i} className="flex items-center gap-3 py-2 px-3 rounded-xl hover:bg-white/5 transition-all">
+              <div key={i} className="flex items-center gap-3 py-2 px-3 hover:bg-white/5 transition-all">
                 <span className="text-lg font-black w-6 text-center">
                   {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}
                 </span>
@@ -279,11 +279,11 @@ export default function DashboardPage({ role }: { role: UserRole }) {
         </div>
 
         {/* 最近日誌動態 */}
-        <div className="glass rounded-2xl p-5 border border-white/5">
+        <div className="glass p-5 border border-white/5">
           <h3 className="font-bold mb-4 flex items-center gap-2">📖 最近日誌動態</h3>
           <div className="space-y-2">
             {stats.recentLogs.map((log, i) => (
-              <div key={i} className="flex items-center gap-3 py-2 px-3 rounded-xl hover:bg-white/5 transition-all">
+              <div key={i} className="flex items-center gap-3 py-2 px-3 hover:bg-white/5 transition-all">
                 <span className="text-xl">{log.avatar}</span>
                 <div className="flex-1">
                   <div className="text-sm font-medium">{log.name}</div>
@@ -331,7 +331,7 @@ function KpiCard({ icon, label, value, unit, color, highlight, isEmoji }: {
   }
 
   return (
-    <div className={`glass rounded-2xl p-4 border ${highlightBorder} bg-gradient-to-br ${colorMap[color] || colorMap.purple}`}>
+    <div className={`glass p-4 border ${highlightBorder}`} style={{ backgroundImage: `linear-gradient(135deg, ${colorMap[color] || colorMap.purple})` }}>
       <div className="flex items-center gap-2 mb-2">
         <span className="text-lg">{icon}</span>
         <span className="text-xs text-gray-400">{label}</span>

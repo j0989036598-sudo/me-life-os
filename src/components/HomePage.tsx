@@ -84,37 +84,39 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
     <div className="animate-fade space-y-6">
       {/* ── 管理者專屬 ── */}
       {isManager && totalMembers > 0 && (
-        <div className="glass rounded-2xl p-5 border border-purple-500/20 bg-gradient-to-r from-purple-500/5 to-amber-500/5">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="glass p-5">
+          <div style={{ background: 'linear-gradient(to right, var(--wood-mid), var(--wood-frame))', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-light)', borderLeftColor: 'var(--wood-light)', padding: '0.75rem 1rem', marginBottom: '1rem' }} className="flex items-center gap-2">
             <span className="text-lg">{role === 'boss' ? '👑' : '🛡️'}</span>
-            <h3 className="font-bold text-sm text-purple-300">
+            <h3 className="font-pixel text-xs text-gold-400">
               {role === 'boss' ? '老闆視角 · 全公司今日狀態' : '主管視角 · 團隊今日狀態'}
             </h3>
-            <span className="ml-auto text-xs text-gray-500">{dateStr}</span>
+            <span className="ml-auto text-xs text-text-muted">{dateStr}</span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-dark-700/50 rounded-xl p-3 text-center">
-              <div className="text-2xl font-black text-emerald-400">{totalMembers}</div>
-              <div className="text-xs text-gray-500 mt-1">團隊成員</div>
+            <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center">
+              <div className="text-2xl font-black text-rpg-green">{totalMembers}</div>
+              <div className="text-xs text-text-muted mt-1">團隊成員</div>
             </div>
-            <div className="bg-dark-700/50 rounded-xl p-3 text-center">
-              <div className="text-2xl font-black text-blue-400">{todayCheckedIn.size}</div>
-              <div className="text-xs text-gray-500 mt-1">今日打卡</div>
+            <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center">
+              <div className="text-2xl font-black text-rpg-cyan">{todayCheckedIn.size}</div>
+              <div className="text-xs text-text-muted mt-1">今日打卡</div>
             </div>
-            <div className="bg-dark-700/50 rounded-xl p-3 text-center">
-              <div className="text-2xl font-black text-amber-400">{totalMembers - todayCheckedIn.size}</div>
-              <div className="text-xs text-gray-500 mt-1">未打卡</div>
+            <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center">
+              <div className="text-2xl font-black text-rpg-red">{totalMembers - todayCheckedIn.size}</div>
+              <div className="text-xs text-text-muted mt-1">未打卡</div>
             </div>
-            <div className="bg-dark-700/50 rounded-xl p-3 text-center">
-              <div className="text-2xl font-black text-purple-400">{totalMembers > 0 ? Math.round((todayCheckedIn.size / totalMembers) * 100) : 0}%</div>
-              <div className="text-xs text-gray-500 mt-1">打卡率</div>
+            <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center">
+              <div className="text-2xl font-black text-rpg-gold">{totalMembers > 0 ? Math.round((todayCheckedIn.size / totalMembers) * 100) : 0}%</div>
+              <div className="text-xs text-text-muted mt-1">打卡率</div>
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {profiles.map((p) => (
-              <div key={p.id} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border ${
-                todayCheckedIn.has(p.user_id) ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : 'bg-red-500/10 border-red-500/20 text-red-300'
-              }`}>
+              <div key={p.id} style={{
+                background: todayCheckedIn.has(p.user_id) ? 'var(--rpg-green)' : 'var(--rpg-red)',
+                border: `2px solid ${todayCheckedIn.has(p.user_id) ? 'var(--rpg-green)' : 'var(--rpg-red)'}`,
+                opacity: 0.8
+              }} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white">
                 <span>{p.avatar}</span>
                 <span>{p.name}</span>
                 <span>{todayCheckedIn.has(p.user_id) ? '✅' : '○'}</span>
@@ -125,54 +127,52 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
       )}
 
       {/* ── 個人角色卡 ── */}
-      <div className="glass rounded-2xl p-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-500/10 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2" />
-        <div className="relative flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+      <div className="glass p-6">
+        <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
           <div className="flex flex-col items-center">
-            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-500/30 to-amber-500/30 flex items-center justify-center text-5xl border border-white/10">
+            <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-frame)' }} className="w-24 h-24 flex items-center justify-center text-5xl">
               {user?.avatar}
             </div>
-            <div className="mt-2 px-3 py-1 bg-amber-500/20 rounded-full text-xs text-amber-400 font-bold">{user?.title}</div>
+            <div style={{ background: 'var(--rpg-gold)', border: '2px solid var(--wood-dark)' }} className="mt-2 px-3 py-1 text-xs text-white font-bold">{user?.title}</div>
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-2xl font-black">{user?.name}</h1>
-              <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">Lv.{state.level}</span>
-              <span className="text-fire-400 text-sm font-bold">🔥 {state.streak} 天</span>
+              <h1 className="text-2xl font-black text-text-primary">{user?.name}</h1>
+              <span style={{ background: 'var(--rpg-purple)', border: '2px solid var(--wood-dark)' }} className="text-xs text-white px-2 py-0.5">Lv.{state.level}</span>
+              <span className="text-rpg-red text-sm font-bold">🔥 {state.streak} 天</span>
             </div>
-            <p className="text-gray-400 text-sm mb-4">
-              {isManager ? <span className="text-purple-300 text-xs">{role === 'boss' ? '👑 最高指揮官' : '🛡️ 隊長'} · 今天是 {dateStr}</span> : `今天是 ${dateStr}`}
+            <p className="text-text-secondary text-sm mb-4">
+              {isManager ? <span className="text-rpg-gold text-xs">{role === 'boss' ? '👑 最高指揮官' : '🛡️ 隊長'} · 今天是 {dateStr}</span> : `今天是 ${dateStr}`}
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="bg-dark-700/50 rounded-xl p-3 text-center">
-                <div className="text-xs text-gray-500 mb-1">XP</div>
+              <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center">
+                <div className="text-xs text-text-muted mb-1">XP</div>
                 <div className="text-lg font-bold text-xp-400">✦ {state.xp.toLocaleString()}</div>
-                <div className="w-full h-1.5 bg-dark-600 rounded-full mt-1.5 overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-xp-500 to-xp-400 rounded-full progress-bar" style={{ width: `${(state.xp / state.xpMax) * 100}%` }} />
+                <div style={{ background: 'var(--bg-700)', border: '2px solid var(--wood-dark)' }} className="w-full h-1.5 mt-1.5 overflow-hidden">
+                  <div style={{ background: 'var(--rpg-cyan)' }} className="h-full progress-bar" style={{ width: `${(state.xp / state.xpMax) * 100}%` }} />
                 </div>
-                <div className="text-[10px] text-gray-600 mt-0.5">{state.xp}/{state.xpMax}</div>
+                <div className="text-[10px] text-text-muted mt-0.5">{state.xp}/{state.xpMax}</div>
               </div>
-              <div className="bg-dark-700/50 rounded-xl p-3 text-center"><div className="text-xs text-gray-500 mb-1">SP</div><div className="text-lg font-bold text-sp-400">🔮 {state.sp}</div></div>
-              <div className="bg-dark-700/50 rounded-xl p-3 text-center"><div className="text-xs text-gray-500 mb-1">Gold</div><div className="text-lg font-bold text-gold-400">🪙 {state.gold.toLocaleString()}</div></div>
-              <div className="bg-dark-700/50 rounded-xl p-3 text-center"><div className="text-xs text-gray-500 mb-1">鑽石</div><div className="text-lg font-bold text-blue-400">💎 {state.diamond}</div></div>
+              <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center"><div className="text-xs text-text-muted mb-1">SP</div><div className="text-lg font-bold text-sp-400">🔮 {state.sp}</div></div>
+              <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center"><div className="text-xs text-text-muted mb-1">Gold</div><div className="text-lg font-bold text-gold-400">🪙 {state.gold.toLocaleString()}</div></div>
+              <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center"><div className="text-xs text-text-muted mb-1">鑽石</div><div className="text-lg font-bold text-rpg-cyan">💎 {state.diamond}</div></div>
             </div>
           </div>
         </div>
       </div>
 
       {/* ── Season Pass ── */}
-      <div className="glass rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="glass p-6">
+        <div style={{ background: 'linear-gradient(to right, var(--wood-mid), var(--wood-frame))', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-light)', borderLeftColor: 'var(--wood-light)', padding: '0.75rem 1rem', marginBottom: '1rem' }} className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xl">🎫</span>
-            <h3 className="font-bold">Season Pass {SEASON_PASS.season}</h3>
-            <span className="text-xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">{SEASON_PASS.name}</span>
+            <h3 className="font-pixel text-xs text-gold-400">Season Pass {SEASON_PASS.season}</h3>
+            <span style={{ background: 'var(--rpg-gold)', color: 'var(--wood-darkest)' }} className="text-xs px-2 py-0.5 font-bold">{SEASON_PASS.name}</span>
           </div>
-          <span className="text-xs text-gray-500">{state.seasonXp.toLocaleString()} / {state.seasonXpMax.toLocaleString()} 賽季XP</span>
+          <span className="text-xs text-text-muted">{state.seasonXp.toLocaleString()} / {state.seasonXpMax.toLocaleString()} 賽季XP</span>
         </div>
-        <div className="w-full h-2 bg-dark-600 rounded-full overflow-hidden mb-4 relative">
-          <div className="h-full bg-gradient-to-r from-amber-500 via-purple-500 to-emerald-500 rounded-full progress-bar" style={{ width: `${(state.seasonXp / state.seasonXpMax) * 100}%` }} />
+        <div style={{ background: 'var(--bg-700)', border: '2px solid var(--wood-dark)' }} className="w-full h-2 overflow-hidden mb-4 relative">
+          <div style={{ background: 'var(--rpg-gold)' }} className="h-full progress-bar" style={{ width: `${(state.seasonXp / state.seasonXpMax) * 100}%` }} />
           <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white pointer-events-none">
             {Math.round((state.seasonXp / state.seasonXpMax) * 100)}%
           </div>
@@ -184,24 +184,27 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
             const canClaim = isUnlocked && !isClaimed
 
             return (
-              <div key={tier.tier} className={`text-center p-3 rounded-xl transition-all relative ${
-                isClaimed ? 'bg-emerald-500/10 border border-emerald-500/20'
-                : canClaim ? 'bg-amber-500/15 border border-amber-500/30 cursor-pointer hover:scale-105 hover:bg-amber-500/20'
-                : 'bg-dark-700/50 border border-white/5 opacity-40'
-              }`}>
+              <div key={tier.tier} style={{
+                background: isClaimed ? 'var(--rpg-green)' : canClaim ? 'var(--rpg-gold)' : 'var(--bg-700)',
+                border: `3px solid ${isClaimed ? 'var(--rpg-green)' : canClaim ? 'var(--rpg-gold)' : 'var(--wood-dark)'}`,
+                borderTopColor: isClaimed || canClaim ? 'inherit' : 'var(--wood-mid)',
+                borderLeftColor: isClaimed || canClaim ? 'inherit' : 'var(--wood-mid)',
+                opacity: !isClaimed && !isUnlocked ? 0.5 : 1,
+              }} className="text-center p-3 transition-all relative">
                 {canClaim && (
-                  <div className="absolute -top-2 -right-2 w-5 h-5 bg-emerald-400 rounded-full animate-pulse" />
+                  <div style={{ background: 'var(--rpg-red)' }} className="absolute -top-2 -right-2 w-5 h-5 animate-pulse" />
                 )}
-                <div className="text-xs text-gray-500 mb-1">Tier {tier.tier}</div>
+                <div className="text-xs text-text-muted mb-1">Tier {tier.tier}</div>
                 <div className="text-lg mb-1">{tier.icon}</div>
-                <div className="text-[10px] text-gray-400 truncate">{tier.rewardText}</div>
-                {isClaimed && <div className="text-[10px] text-emerald-400 mt-1">✅ 已領取</div>}
+                <div className="text-[10px] text-text-secondary truncate">{tier.rewardText}</div>
+                {isClaimed && <div className="text-[10px] text-white mt-1">✅ 已領取</div>}
                 {!isClaimed && !isUnlocked && (
-                  <div className="text-[10px] text-gray-500 mt-1">🔒</div>
+                  <div className="text-[10px] text-text-muted mt-1">🔒</div>
                 )}
                 {canClaim && (
                   <button onClick={() => handleClaimTier(tier)}
-                    className="mt-2 w-full py-1 px-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-[9px] font-bold rounded transition-all">
+                    style={{ background: 'var(--rpg-green)', border: '2px solid var(--wood-dark)' }}
+                    className="pixel-btn mt-2 w-full py-1 px-1 text-white text-[9px] font-bold transition-all">
                     領取
                   </button>
                 )}
@@ -213,24 +216,25 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
 
       {/* ── 下方兩欄 ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="glass rounded-2xl p-6">
-          <h3 className="font-bold mb-4 flex items-center gap-2">
-            ⚡ 待完成任務 <span className="text-xs text-gray-500">{doneTasks.length}/{myTasks.length}</span>
-          </h3>
+        <div className="glass p-6">
+          <div style={{ background: 'linear-gradient(to right, var(--wood-mid), var(--wood-frame))', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-light)', borderLeftColor: 'var(--wood-light)', padding: '0.75rem 1rem', marginBottom: '1rem' }} className="flex items-center justify-between">
+            <h3 className="font-pixel text-xs text-gold-400">⚡ 待完成任務</h3>
+            <span className="text-xs text-text-muted">{doneTasks.length}/{myTasks.length}</span>
+          </div>
           {activeTasks.length === 0 ? (
             <div className="text-center py-6">
               <span className="text-3xl block mb-2">🎯</span>
-              <p className="text-gray-500 text-sm mb-2">還沒有待完成的任務</p>
-              <p className="text-gray-600 text-xs">去「任務委托」指派任務，或等主管分配吧！</p>
+              <p className="text-text-secondary text-sm mb-2">還沒有待完成的任務</p>
+              <p className="text-text-muted text-xs">去「任務委托」指派任務，或等主管分配吧！</p>
             </div>
           ) : (
             <div className="space-y-2">
               {activeTasks.slice(0, 4).map((t) => (
-                <div key={t.id} className="flex items-center gap-3 p-3 rounded-xl bg-dark-700/50 border border-white/5">
-                  <div className="w-5 h-5 rounded-full border-2 border-gray-600" />
+                <div key={t.id} style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="flex items-center gap-3 p-3">
+                  <div style={{ border: '2px solid var(--rpg-gold)' }} className="w-5 h-5" />
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm truncate">{t.title}</div>
-                    <div className="text-[10px] text-gray-500">來自 {t.assigned_by_name}</div>
+                    <div className="text-sm truncate text-text-primary">{t.title}</div>
+                    <div className="text-[10px] text-text-muted">來自 {t.assigned_by_name}</div>
                   </div>
                   {t.xp_reward > 0 && <div className="text-xs text-xp-400 whitespace-nowrap">+{t.xp_reward} XP</div>}
                 </div>
@@ -239,26 +243,29 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
           )}
         </div>
 
-        <div className="glass rounded-2xl p-6">
-          <h3 className="font-bold mb-4 flex items-center gap-2">📖 最近日誌</h3>
+        <div className="glass p-6">
+          <div style={{ background: 'linear-gradient(to right, var(--wood-mid), var(--wood-frame))', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-light)', borderLeftColor: 'var(--wood-light)', padding: '0.75rem 1rem', marginBottom: '1rem' }} className="flex items-center gap-2">
+            <span className="text-gold-400">📖</span>
+            <h3 className="font-pixel text-xs text-gold-400">最近日誌</h3>
+          </div>
           {myLogs.length === 0 ? (
             <div className="text-center py-6">
               <span className="text-3xl block mb-2">📖</span>
-              <p className="text-gray-500 text-sm mb-2">還沒有日誌紀錄</p>
-              <p className="text-gray-600 text-xs">去「賢者之書」寫下今天的冒險吧！</p>
+              <p className="text-text-secondary text-sm mb-2">還沒有日誌紀錄</p>
+              <p className="text-text-muted text-xs">去「賢者之書」寫下今天的冒險吧！</p>
             </div>
           ) : (
             <div className="space-y-2">
               {myLogs.slice(0, 4).map((log) => (
-                <div key={log.id} className="flex items-center gap-3 p-3 rounded-xl bg-dark-700/50 border border-white/5">
+                <div key={log.id} style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="flex items-center gap-3 p-3">
                   <div className="text-2xl">{log.mood}</div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{log.highlight || '(無亮點)'}</div>
-                    <div className="text-xs text-gray-500">{log.date} · {log.quest}</div>
+                    <div className="text-sm font-medium truncate text-text-primary">{log.highlight || '(無亮點)'}</div>
+                    <div className="text-xs text-text-muted">{log.date} · {log.quest}</div>
                   </div>
                   <div className="flex gap-0.5">
                     {[...Array(5)].map((_, j) => (
-                      <div key={j} className={`w-1.5 h-4 rounded-full ${j < log.energy ? 'bg-amber-400' : 'bg-dark-600'}`} />
+                      <div key={j} style={{ background: j < log.energy ? 'var(--rpg-gold)' : 'var(--bg-700)', border: '1px solid var(--wood-dark)' }} className="w-1.5 h-4" />
                     ))}
                   </div>
                 </div>

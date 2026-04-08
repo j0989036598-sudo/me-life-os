@@ -122,7 +122,7 @@ export default function PerformancePage({ role }: { role: UserRole }) {
 
   if (!['boss', 'manager'].includes(role)) {
     return (
-      <div className="glass rounded-2xl p-8 text-center text-gray-400">
+      <div className="glass p-8 text-center text-gray-400">
         <div className="text-4xl mb-2">🔒</div>
         <p>此功能只限管理者使用</p>
       </div>
@@ -150,7 +150,7 @@ export default function PerformancePage({ role }: { role: UserRole }) {
         <div className="flex gap-2">
           <button
             onClick={() => setDateRange('week')}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+            className={`px-4 py-2 text-sm font-bold transition-all ${
               dateRange === 'week'
                 ? 'bg-blue-500/20 text-blue-300 ring-1 ring-blue-400/30'
                 : 'glass text-gray-400'
@@ -160,7 +160,7 @@ export default function PerformancePage({ role }: { role: UserRole }) {
           </button>
           <button
             onClick={() => setDateRange('month')}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+            className={`px-4 py-2 text-sm font-bold transition-all ${
               dateRange === 'month'
                 ? 'bg-blue-500/20 text-blue-300 ring-1 ring-blue-400/30'
                 : 'glass text-gray-400'
@@ -170,7 +170,7 @@ export default function PerformancePage({ role }: { role: UserRole }) {
           </button>
           <button
             onClick={() => setDateRange('all')}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+            className={`px-4 py-2 text-sm font-bold transition-all ${
               dateRange === 'all' ? 'bg-blue-500/20 text-blue-300 ring-1 ring-blue-400/30' : 'glass text-gray-400'
             }`}
           >
@@ -181,22 +181,22 @@ export default function PerformancePage({ role }: { role: UserRole }) {
 
       {/* Team Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="glass rounded-2xl p-6 text-center border border-white/5">
+        <div className="glass p-6 text-center border border-white/5">
           <div className="text-4xl font-black text-emerald-400 mb-2">{teamTotals.completedThisMonth}</div>
           <div className="text-sm text-gray-400">本期已完成任務</div>
         </div>
-        <div className="glass rounded-2xl p-6 text-center border border-white/5">
+        <div className="glass p-6 text-center border border-white/5">
           <div className="text-4xl font-black text-blue-400 mb-2">{teamTotals.logSubmissionRate}%</div>
           <div className="text-sm text-gray-400">日誌提交率</div>
         </div>
-        <div className="glass rounded-2xl p-6 text-center border border-white/5">
+        <div className="glass p-6 text-center border border-white/5">
           <div className="text-4xl font-black text-purple-400 mb-2">{teamTotals.averageStreak}</div>
           <div className="text-sm text-gray-400">平均連勝天數</div>
         </div>
       </div>
 
       {/* Bar Chart */}
-      <div className="glass rounded-2xl p-6 mb-8 border border-white/5">
+      <div className="glass p-6 mb-8 border border-white/5">
         <h3 className="text-lg font-bold mb-6">📈 任務完成進度</h3>
         <div className="space-y-4">
           {members
@@ -217,10 +217,13 @@ export default function PerformancePage({ role }: { role: UserRole }) {
                   </div>
                   <span className="text-sm font-bold text-emerald-400">{member.tasksCompleted}</span>
                 </div>
-                <div className="w-full bg-dark-700 rounded-full h-2 overflow-hidden">
+                <div className="w-full h-4 overflow-hidden" style={{ background: 'var(--wood-darkest)', border: '3px solid var(--wood-dark)' }}>
                   <div
                     className="h-full bg-gradient-to-r from-emerald-600 to-emerald-500 transition-all"
-                    style={{ width: `${(member.tasksCompleted / maxTasks) * 100}%` }}
+                    style={{
+                      width: `${(member.tasksCompleted / maxTasks) * 100}%`,
+                      backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(0,0,0,0.15) 6px, rgba(0,0,0,0.15) 8px)'
+                    }}
                   />
                 </div>
               </div>
@@ -229,7 +232,7 @@ export default function PerformancePage({ role }: { role: UserRole }) {
       </div>
 
       {/* Member Stats Table */}
-      <div className="glass rounded-2xl p-6 border border-white/5 overflow-x-auto">
+      <div className="glass p-6 border border-white/5 overflow-x-auto">
         <h3 className="text-lg font-bold mb-4">👥 成員詳細統計</h3>
         <table className="w-full text-sm">
           <thead>

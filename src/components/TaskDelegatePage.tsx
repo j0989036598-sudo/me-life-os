@@ -162,7 +162,7 @@ export default function TaskDelegatePage({ currentUserId, currentUserName, curre
 
   const renderTaskList = (taskList: AssignedTask[], showTarget: boolean) => (
     taskList.length === 0 ? (
-      <div className="glass rounded-2xl p-12 text-center text-gray-500">
+      <div className="glass p-12 text-center text-gray-500">
         <div className="text-4xl mb-3">📋</div>
         <p>尚無任務</p>
       </div>
@@ -171,7 +171,7 @@ export default function TaskDelegatePage({ currentUserId, currentUserName, curre
         {taskList.map(task => {
           const target = showTarget ? getProfileByUserId(task.assigned_to) : getProfileByUserId(task.assigned_by)
           return (
-            <div key={task.id} className="glass rounded-2xl p-4 border border-white/5">
+            <div key={task.id} className="glass p-4 border border-white/5">
               <div className="flex items-start gap-3">
                 <span className="text-2xl mt-1">{target?.avatar || '👤'}</span>
                 <div className="flex-1 min-w-0">
@@ -216,34 +216,34 @@ export default function TaskDelegatePage({ currentUserId, currentUserName, curre
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="glass rounded-2xl p-6 text-center">
+        <div className="glass p-6 text-center">
           <div className="text-4xl font-black text-purple-400">{sentTasks.length}</div>
           <div className="text-sm text-gray-400 mt-2">已指派任務</div>
         </div>
-        <div className="glass rounded-2xl p-6 text-center">
+        <div className="glass p-6 text-center">
           <div className="text-4xl font-black text-emerald-400">{sentTasks.filter(t => t.status === 'completed').length}</div>
           <div className="text-sm text-gray-400 mt-2">已完成</div>
         </div>
-        <div className="glass rounded-2xl p-6 text-center">
+        <div className="glass p-6 text-center">
           <div className="text-4xl font-black text-yellow-400">{sentTasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length}</div>
           <div className="text-sm text-gray-400 mt-2">進行中</div>
         </div>
       </div>
 
-      <div className="flex gap-2 mb-4 p-1 glass rounded-xl w-fit">
+      <div className="flex gap-2 mb-4 p-1 glass w-fit">
         <button className={tabClass('assign')} onClick={() => setTab('assign')}>📝 指派任務</button>
         <button className={tabClass('sent')} onClick={() => setTab('sent')}>📤 已指派 ({sentTasks.length})</button>
         <button className={tabClass('received')} onClick={() => setTab('received')}>📥 收到的任務 ({receivedTasks.length})</button>
       </div>
 
       {loading ? (
-        <div className="glass rounded-2xl p-12 text-center text-gray-500">
+        <div className="glass p-12 text-center text-gray-500">
           <div className="text-4xl mb-3 animate-pulse">⏳</div><p>載入中...</p>
         </div>
       ) : (
         <>
           {tab === 'assign' && (
-            <div className="glass rounded-2xl p-6">
+            <div className="glass p-6">
               <h3 className="font-bold mb-5">📝 指派新任務</h3>
               {msg && (
                 <div className={`rounded-xl p-3 mb-4 text-sm text-center ${
@@ -255,7 +255,7 @@ export default function TaskDelegatePage({ currentUserId, currentUserName, curre
                 <div>
                   <label className="text-sm text-gray-400 mb-1.5 block">指派對象 *</label>
                   <select value={assignTo} onChange={e => setAssignTo(e.target.value)}
-                    className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50">
+                    className="w-full bg-dark-700 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50">
                     <option value="">選擇成員...</option>
                     {assignableProfiles.map(p => (
                       <option key={p.user_id} value={p.user_id}>{p.avatar} {p.name} — {p.job_title} ({p.department})</option>
@@ -265,12 +265,12 @@ export default function TaskDelegatePage({ currentUserId, currentUserName, curre
                 <div>
                   <label className="text-sm text-gray-400 mb-1.5 block">任務標題 *</label>
                   <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="例：完成本週社群報告"
-                    className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50" />
+                    className="w-full bg-dark-700 border border-white/10 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50" />
                 </div>
                 <div>
                   <label className="text-sm text-gray-400 mb-1.5 block">任務描述（選填）</label>
                   <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="更多任務細節..."
-                    className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50 h-24 resize-none" />
+                    className="w-full bg-dark-700 border border-white/10 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50 h-24 resize-none" />
                 </div>
                 <div>
                   <label className="text-sm text-gray-400 mb-1.5 block">優先度 *</label>
@@ -283,7 +283,7 @@ export default function TaskDelegatePage({ currentUserId, currentUserName, curre
                       <button
                         key={p.value}
                         onClick={() => setPriority(p.value)}
-                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+                        className={`flex-1 py-2.5 text-sm font-medium border transition-all ${
                           priority === p.value ? `${p.color} ring-1 ring-offset-1` : 'glass text-gray-400 border-white/10'
                         }`}
                       >
@@ -295,7 +295,7 @@ export default function TaskDelegatePage({ currentUserId, currentUserName, curre
                 <div>
                   <label className="text-sm text-gray-400 mb-1.5 block">任務分類 *</label>
                   <select value={category} onChange={e => setCategory(e.target.value)}
-                    className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50">
+                    className="w-full bg-dark-700 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50">
                     <option value="">選擇分類...</option>
                     {CATEGORIES.map(c => (
                       <option key={c} value={c}>{c}</option>
@@ -306,16 +306,16 @@ export default function TaskDelegatePage({ currentUserId, currentUserName, curre
                   <div>
                     <label className="text-sm text-gray-400 mb-1.5 block">XP 獎勵</label>
                     <input type="number" value={xpReward} onChange={e => setXpReward(Number(e.target.value))} min="0" max="500"
-                      className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50" />
+                      className="w-full bg-dark-700 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50" />
                   </div>
                   <div>
                     <label className="text-sm text-gray-400 mb-1.5 block">截止日期（選填）</label>
                     <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
-                      className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50" />
+                      className="w-full bg-dark-700 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50" />
                   </div>
                 </div>
                 <button onClick={handleAssign} disabled={submitting}
-                  className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-purple-500/20 disabled:opacity-50">
+                  className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-bold text-sm transition-all shadow-lg shadow-purple-500/20 disabled:opacity-50">
                   {submitting ? '指派中...' : '📋 送出任務'}
                 </button>
               </div>

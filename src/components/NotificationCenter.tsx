@@ -127,12 +127,12 @@ export default function NotificationCenter({ userId, onNavigate }: {
       {/* 鈴鐺按鈕 */}
       <button
         onClick={handleToggle}
-        className="relative p-2 rounded-xl hover:bg-white/10 transition-all"
+        className="relative p-2 hover:bg-white/10 transition-all"
         title="通知"
       >
         <span className="text-xl">🔔</span>
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 animate-pulse">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-1 animate-pulse" style={{ borderRadius: '0' }}>
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -140,13 +140,13 @@ export default function NotificationCenter({ userId, onNavigate }: {
 
       {/* 通知面板 */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-h-[70vh] bg-dark-800 border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade">
+        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-h-[70vh] overflow-hidden z-50 animate-fade" style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }}>
           {/* 標題列 */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
-            <h3 className="font-bold text-sm flex items-center gap-2">
+          <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <h3 style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '11px', color: 'var(--rpg-gold)', textShadow: '1px 1px 0 rgba(0,0,0,0.5)' }} className="flex items-center gap-2">
               🔔 通知中心
               {unreadCount > 0 && (
-                <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full">{unreadCount} 未讀</span>
+                <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5" style={{ borderRadius: '0' }}>{unreadCount} 未讀</span>
               )}
             </h3>
             {unreadCount > 0 && (
@@ -176,7 +176,8 @@ export default function NotificationCenter({ userId, onNavigate }: {
                     <button
                       key={n.id}
                       onClick={() => handleRead(n)}
-                      className={`w-full text-left px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-all flex gap-3 ${
+                      style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                      className={`w-full text-left px-4 py-3 hover:bg-white/5 transition-all flex gap-3 ${
                         !n.read ? 'bg-purple-500/5' : ''
                       }`}
                     >

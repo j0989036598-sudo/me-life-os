@@ -30,6 +30,13 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const [formAvatar, setFormAvatar] = useState('⚔️')
   const [formSubmitting, setFormSubmitting] = useState(false)
 
+  // Wood frame border style
+  const woodFrameStyle = {
+    border: '5px solid',
+    borderColor: `var(--wood-darkest) var(--wood-light) var(--wood-light) var(--wood-darkest)`,
+    boxShadow: `inset 2px 2px 0 var(--wood-highlight), inset -2px -2px 0 var(--wood-dark), 3px 3px 8px rgba(0,0,0,0.8)`,
+  }
+
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -95,21 +102,24 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-900 flex items-center justify-center">
-        <div className="text-center"><div className="text-4xl mb-4 animate-pulse">⚔️</div><p className="text-gray-400 text-sm">載入中...</p></div>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--wood-dark)' }}>
+        <div className="text-center">
+          <div className="text-4xl mb-4 animate-pulse">⚔️</div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>載入中...</p>
+        </div>
       </div>
     )
   }
 
   if (showUnauthorized) {
     return (
-      <div className="min-h-screen bg-dark-900 flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--wood-dark)' }}>
         <div className="w-full max-w-sm text-center">
           <div className="text-5xl mb-4">🚫</div>
-          <h2 className="text-xl font-bold text-white mb-2">尚未獲得授權</h2>
-          <p className="text-gray-400 text-sm mb-6 leading-relaxed">你的帳號尚未被加入系統。<br />請聯繫老闆將你的 Gmail 加入白名單後再試。</p>
-          <div className="bg-dark-800 rounded-xl px-4 py-3 mb-6 text-sm text-gray-500 break-all">{pendingEmail}</div>
-          <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-red-400 transition-colors underline underline-offset-2">切換帳號 / 登出</button>
+          <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)', fontFamily: "'Press Start 2P', monospace" }}>尚未獲得授權</h2>
+          <p className="text-sm mb-6 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>你的帳號尚未被加入系統。<br />請聯繫老闆將你的 Gmail 加入白名單後再試。</p>
+          <div className="px-4 py-3 mb-6 text-sm break-all glass" style={{ color: 'var(--text-muted)' }}>{pendingEmail}</div>
+          <button onClick={handleLogout} className="text-sm transition-colors underline underline-offset-2 hover:text-red-400" style={{ color: 'var(--text-muted)' }}>切換帳號 / 登出</button>
         </div>
       </div>
     )
@@ -117,47 +127,65 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
   if (showCreateForm) {
     return (
-      <div className="min-h-screen bg-dark-900 flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--wood-dark)' }}>
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="text-5xl mb-3">{formAvatar}</div>
-            <h1 className="text-2xl font-bold text-white">建立你的角色</h1>
-            <p className="text-gray-400 text-sm mt-1">{pendingEmail}</p>
+            <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: "'Press Start 2P', monospace" }}>建立你的角色</h1>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>{pendingEmail}</p>
           </div>
-          <div className="bg-dark-800 rounded-2xl p-6 space-y-5">
+          <div className="glass p-6 space-y-5" style={woodFrameStyle}>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">選擇頭像</label>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>選擇頭像</label>
               <div className="grid grid-cols-6 gap-2">
                 {AVATAR_OPTIONS.map((emoji) => (
-                  <button key={emoji} onClick={() => setFormAvatar(emoji)} className={`text-2xl p-2 rounded-lg transition-all ${
-                    formAvatar === emoji ? 'bg-indigo-600 ring-2 ring-indigo-400 scale-110' : 'bg-dark-700 hover:bg-dark-600'
-                  }`}>{emoji}</button>
+                  <button key={emoji} onClick={() => setFormAvatar(emoji)} className="text-2xl p-2 transition-all" style={{
+                    backgroundColor: formAvatar === emoji ? 'var(--rpg-gold)' : 'var(--bg-700)',
+                    border: formAvatar === emoji ? '2px solid var(--rpg-gold)' : '1px solid var(--wood-mid)',
+                    transform: formAvatar === emoji ? 'scale(1.1)' : 'scale(1)',
+                  }}>{emoji}</button>
                 ))}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">姓名 <span className="text-red-400">*</span></label>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>姓名 <span style={{ color: 'var(--rpg-red)' }}>*</span></label>
               <input type="text" value={formName} onChange={e => setFormName(e.target.value)} placeholder="例：王小明"
-                className="w-full bg-dark-700 text-white rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                className="w-full px-4 py-2.5 text-sm glass" style={{
+                  color: 'var(--text-primary)',
+                  backgroundColor: 'var(--bg-800)',
+                  borderColor: 'var(--wood-mid)',
+                }} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">職位 <span className="text-red-400">*</span></label>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>職位 <span style={{ color: 'var(--rpg-red)' }}>*</span></label>
               <input type="text" value={formJobTitle} onChange={e => setFormJobTitle(e.target.value)} placeholder="例：社群行銷專員"
-                className="w-full bg-dark-700 text-white rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                className="w-full px-4 py-2.5 text-sm glass" style={{
+                  color: 'var(--text-primary)',
+                  backgroundColor: 'var(--bg-800)',
+                  borderColor: 'var(--wood-mid)',
+                }} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">部門</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>部門</label>
               <select value={formDepartment} onChange={e => setFormDepartment(e.target.value)}
-                className="w-full bg-dark-700 text-white rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                className="w-full px-4 py-2.5 text-sm glass" style={{
+                  color: 'var(--text-primary)',
+                  backgroundColor: 'var(--bg-800)',
+                  borderColor: 'var(--wood-mid)',
+                }}>
                 {DEPARTMENT_OPTIONS.map(dept => <option key={dept} value={dept}>{dept}</option>)}
               </select>
             </div>
-            {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+            {error && <p className="text-sm text-center" style={{ color: 'var(--rpg-red)' }}>{error}</p>}
             <button onClick={handleCreateProfile} disabled={formSubmitting}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors">
+              className="w-full pixel-btn font-semibold py-3 transition-colors" style={{
+                color: 'var(--text-primary)',
+                backgroundColor: formSubmitting ? 'var(--bg-700)' : 'var(--rpg-gold)',
+                opacity: formSubmitting ? 0.6 : 1,
+              }}>
               {formSubmitting ? '建立中...' : '完成，進入系統 →'}
             </button>
-            <button onClick={handleLogout} className="block mx-auto text-xs text-gray-600 hover:text-red-400 transition-colors underline underline-offset-2">切換帳號 / 登出</button>
+            <button onClick={handleLogout} className="block mx-auto text-xs transition-colors underline underline-offset-2" style={{ color: 'var(--text-muted)' }}>切換帳號 / 登出</button>
           </div>
         </div>
       </div>
@@ -165,15 +193,19 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-dark-900 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--wood-dark)' }}>
       <div className="w-full max-w-sm text-center">
         <div className="text-6xl mb-4">⚔️</div>
-        <h1 className="text-3xl font-bold text-white mb-1">穎流行銷</h1>
-        <p className="text-gray-500 text-sm mb-10">內部管理系統</p>
-        <div className="bg-dark-800 rounded-2xl p-6">
-          <p className="text-gray-400 text-sm mb-6">使用公司 Google 帳號登入</p>
+        <h1 className="text-3xl font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: "'Press Start 2P', monospace" }}>穎流行銷</h1>
+        <p className="text-sm mb-10" style={{ color: 'var(--text-secondary)' }}>內部管理系統</p>
+        <div className="glass p-6" style={woodFrameStyle}>
+          <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>使用公司 Google 帳號登入</p>
           <button onClick={handleGoogleLogin} disabled={googleLoading}
-            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 disabled:bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-colors">
+            className="w-full flex items-center justify-center gap-3 pixel-btn font-semibold py-3 px-6 transition-colors" style={{
+              backgroundColor: googleLoading ? 'var(--bg-700)' : 'var(--wood-light)',
+              color: 'var(--text-primary)',
+              opacity: googleLoading ? 0.6 : 1,
+            }}>
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -182,7 +214,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             </svg>
             {googleLoading ? '登入中...' : '使用 Google 登入'}
           </button>
-          {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
+          {error && <p className="text-sm mt-4" style={{ color: 'var(--rpg-red)' }}>{error}</p>}
         </div>
       </div>
     </div>

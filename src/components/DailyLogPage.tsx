@@ -91,11 +91,11 @@ export default function DailyLogPage({ role, profile }: { role?: UserRole; profi
         <h2 className="text-3xl font-black mb-2">賢者之書已封印！</h2>
         <p className="text-gray-400 mb-4 text-sm">今日的冒險紀錄已寫入 Supabase 雲端</p>
         <div className="inline-flex gap-4 mb-6">
-          <span className="px-4 py-2 bg-xp-400/10 rounded-xl text-xp-400 font-bold">+30 XP ✦</span>
-          <span className="px-4 py-2 bg-gold-400/10 rounded-xl text-gold-400 font-bold">+15 🪙</span>
+          <span className="px-4 py-2 bg-xp-400/10 text-xp-400 font-bold">+30 XP ✦</span>
+          <span className="px-4 py-2 bg-gold-400/10 text-gold-400 font-bold">+15 🪙</span>
         </div>
         <br />
-        <button onClick={() => setSubmitted(false)} className="mt-4 px-6 py-3 glass rounded-xl text-sm hover:bg-dark-600 transition-all">
+        <button onClick={() => setSubmitted(false)} className="mt-4 px-6 py-3 glass text-sm hover:bg-dark-600 transition-all">
           查看歷史日誌
         </button>
       </div>
@@ -113,7 +113,7 @@ export default function DailyLogPage({ role, profile }: { role?: UserRole; profi
       </div>
 
       {alreadySubmittedToday && !submitted && (
-        <div className="glass rounded-2xl p-4 mt-4 mb-2 border border-emerald-500/20 bg-emerald-500/5 text-center">
+        <div className="glass p-4 mt-4 mb-2 border border-emerald-500/20 bg-emerald-500/5 text-center">
           <span className="text-emerald-400 text-sm font-bold">✅ 今天已經封印過賢者之書了！</span>
         </div>
       )}
@@ -121,12 +121,12 @@ export default function DailyLogPage({ role, profile }: { role?: UserRole; profi
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         {/* Main Form */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="glass rounded-2xl p-6">
+          <div className="glass p-6">
             <label className="block text-sm font-bold mb-3 text-purple-300">💫 今日靈魂狀態</label>
             <div className="flex gap-2 flex-wrap">
               {moods.map((m, i) => (
                 <button key={i} onClick={() => setMood(m.emoji)}
-                  className={`flex flex-col items-center p-3 rounded-xl transition-all min-w-[64px] ${
+                  className={`flex flex-col items-center p-3 transition-all min-w-[64px] ${
                     mood === m.emoji ? 'bg-purple-500/20 ring-2 ring-purple-400 scale-105' : 'bg-dark-700/50 hover:bg-dark-600'
                   }`}>
                   <span className="text-2xl mb-1">{m.emoji}</span>
@@ -136,54 +136,54 @@ export default function DailyLogPage({ role, profile }: { role?: UserRole; profi
             </div>
           </div>
 
-          <div className="glass rounded-2xl p-6">
+          <div className="glass p-6">
             <label className="block text-sm font-bold mb-3 text-amber-300">⚡ 能量值</label>
             <div className="flex gap-2">
               {[1, 2, 3, 4, 5].map((e) => (
                 <button key={e} onClick={() => setEnergy(e)}
-                  className={`flex-1 h-12 rounded-xl font-bold transition-all text-sm ${
+                  className={`flex-1 h-12 font-bold transition-all text-sm ${
                     energy >= e ? 'bg-gradient-to-t from-amber-600 to-amber-400 text-dark-900' : 'bg-dark-700/50 text-gray-500 hover:bg-dark-600'
                   }`}>{e}</button>
               ))}
             </div>
           </div>
 
-          <div className="glass rounded-2xl p-6 space-y-4">
+          <div className="glass p-6 space-y-4">
             <div>
               <label className="block text-sm font-bold mb-2 text-emerald-300">🗡️ 今日主線任務</label>
               <input type="text" value={quest} onChange={(e) => setQuest(e.target.value)} placeholder="今天最重要的一件事..."
-                className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder-gray-600" />
+                className="w-full bg-dark-700 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder-gray-600" />
             </div>
             <div>
               <label className="block text-sm font-bold mb-2 text-blue-300">✨ 今日亮點</label>
               <input type="text" value={highlight} onChange={(e) => setHighlight(e.target.value)} placeholder="今天最值得記住的一件事..."
-                className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-600" />
+                className="w-full bg-dark-700 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-600" />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="glass rounded-2xl p-6">
+            <div className="glass p-6">
               <label className="block text-sm font-bold mb-2 text-emerald-300">⚔️ 戰功（做得好的）</label>
               <textarea value={wins} onChange={(e) => setWins(e.target.value)} placeholder="今天的勝利..."
-                className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder-gray-600 h-20 resize-none" />
+                className="w-full bg-dark-700 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder-gray-600 h-20 resize-none" />
             </div>
-            <div className="glass rounded-2xl p-6">
+            <div className="glass p-6">
               <label className="block text-sm font-bold mb-2 text-red-300">🚧 卡點（遇到的困難）</label>
               <textarea value={blocks} onChange={(e) => setBlocks(e.target.value)} placeholder="今天的挑戰..."
-                className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 placeholder-gray-600 h-20 resize-none" />
+                className="w-full bg-dark-700 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 placeholder-gray-600 h-20 resize-none" />
             </div>
           </div>
 
-          <div className="glass rounded-2xl p-6">
+          <div className="glass p-6">
             <label className="block text-sm font-bold mb-2 text-purple-300">🔮 今日反思</label>
             <textarea value={reflection} onChange={(e) => setReflection(e.target.value)} placeholder="回顧今天，有什麼領悟..."
-              className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-600 h-20 resize-none" />
+              className="w-full bg-dark-700 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-600 h-20 resize-none" />
           </div>
 
-          {error && <div className="text-red-400 text-sm text-center bg-red-500/10 rounded-xl p-3 border border-red-500/20">{error}</div>}
+          {error && <div className="text-red-400 text-sm text-center bg-red-500/10 p-3 border border-red-500/20">{error}</div>}
 
           <button onClick={handleSubmit} disabled={submitting || alreadySubmittedToday}
-            className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg ${
+            className={`w-full py-4 font-bold text-lg transition-all shadow-lg ${
               alreadySubmittedToday ? 'bg-dark-600 text-gray-500 cursor-not-allowed'
               : 'bg-gradient-to-r from-purple-600 to-amber-500 hover:opacity-90 hover:shadow-purple-500/25'
             }`}>
@@ -195,18 +195,18 @@ export default function DailyLogPage({ role, profile }: { role?: UserRole; profi
         <div className="space-y-3">
           <h3 className="font-bold text-sm text-gray-400 mb-2">📜 歷史卷軸</h3>
           {loadingHistory ? (
-            <div className="glass rounded-xl p-8 text-center text-gray-500">
+            <div className="glass p-8 text-center text-gray-500">
               <div className="text-2xl mb-2 animate-pulse">⏳</div>
               <p className="text-xs">載入中...</p>
             </div>
           ) : historyLogs.length === 0 ? (
-            <div className="glass rounded-xl p-8 text-center text-gray-500">
+            <div className="glass p-8 text-center text-gray-500">
               <div className="text-2xl mb-2">📖</div>
               <p className="text-xs">尚無歷史日誌</p>
             </div>
           ) : (
             historyLogs.slice(0, 10).map((log) => (
-              <div key={log.id} className="glass rounded-xl p-4">
+              <div key={log.id} className="glass p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xl">{log.mood}</span>
                   <span className="text-xs text-gray-500">{log.date}</span>
