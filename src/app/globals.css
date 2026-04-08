@@ -2,153 +2,273 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Press+Start+2P&family=DotGothic16&display=swap');
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* ═══ Theme CSS Variables ═══ */
+/* ═══════════════════════════════════════
+   RPG 像素風格 — CSS 變數系統
+   ═══════════════════════════════════════ */
 :root {
-  /* 深色模式（預設） */
-  --bg-900: #0a0e1a;
-  --bg-800: #111827;
-  --bg-700: #1a2035;
-  --bg-600: #232b42;
+  /* 木框色系 */
+  --wood-darkest: #1a0e06;
+  --wood-dark: #2a1a0e;
+  --wood-mid: #54381e;
+  --wood-frame: #6b4c2e;
+  --wood-light: #8b6840;
+  --wood-highlight: #b8905a;
+  --wood-shine: #d4b07a;
 
-  --text-primary: #ffffff;
-  --text-secondary: #d1d5db;  /* gray-300 */
-  --text-muted: #9ca3af;      /* gray-400 */
-  --text-dim: #6b7280;        /* gray-500 */
-  --text-faint: #4b5563;      /* gray-600 */
+  /* 面板背景 */
+  --bg-900: #0e0a14;
+  --bg-800: #161220;
+  --bg-700: #1e1a2a;
+  --bg-600: #2a2438;
 
-  --border-subtle: rgba(255, 255, 255, 0.05);
-  --border-light: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.10);
+  /* 文字 */
+  --text-primary: #e8dcc0;
+  --text-secondary: #b8a888;
+  --text-muted: #887860;
+  --text-dim: #685840;
+  --text-faint: #483828;
 
-  --glass-bg: rgba(17, 24, 39, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  /* 邊框 */
+  --border-subtle: rgba(107, 76, 46, 0.3);
+  --border-light: rgba(107, 76, 46, 0.5);
+  --border-medium: rgba(107, 76, 46, 0.7);
 
-  --scrollbar-track: #111827;
-  --scrollbar-thumb: #374151;
+  /* 面板 */
+  --glass-bg: var(--bg-700);
+  --glass-border: var(--wood-mid);
 
-  --input-bg: #1a2035;
-  --input-border: rgba(255, 255, 255, 0.10);
-  --placeholder: #4b5563;
+  /* 捲軸 */
+  --scrollbar-track: var(--wood-darkest);
+  --scrollbar-thumb: var(--wood-frame);
 
-  --shadow-color: rgba(0, 0, 0, 0.3);
+  /* 輸入框 */
+  --input-bg: var(--bg-800);
+  --input-border: var(--wood-mid);
+  --placeholder: var(--text-dim);
+
+  --shadow-color: rgba(0, 0, 0, 0.5);
+
+  /* RPG 重點色 */
+  --rpg-gold: #e8c840;
+  --rpg-green: #40c848;
+  --rpg-red: #e04030;
+  --rpg-cyan: #40b8d8;
+  --rpg-purple: #a060d0;
+  --rpg-pink: #d060a0;
 }
 
+/* ═══ 淺色模式（RPG 羊皮紙風） ═══ */
 [data-theme="light"] {
-  --bg-900: #f0f2f5;
-  --bg-800: #ffffff;
-  --bg-700: #f8f9fb;
-  --bg-600: #e8ecf1;
+  --bg-900: #d8cbb8;
+  --bg-800: #e8dcc8;
+  --bg-700: #f0e4d0;
+  --bg-600: #c8b8a0;
 
-  --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
-  --text-dim: #94a3b8;
-  --text-faint: #cbd5e1;
+  --text-primary: #2a1a0e;
+  --text-secondary: #54381e;
+  --text-muted: #8b6840;
+  --text-dim: #b8905a;
+  --text-faint: #d4b07a;
 
-  --border-subtle: rgba(0, 0, 0, 0.05);
-  --border-light: rgba(0, 0, 0, 0.08);
-  --border-medium: rgba(0, 0, 0, 0.12);
+  --border-subtle: rgba(84, 56, 30, 0.15);
+  --border-light: rgba(84, 56, 30, 0.25);
+  --border-medium: rgba(84, 56, 30, 0.35);
 
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-bg: #e8dcc8;
+  --glass-border: var(--wood-mid);
 
-  --scrollbar-track: #f1f5f9;
-  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-track: #d0c0a8;
+  --scrollbar-thumb: var(--wood-frame);
 
-  --input-bg: #f1f5f9;
-  --input-border: rgba(0, 0, 0, 0.12);
-  --placeholder: #94a3b8;
+  --input-bg: #e0d0b8;
+  --input-border: var(--wood-mid);
+  --placeholder: #8b6840;
 
-  --shadow-color: rgba(0, 0, 0, 0.08);
+  --shadow-color: rgba(0, 0, 0, 0.15);
 }
 
 body {
   font-family: 'Noto Sans TC', sans-serif;
-  background: var(--bg-900);
+  background: var(--wood-dark);
   color: var(--text-primary);
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--scrollbar-track); }
-::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+/* ═══ 像素滾動條 ═══ */
+::-webkit-scrollbar { width: 14px; }
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-left: 3px solid var(--wood-mid);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border: 2px solid var(--wood-light);
+  border-top-color: var(--wood-highlight);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--wood-light); }
 
+/* ═══════════════════════════════════════
+   RPG 木框面板 — .glass 替代
+   ═══════════════════════════════════════ */
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
+  backdrop-filter: none;
+  border: 5px solid var(--wood-frame);
+  border-top-color: var(--wood-highlight);
+  border-left-color: var(--wood-light);
+  border-right-color: var(--wood-mid);
+  border-bottom-color: var(--wood-dark);
+  box-shadow:
+    inset 0 0 0 2px var(--wood-darkest),
+    3px 3px 0 rgba(0,0,0,0.4);
 }
 
-.glow-gold { box-shadow: 0 0 20px rgba(251, 191, 36, 0.15); }
-.glow-xp { box-shadow: 0 0 20px rgba(139, 92, 246, 0.15); }
-.glow-sp { box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); }
+/* ═══ RPG 面板（帶標題欄） ═══ */
+.rpg-panel {
+  background: var(--bg-700);
+  border: 5px solid var(--wood-frame);
+  border-top-color: var(--wood-highlight);
+  border-left-color: var(--wood-light);
+  border-right-color: var(--wood-mid);
+  border-bottom-color: var(--wood-dark);
+  box-shadow:
+    inset 0 0 0 2px var(--wood-darkest),
+    3px 3px 0 rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+
+.rpg-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: linear-gradient(180deg, var(--wood-frame) 0%, var(--wood-mid) 100%);
+  border-bottom: 3px solid var(--wood-dark);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: var(--text-primary);
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.6);
+  letter-spacing: 1px;
+  min-height: 32px;
+}
+
+.rpg-panel-header .win-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.win-btn {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--wood-dark);
+  border-top-color: var(--wood-highlight);
+  border-left-color: var(--wood-light);
+  background: var(--wood-frame);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: 'Press Start 2P', monospace;
+  line-height: 1;
+}
+.win-btn:hover { background: var(--wood-light); }
+.win-btn.close { background: var(--rpg-red); border-top-color: #f06050; border-left-color: #e85040; }
+
+.rpg-panel-body {
+  padding: 10px;
+  background: var(--bg-800);
+  border: 2px solid var(--wood-darkest);
+  margin: 0 2px 2px 2px;
+}
+
+/* ═══ 像素按鈕 ═══ */
+.pixel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--wood-mid);
+  border: 4px solid transparent;
+  border-top-color: var(--wood-highlight);
+  border-left-color: var(--wood-light);
+  border-right-color: var(--wood-dark);
+  border-bottom-color: var(--wood-darkest);
+  color: var(--text-primary);
+  font-family: 'DotGothic16', 'Noto Sans TC', monospace;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--wood-darkest);
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+}
+.pixel-btn:hover { background: var(--wood-light); }
+.pixel-btn:active {
+  border-top-color: var(--wood-darkest);
+  border-left-color: var(--wood-dark);
+  border-right-color: var(--wood-highlight);
+  border-bottom-color: var(--wood-highlight);
+  box-shadow: none;
+  transform: translate(2px, 2px);
+}
+
+/* ═══ 像素進度條 ═══ */
+.pixel-bar {
+  height: 16px;
+  background: var(--wood-darkest);
+  border: 3px solid var(--wood-dark);
+  border-top-color: var(--wood-darkest);
+  border-left-color: var(--wood-darkest);
+  border-right-color: var(--wood-mid);
+  border-bottom-color: var(--wood-mid);
+  position: relative;
+  overflow: hidden;
+}
+.pixel-bar-fill {
+  height: 100%;
+  background-image: repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(0,0,0,0.15) 6px, rgba(0,0,0,0.15) 8px);
+}
+
+/* ═══ 光效 ═══ */
+.glow-gold { box-shadow: 0 0 12px rgba(232, 200, 64, 0.25), inset 0 0 0 2px var(--wood-darkest), 3px 3px 0 rgba(0,0,0,0.4); }
+.glow-xp { box-shadow: 0 0 12px rgba(160, 96, 208, 0.25), inset 0 0 0 2px var(--wood-darkest), 3px 3px 0 rgba(0,0,0,0.4); }
+.glow-sp { box-shadow: 0 0 12px rgba(64, 200, 72, 0.25), inset 0 0 0 2px var(--wood-darkest), 3px 3px 0 rgba(0,0,0,0.4); }
 
 .progress-bar { transition: width 1s ease-out; }
 
 /* Rarity glows */
-.rarity-ssr { box-shadow: 0 0 30px rgba(251, 191, 36, 0.3); }
-.rarity-sr { box-shadow: 0 0 20px rgba(139, 92, 246, 0.2); }
+.rarity-ssr { box-shadow: 0 0 20px rgba(232, 200, 64, 0.35), inset 0 0 0 2px var(--wood-darkest); }
+.rarity-sr { box-shadow: 0 0 15px rgba(160, 96, 208, 0.25), inset 0 0 0 2px var(--wood-darkest); }
 
-/* ═══ 淺色模式：覆寫 Tailwind 工具類 ═══ */
-/* 文字顏色 */
-[data-theme="light"] .text-white {
-  color: var(--text-primary) !important;
-}
-[data-theme="light"] .text-gray-200 {
-  color: #334155 !important;
-}
-[data-theme="light"] .text-gray-300 {
-  color: #475569 !important;
-}
-[data-theme="light"] .text-gray-400 {
-  color: #64748b !important;
-}
-[data-theme="light"] .text-gray-500 {
-  color: #94a3b8 !important;
-}
-[data-theme="light"] .text-gray-600 {
-  color: #94a3b8 !important;
-}
+/* ═══ 淺色模式覆寫 ═══ */
+[data-theme="light"] .text-white { color: var(--text-primary) !important; }
+[data-theme="light"] .text-gray-200 { color: #3a2510 !important; }
+[data-theme="light"] .text-gray-300 { color: #54381e !important; }
+[data-theme="light"] .text-gray-400 { color: #6b4c2e !important; }
+[data-theme="light"] .text-gray-500 { color: #8b6840 !important; }
+[data-theme="light"] .text-gray-600 { color: #a88858 !important; }
 
-/* 邊框 */
-[data-theme="light"] .border-white\/5 {
-  border-color: rgba(0, 0, 0, 0.06) !important;
-}
-[data-theme="light"] .border-white\/10 {
-  border-color: rgba(0, 0, 0, 0.10) !important;
-}
-[data-theme="light"] .border-white\/20 {
-  border-color: rgba(0, 0, 0, 0.12) !important;
-}
+[data-theme="light"] .border-white\/5 { border-color: rgba(84, 56, 30, 0.15) !important; }
+[data-theme="light"] .border-white\/10 { border-color: rgba(84, 56, 30, 0.25) !important; }
+[data-theme="light"] .border-white\/20 { border-color: rgba(84, 56, 30, 0.35) !important; }
 
-/* placeholder */
-[data-theme="light"] .placeholder-gray-600::placeholder {
-  color: #94a3b8 !important;
-}
+[data-theme="light"] .placeholder-gray-600::placeholder { color: #8b6840 !important; }
 
-/* 分隔線 */
 [data-theme="light"] .divide-white\/5 > :not([hidden]) ~ :not([hidden]) {
-  border-color: rgba(0, 0, 0, 0.06) !important;
+  border-color: rgba(84, 56, 30, 0.15) !important;
 }
 
-/* 淺色模式下調整半透明背景 */
-[data-theme="light"] .bg-white\/5 {
-  background-color: rgba(0, 0, 0, 0.03) !important;
-}
-[data-theme="light"] .bg-white\/10 {
-  background-color: rgba(0, 0, 0, 0.05) !important;
-}
+[data-theme="light"] .bg-white\/5 { background-color: rgba(84, 56, 30, 0.06) !important; }
+[data-theme="light"] .bg-white\/10 { background-color: rgba(84, 56, 30, 0.10) !important; }
 
-/* 淺色模式下 hover 背景 */
-[data-theme="light"] .hover\:bg-dark-600:hover {
-  background-color: #e2e8f0 !important;
-}
+[data-theme="light"] .hover\:bg-dark-600:hover { background-color: #c8b8a0 !important; }
 
-/* 下拉選單與輸入框 */
 [data-theme="light"] select,
 [data-theme="light"] input[type="text"],
 [data-theme="light"] input[type="number"],
@@ -160,11 +280,26 @@ body {
   color: var(--text-primary) !important;
 }
 [data-theme="light"] select option {
-  background-color: #ffffff;
-  color: #0f172a;
+  background-color: #e8dcc8;
+  color: #2a1a0e;
 }
 
-/* 淺色模式漸變遮罩修正 */
 [data-theme="light"] .bg-dark-900\/80 {
-  background-color: rgba(240, 242, 245, 0.85) !important;
+  background-color: rgba(216, 203, 184, 0.9) !important;
+}
+
+/* ═══ 全域圓角覆寫 → 方角像素風 ═══ */
+.rounded-full { border-radius: 0 !important; }
+.rounded-xl { border-radius: 0 !important; }
+.rounded-2xl { border-radius: 0 !important; }
+.rounded-lg { border-radius: 0 !important; }
+.rounded-md { border-radius: 0 !important; }
+.rounded { border-radius: 0 !important; }
+.rounded-sm { border-radius: 0 !important; }
+
+/* ═══ 像素字體 — 標題用 ═══ */
+.pixel-title {
+  font-family: 'Press Start 2P', monospace;
+  letter-spacing: 1px;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
 }
