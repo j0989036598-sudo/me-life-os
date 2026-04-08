@@ -67,12 +67,34 @@ function AppContent({ profile, onLogout, onProfileUpdate }: { profile: Profile; 
     <div className="min-h-screen bg-dark-900">
       <DesktopSidebar page={safePage} setPage={setPage} user={sidebarUser} role={role} allowedPages={allowedPages} onLogout={onLogout} />
       <BottomTabBar page={safePage} setPage={setPage} allowedPages={allowedPages} onLogout={onLogout} />
-      {/* 通知鈴鐺（固定右上角） */}
-      <div className="fixed top-4 right-4 z-30">
-        <NotificationCenter userId={profile.user_id} onNavigate={setPage} />
-      </div>
-      <main className="md:ml-64 p-4 md:p-8 pb-24 md:pb-8 min-h-screen">
-        {renderPage()}
+      <main className="md:ml-64 pb-24 md:pb-8 min-h-screen">
+        {/* 頂部導航列：麵包屑 + 通知 */}
+        <div className="sticky top-0 z-30 bg-dark-900/80 backdrop-blur-lg border-b border-white/5 px-4 md:px-8 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-500">⚔️ ME Life OS</span>
+            <span className="text-gray-600">/</span>
+            <span className="text-white font-medium">{
+              safePage === 'home' ? '🏠 首頁' :
+              safePage === 'dashboard' ? '📊 儀表板' :
+              safePage === 'log' ? '📖 賢者之書' :
+              safePage === 'tasks' ? '⚡ 任務中心' :
+              safePage === 'metronome' ? '⏱️ 節拍器' :
+              safePage === 'skills' ? '🌳 技能樹' :
+              safePage === 'guild' ? '⚔️ 公會' :
+              safePage === 'market' ? '🏪 市集' :
+              safePage === 'rewards' ? '🎁 獎勵中心' :
+              safePage === 'performance' ? '📈 績效報表' :
+              safePage === 'team-logs' ? '📋 員工日誌' :
+              safePage === 'task-delegate' ? '📝 任務委托' :
+              safePage === 'settings' ? '⚙️ 個人設定' :
+              safePage === 'admin' ? '👁️ 管理後台' : safePage
+            }</span>
+          </div>
+          <NotificationCenter userId={profile.user_id} onNavigate={setPage} />
+        </div>
+        <div className="p-4 md:p-8">
+          {renderPage()}
+        </div>
       </main>
     </div>
   )
