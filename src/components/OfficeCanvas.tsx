@@ -67,20 +67,23 @@ export default function OfficeCanvas({
   const seats = isRest ? REST_SEATS : OFFICE_SEATS
 
   return (
+    // 外層：不加 overflow-hidden，讓狗狗不被裁切
     <div
-      className="relative w-full rounded-xl overflow-hidden bg-black"
+      className="relative w-full rounded-xl bg-black"
       style={{ aspectRatio: '1 / 1' }}
     >
-      {/* 背景圖 */}
-      <img
-        src={bgImage}
-        alt="場景"
-        className="w-full h-full object-contain"
-        style={{ imageRendering: 'pixelated' }}
-        onLoad={() => setImgLoaded(true)}
-      />
+      {/* 背景圖層：單獨加 overflow-hidden 維持圓角裁切 */}
+      <div className="absolute inset-0 rounded-xl overflow-hidden">
+        <img
+          src={bgImage}
+          alt="場景"
+          className="w-full h-full object-contain"
+          style={{ imageRendering: 'pixelated' }}
+          onLoad={() => setImgLoaded(true)}
+        />
+      </div>
 
-      {/* 狗狗員工 */}
+      {/* 狗狗員工層：在背景之上，不受 overflow-hidden 限制 */}
       {imgLoaded && members.map((member, i) => {
         const seat = seats[i % seats.length]
         const cfg = STATUS_CONFIG[member.status] ?? STATUS_CONFIG.offline
@@ -95,6 +98,7 @@ export default function OfficeCanvas({
               top: `${seat.y}%`,
               transform: 'translate(-50%, -100%)',
               pointerEvents: 'none',
+              zIndex: 10,
             }}
           >
             {/* 名字標籤 */}
@@ -113,16 +117,14 @@ export default function OfficeCanvas({
               {member.name}
             </div>
 
-            {/* 狗狗 Sprite */}
+            {/* 狗狗 Sprite — 直接顯示 GIF，不用 objectFit */}
             <img
               src={sprite}
               alt={member.name}
               style={{
-                width: '48px',
-                height: '48px',
+                width: '56px',
+                height: '56px',
                 imageRendering: 'pixelated',
-                objectFit: 'none',
-                objectPosition: '0 0',
               }}
             />
           </div>
