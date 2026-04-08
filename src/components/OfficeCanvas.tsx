@@ -17,18 +17,32 @@ export interface OfficeMember {
   character: CharacterAppearance | null
 }
 
-// ── 可行走地板範圍（等距視角，百分比）────────────────────────────────────
-const OFFICE_BOUNDS = { minX: 15, maxX: 74, minY: 54, maxY: 77 }
-const REST_BOUNDS   = { minX: 15, maxX: 74, minY: 50, maxY: 75 }
+// ─────────────────────────────────────────────────────────────────────────────
+// 俯視地圖：可行走範圍（百分比）
+// 辦公室圖：桌子之間的走廊、中央空地
+const OFFICE_BOUNDS = { minX: 14, maxX: 86, minY: 14, maxY: 88 }
 
-// ── 初始出現位置 ──────────────────────────────────────────────────────────
+// 休息區（海灘）圖：中央沙地、傢具間空間
+const REST_BOUNDS = { minX: 22, maxX: 78, minY: 22, maxY: 84 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 初始出現位置（對應各自地圖的桌子 / 躺椅位置）
 const OFFICE_STARTS = [
-  { x: 27, y: 70 }, { x: 42, y: 64 }, { x: 57, y: 68 },
-  { x: 65, y: 58 }, { x: 34, y: 57 }, { x: 60, y: 56 },
+  { x: 42, y: 28 }, // 上方桌排左
+  { x: 62, y: 28 }, // 上方桌排右
+  { x: 75, y: 55 }, // 右側桌群
+  { x: 25, y: 68 }, // 左下桌
+  { x: 62, y: 72 }, // 右下桌
+  { x: 48, y: 82 }, // 底部走道
 ]
+
 const REST_STARTS = [
-  { x: 35, y: 65 }, { x: 52, y: 60 }, { x: 65, y: 65 },
-  { x: 24, y: 72 }, { x: 50, y: 72 }, { x: 68, y: 72 },
+  { x: 35, y: 32 }, // 上方躺椅區左
+  { x: 55, y: 32 }, // 上方躺椅區右
+  { x: 70, y: 32 }, // 上方躺椅區最右
+  { x: 30, y: 68 }, // 餐桌區
+  { x: 65, y: 70 }, // 吧台區
+  { x: 50, y: 55 }, // 中央沙地
 ]
 
 const STATUS_CONFIG = {
@@ -38,7 +52,7 @@ const STATUS_CONFIG = {
   offline: { color: '#6b7280' },
 }
 
-// 狗狗移動速度：% / 秒
+// 移動速度：% per second
 const SPEED = 10
 
 function rand(min: number, max: number) {
@@ -46,9 +60,9 @@ function rand(min: number, max: number) {
 }
 
 interface DogState {
-  x: number         // 當前位置（或起點）
+  x: number
   y: number
-  targetX: number   // 目標位置
+  targetX: number
   targetY: number
   isMoving: boolean
   facingLeft: boolean
@@ -66,16 +80,16 @@ export default function OfficeCanvas({
   bgImage = '/office-bg.jpg',
   emptyText = '目前沒有人在這裡',
 }: OfficeCanvasProps) {
-  const [imgLoaded, setImgLoaded]     = useState(false)
+  const [imgLoaded, setImgLoaded]           = useState(false)
   const [containerWidth, setContainerWidth] = useState(400)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [dogs, setDogs]               = useState<DogState[]>([])
-  const dogsRef                       = useRef<DogState[]>([])   // 讓 timeout 讀到最新位置
-  const timeoutsRef                   = useRef<ReturnType<typeof setTimeout>[]>([])
+  const [dogs, setDogs]     = useState<DogState[]>([])
+  const dogsRef             = useRef<DogState[]>([])
+  const timeoutsRef         = useRef<ReturnType<typeof setTimeout>[]>([])
 
-  const isRest = bgImage.includes('rest')
-  const bounds = isRest ? REST_BOUNDS : OFFICE_BOUNDS
-  const starts = isRest ? REST_STARTS : OFFICE_STARTS
+  const isRest  = bgImage.includes('rest')
+  const bounds  = isRest ? REST_BOUNDS  : OFFICE_BOUNDS
+  const starts  = isRest ? REST_STARTS  : OFFICE_STARTS
 
   // 容器寬度偵測
   useEffect(() => {
@@ -87,7 +101,8 @@ export default function OfficeCanvas({
     return () => obs.disconnect()
   }, [])
 
-  const spriteSize = Math.round(containerWidth * 0.07)
+  // 俯視地圖：固定 sprite 大小（不需深度縮放）
+  const spriteSize = Math.round(containerWidth * 0.065)
 
   // 初始化狗狗
   useEffect(() => {
@@ -101,15 +116,14 @@ export default function OfficeCanvas({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [members.length, isRest])
 
-  // 讓單隻狗移動 → 等待 → 再移動
+  // 單隻狗的移動排程
   function scheduleDog(index: number, waitMs: number) {
-    if (isRest) return  // 休息區不走動
+    if (isRest) return // 休息區靜止
 
     const t = setTimeout(() => {
       const current = dogsRef.current[index]
       if (!current) return
 
-      // 計算目標 & 距離
       const targetX = rand(bounds.minX, bounds.maxX)
       const targetY = rand(bounds.minY, bounds.maxY)
       const dx = targetX - current.x
@@ -117,25 +131,18 @@ export default function OfficeCanvas({
       const dist = Math.sqrt(dx * dx + dy * dy)
       const transitionMs = Math.max(800, Math.round((dist / SPEED) * 1000))
 
-      // 更新到移動狀態
       const moving: DogState = {
-        ...current,
-        targetX, targetY,
-        isMoving: true,
-        facingLeft: dx < 0,
-        transitionMs,
+        ...current, targetX, targetY,
+        isMoving: true, facingLeft: dx < 0, transitionMs,
       }
       dogsRef.current = dogsRef.current.map((d, i) => i === index ? moving : d)
       setDogs([...dogsRef.current])
 
-      // transition 結束後切回 idle，並排下一次
       const arrive = setTimeout(() => {
         const arrived: DogState = {
           ...dogsRef.current[index],
-          x: targetX,
-          y: targetY,
-          isMoving: false,
-          transitionMs: 0,
+          x: targetX, y: targetY,
+          isMoving: false, transitionMs: 0,
         }
         dogsRef.current = dogsRef.current.map((d, i) => i === index ? arrived : d)
         setDogs([...dogsRef.current])
@@ -148,7 +155,7 @@ export default function OfficeCanvas({
     timeoutsRef.current.push(t)
   }
 
-  // 圖片載入後啟動
+  // 圖片載入後啟動走動
   useEffect(() => {
     if (!imgLoaded || members.length === 0) return
     timeoutsRef.current.forEach(clearTimeout)
@@ -158,7 +165,7 @@ export default function OfficeCanvas({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imgLoaded, members.length, isRest])
 
-  // 深度排序（靠前的蓋在後面角色上）
+  // 俯視圖依 y 值排序（靠下的角色蓋在靠上的上面）
   const sorted = dogs
     .map((d, i) => ({ d, i, member: members[i] }))
     .filter(x => x.member)
@@ -168,7 +175,7 @@ export default function OfficeCanvas({
     <div
       ref={containerRef}
       className="relative w-full rounded-xl bg-black"
-      style={{ aspectRatio: '4 / 3' }}
+      style={{ aspectRatio: '1 / 1' }} // 這兩張圖都是正方形
     >
       {/* 背景圖 */}
       <div className="absolute inset-0 rounded-xl overflow-hidden">
@@ -183,7 +190,7 @@ export default function OfficeCanvas({
 
       {/* 狗狗員工 */}
       {imgLoaded && sorted.map(({ d, member }, renderIdx) => {
-        const cfg = STATUS_CONFIG[member.status] ?? STATUS_CONFIG.offline
+        const cfg    = STATUS_CONFIG[member.status] ?? STATUS_CONFIG.offline
         const sprite = isRest
           ? '/sprites/dog-rest.gif'
           : d.isMoving ? '/sprites/dog-walk.gif' : '/sprites/dog-idle.gif'
@@ -193,8 +200,6 @@ export default function OfficeCanvas({
             key={member.id}
             className="absolute flex flex-col items-center select-none"
             style={{
-              // 移動中：目標位置（CSS transition 負責平滑過渡）
-              // 停止時：當前位置
               left: `${d.isMoving ? d.targetX : d.x}%`,
               top:  `${d.isMoving ? d.targetY : d.y}%`,
               transform: 'translate(-50%, -100%)',
@@ -227,7 +232,7 @@ export default function OfficeCanvas({
               {member.name}
             </div>
 
-            {/* 狗狗 Sprite（依移動方向水平翻轉）*/}
+            {/* 狗狗 Sprite */}
             <img
               src={sprite}
               alt={member.name}
