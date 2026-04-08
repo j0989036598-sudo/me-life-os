@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useGame } from '@/lib/GameContext'
-import { supabase, getAllProfiles, getAllAssignedTasks, createAssignedTask, updateAssignedTaskStatus, deleteAssignedTask, upsertGameStats, getGameStats, type Profile, type AssignedTask } from '@/lib/supabase'
+import { supabase, getAllProfiles, getAllAssignedTasks, createAssignedTask, updateAssignedTaskStatus, deleteAssignedTask, upsertGameStats, getGameStats, createNotification, type Profile, type AssignedTask } from '@/lib/supabase'
 
 interface TaskDelegatePageProps {
   currentUserId: string
@@ -83,6 +83,14 @@ export default function TaskDelegatePage({ currentUserId, currentUserName, curre
     })
     setSubmitting(false)
     if (result) {
+      // 發送通知給被指派者
+      createNotification({
+        user_id: assignTo,
+        type: 'task_assigned',
+        title: '📋 新任務指派',
+        message: `${currentUserName} 指派了「${title.trim()}」給你`,
+        link_to: 'task-delegate',
+      })
       setMsg({ type: 'success', text: `✅ 已指派「${title}」給 ${targetProfile?.name}` })
       setTitle('')
       setDesc('')
@@ -102,16 +110,26 @@ export default function TaskDelegatePage({ currentUserId, currentUserName, curre
     // 完成任務時，更新被指派者的 game stats（加 XP）
     if (status === 'completed') {
       const task = tasks.find(t => t.id === taskId)
-      if (task && task.xp_reward > 0) {
-        const stats = await getGameStats(task.assigned_to)
-        if (stats) {
-          let newXp = stats.xp + task.xp_reward
-          let newLevel = stats.level
-          let newXpMax = stats.xp_max
-          let newSp = stats.sp
-          while (newXp >= newXpMax) { newXp -= newXpMax; newLevel++; newXpMax = Math.floor(newXpMax * 1.2); newSp += 5 }
-          await upsertGameStats({ ...stats, xp: newXp, level: newLevel, xp_max: newXpMax, sp: newSp, gold: stats.gold + Math.floor(task.xp_reward / 2) })
+      if (task) {
+        if (task.xp_reward > 0) {
+          const stats = await getGameStats(task.assigned_to)
+          if (stats) {
+            let newXp = stats.xp + task.xp_reward
+            let newLevel = stats.level
+            let newXpMax = stats.xp_max
+            let newSp = stats.sp
+            while (newXp >= newXpMax) { newXp -= newXpMax; newLevel++; newXpMax = Math.floor(newXpMax * 1.2); newSp += 5 }
+            await upsertGameStats({ ...stats, xp: newXp, level: newLevel, xp_max: newXpMax, sp: newSp, gold: stats.gold + Math.floor(task.xp_reward / 2) })
+          }
         }
+        // 通知指派者任務已完成
+        createNotification({
+          user_id: task.assigned_by,
+          type: 'task_completed',
+          title: '✅ 任務完成',
+          message: `${task.assigned_to_name} 完成了「${task.title}」`,
+          link_to: 'task-delegate',
+        })
       }
     }
     getAllAssignedTasks().then(setTasks)

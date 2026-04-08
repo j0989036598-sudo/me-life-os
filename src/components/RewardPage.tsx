@@ -11,6 +11,9 @@ import {
   getRedemptions,
   createRedemption,
   reviewRedemption,
+  createNotification,
+  createNotificationBatch,
+  getBossAndManagerIds,
   type Profile,
   type UserRole,
   type RewardItem,
@@ -113,6 +116,19 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
       setSelectedReward(null)
       setConfirmingRedemption(false)
       await loadRedemptions()
+
+      // 通知老闆/主管有兌換申請
+      const managerIds = await getBossAndManagerIds()
+      const otherManagers = managerIds.filter(id => id !== profile.user_id)
+      if (otherManagers.length > 0) {
+        createNotificationBatch(otherManagers, {
+          type: 'redemption_request',
+          title: '🎁 新兌換申請',
+          message: `${profile.name} 申請兌換「${reward.name}」`,
+          link_to: 'rewards',
+        })
+      }
+
       setTimeout(() => setRedemptionMsg(null), 3000)
     } else {
       setRedemptionMsg({ type: 'error', text: '兌換失敗' })
@@ -162,6 +178,19 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
   const handleReviewRedemption = async (redemptionId: string, status: 'approved' | 'rejected') => {
     const success = await reviewRedemption(redemptionId, status, profile.name)
     if (success) {
+      // 通知申請者審核結果
+      const redemption = redemptions.find(r => r.id === redemptionId)
+      if (redemption) {
+        createNotification({
+          user_id: redemption.user_id,
+          type: status === 'approved' ? 'redemption_approved' : 'redemption_rejected',
+          title: status === 'approved' ? '✅ 兌換已批准' : '❌ 兌換已拒絕',
+          message: status === 'approved'
+            ? `你的「${redemption.reward_name}」兌換已被 ${profile.name} 批准！`
+            : `你的「${redemption.reward_name}」兌換已被 ${profile.name} 拒絕`,
+          link_to: 'rewards',
+        })
+      }
       await loadRedemptions()
     }
   }

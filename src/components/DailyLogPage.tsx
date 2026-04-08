@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useGame } from '@/lib/GameContext'
-import { createDailyLog, getUserDailyLogs, getDailyLogsByDate, type Profile, type DailyLog, type UserRole } from '@/lib/supabase'
+import { createDailyLog, getUserDailyLogs, getDailyLogsByDate, createNotificationBatch, getBossAndManagerIds, type Profile, type DailyLog, type UserRole } from '@/lib/supabase'
 
 export default function DailyLogPage({ role, profile }: { role?: UserRole; profile?: Profile }) {
   const { addXp, addGold } = useGame()
@@ -61,6 +61,17 @@ export default function DailyLogPage({ role, profile }: { role?: UserRole; profi
         addGold(15)
         setSubmitted(true)
         setAlreadySubmittedToday(true)
+        // 通知老闆/主管有新日誌
+        const managerIds = await getBossAndManagerIds()
+        const otherManagers = managerIds.filter(id => id !== profile.user_id)
+        if (otherManagers.length > 0) {
+          createNotificationBatch(otherManagers, {
+            type: 'system',
+            title: '📖 新日誌提交',
+            message: `${profile.name} 提交了今日賢者之書 ${mood}`,
+            link_to: 'team-logs',
+          })
+        }
         // 刷新歷史
         const logs = await getUserDailyLogs(profile.user_id)
         setHistoryLogs(logs)
