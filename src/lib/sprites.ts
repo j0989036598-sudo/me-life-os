@@ -46,6 +46,15 @@ export const SPRITE_REGISTRY: SpriteDefinition[] = [
     walkGif: '/sprites/Sprite-0003.gif',
     restGif: '/sprites/Sprite-0017.gif',
   },
+  // ── 特殊角色 ────────────────────────────────────────────────────────────────
+  {
+    id: 'mafia-bold',
+    name: '黑幫老大',
+    description: '低調行事，但沒人敢惹',
+    idleGif: '/sprites/mafia-idle.gif',
+    walkGif: '/sprites/mafia-walk.gif',
+    restGif: '/sprites/mafia-rest.gif',
+  },
   // ── 人類系列 ────────────────────────────────────────────────────────────────
   {
     id: 'dwarf',
