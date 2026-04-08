@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { updateProfile, resetAllUserData, type Profile } from '@/lib/supabase'
 import { useGame } from '@/lib/GameContext'
+import { useTheme } from '@/lib/ThemeContext'
 
 const AVATAR_OPTIONS = ['⚔️', '🛡️', '🏹', '🪄', '🔮', '🦅', '🐉', '🌟', '⚡', '🔥', '🌊', '🌸', '🎯', '🏆', '💎', '🌙']
 
@@ -17,6 +18,7 @@ interface SettingsPageProps {
 
 export default function SettingsPage({ profile, onProfileUpdate }: SettingsPageProps) {
   const { state, resetState } = useGame()
+  const { theme, setTheme } = useTheme()
   const [name, setName] = useState(profile.name)
   const [avatar, setAvatar] = useState(profile.avatar)
   const [jobTitle, setJobTitle] = useState(profile.job_title)
@@ -176,6 +178,37 @@ export default function SettingsPage({ profile, onProfileUpdate }: SettingsPageP
               <option key={d} value={d}>{d}</option>
             ))}
           </select>
+        </div>
+      </div>
+
+      {/* 外觀設定 */}
+      <div className="glass rounded-2xl p-6 mb-4">
+        <h3 className="font-bold mb-4">🎨 外觀設定</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => setTheme('dark')}
+            className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+              theme === 'dark'
+                ? 'border-purple-500 bg-purple-500/10 shadow-lg shadow-purple-500/10'
+                : 'border-white/10 hover:border-white/20'
+            }`}
+          >
+            <span className="text-2xl">🌙</span>
+            <span className="text-sm font-medium">深色模式</span>
+            {theme === 'dark' && <span className="text-[10px] text-purple-400">使用中</span>}
+          </button>
+          <button
+            onClick={() => setTheme('light')}
+            className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+              theme === 'light'
+                ? 'border-purple-500 bg-purple-500/10 shadow-lg shadow-purple-500/10'
+                : 'border-white/10 hover:border-white/20'
+            }`}
+          >
+            <span className="text-2xl">☀️</span>
+            <span className="text-sm font-medium">淺色模式</span>
+            {theme === 'light' && <span className="text-[10px] text-purple-400">使用中</span>}
+          </button>
         </div>
       </div>
 

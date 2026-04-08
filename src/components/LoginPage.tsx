@@ -95,7 +95,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-dark-900 flex items-center justify-center">
         <div className="text-center"><div className="text-4xl mb-4 animate-pulse">⚔️</div><p className="text-gray-400 text-sm">載入中...</p></div>
       </div>
     )
@@ -103,12 +103,12 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
   if (showUnauthorized) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-dark-900 flex items-center justify-center p-4">
         <div className="w-full max-w-sm text-center">
           <div className="text-5xl mb-4">🚫</div>
           <h2 className="text-xl font-bold text-white mb-2">尚未獲得授權</h2>
           <p className="text-gray-400 text-sm mb-6 leading-relaxed">你的帳號尚未被加入系統。<br />請聯繫老闆將你的 Gmail 加入白名單後再試。</p>
-          <div className="bg-gray-900 rounded-xl px-4 py-3 mb-6 text-sm text-gray-500 break-all">{pendingEmail}</div>
+          <div className="bg-dark-800 rounded-xl px-4 py-3 mb-6 text-sm text-gray-500 break-all">{pendingEmail}</div>
           <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-red-400 transition-colors underline underline-offset-2">切換帳號 / 登出</button>
         </div>
       </div>
@@ -117,20 +117,20 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
   if (showCreateForm) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-dark-900 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="text-5xl mb-3">{formAvatar}</div>
             <h1 className="text-2xl font-bold text-white">建立你的角色</h1>
             <p className="text-gray-400 text-sm mt-1">{pendingEmail}</p>
           </div>
-          <div className="bg-gray-900 rounded-2xl p-6 space-y-5">
+          <div className="bg-dark-800 rounded-2xl p-6 space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">選擇頭像</label>
               <div className="grid grid-cols-6 gap-2">
                 {AVATAR_OPTIONS.map((emoji) => (
                   <button key={emoji} onClick={() => setFormAvatar(emoji)} className={`text-2xl p-2 rounded-lg transition-all ${
-                    formAvatar === emoji ? 'bg-indigo-600 ring-2 ring-indigo-400 scale-110' : 'bg-gray-800 hover:bg-gray-700'
+                    formAvatar === emoji ? 'bg-indigo-600 ring-2 ring-indigo-400 scale-110' : 'bg-dark-700 hover:bg-dark-600'
                   }`}>{emoji}</button>
                 ))}
               </div>
@@ -138,17 +138,17 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">姓名 <span className="text-red-400">*</span></label>
               <input type="text" value={formName} onChange={e => setFormName(e.target.value)} placeholder="例：王小明"
-                className="w-full bg-gray-800 text-white rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                className="w-full bg-dark-700 text-white rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">職位 <span className="text-red-400">*</span></label>
               <input type="text" value={formJobTitle} onChange={e => setFormJobTitle(e.target.value)} placeholder="例：社群行銷專員"
-                className="w-full bg-gray-800 text-white rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                className="w-full bg-dark-700 text-white rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">部門</label>
               <select value={formDepartment} onChange={e => setFormDepartment(e.target.value)}
-                className="w-full bg-gray-800 text-white rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                className="w-full bg-dark-700 text-white rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                 {DEPARTMENT_OPTIONS.map(dept => <option key={dept} value={dept}>{dept}</option>)}
               </select>
             </div>
@@ -165,12 +165,12 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-dark-900 flex items-center justify-center p-4">
       <div className="w-full max-w-sm text-center">
         <div className="text-6xl mb-4">⚔️</div>
         <h1 className="text-3xl font-bold text-white mb-1">穎流行銷</h1>
         <p className="text-gray-500 text-sm mb-10">內部管理系統</p>
-        <div className="bg-gray-900 rounded-2xl p-6">
+        <div className="bg-dark-800 rounded-2xl p-6">
           <p className="text-gray-400 text-sm mb-6">使用公司 Google 帳號登入</p>
           <button onClick={handleGoogleLogin} disabled={googleLoading}
             className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 disabled:bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-colors">
