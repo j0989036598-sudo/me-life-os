@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useGame } from '@/lib/GameContext'
+import OfficeCanvas, { type OfficeMember, type CharacterAppearance } from './OfficeCanvas'
+import CharacterCreator from './CharacterCreator'
 
 const SEASON_PASS = {
   season: 'S1',
@@ -16,7 +18,7 @@ const SEASON_PASS = {
   ],
 }
 import { UserRole } from '@/app/page'
-import { supabase, getAllProfiles, getAssignedTasksForUser, getUserDailyLogs, getDailyLogsByDate, type Profile, type AssignedTask, type DailyLog } from '@/lib/supabase'
+import { supabase, getAllProfiles, getAssignedTasksForUser, getUserDailyLogs, getDailyLogsByDate, getAllCharacterProfiles, getAllPresence, getCharacterProfile, upsertCharacterProfile, updatePresence, type Profile, type AssignedTask, type DailyLog, type CharacterProfile, type UserPresence } from '@/lib/supabase'
 
 export default function HomePage({ user, role, userId }: { user?: { avatar: string; name: string; level: number; title: string }; role?: UserRole; userId?: string }) {
   const { state, addGold, addSp, addXp, addDiamond } = useGame()
@@ -25,6 +27,9 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
   const [myLogs, setMyLogs] = useState<DailyLog[]>([])
   const [todayLogs, setTodayLogs] = useState<DailyLog[]>([])
   const [claimedTiers, setClaimedTiers] = useState<Set<number>>(new Set())
+  const [officeMembers, setOfficeMembers] = useState<OfficeMember[]>([])
+  const [showCharCreator, setShowCharCreator] = useState(false)
+  const [hasCharacter, setHasCharacter] = useState(true) // assume true until checked
   const today = new Date()
   const days = ['日', '一', '二', '三', '四', '五', '六']
   const dateStr = `${today.getMonth() + 1}/${today.getDate()}（${days[today.getDay()]}）`
@@ -47,6 +52,86 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
       return () => { supabase.removeChannel(channel) }
     }
   }, [userId, isManager, todayStr])
+
+  // ═══ 辦公室可視化：載入角色 + 狀態 ═══
+  const loadOfficeData = useCallback(async () => {
+    if (!userId) return
+    const [allProfiles, allChars, allPresence] = await Promise.all([
+      getAllProfiles(),
+      getAllCharacterProfiles(),
+      getAllPresence(),
+    ])
+    const charMap = new Map(allChars.map(c => [c.user_id, c]))
+    const presMap = new Map(allPresence.map(p => [p.user_id, p]))
+
+    const members: OfficeMember[] = allProfiles.map(p => {
+      const char = charMap.get(p.user_id)
+      const pres = presMap.get(p.user_id)
+      return {
+        id: p.user_id,
+        name: p.name || '未命名',
+        status: pres?.status || 'offline',
+        character: char ? {
+          hairStyle: char.hair_style,
+          hairColor: char.hair_color,
+          skinTone: char.skin_tone,
+          outfitColor: char.outfit_color,
+          accessory: char.accessory,
+        } : null,
+      }
+    })
+    setOfficeMembers(members)
+  }, [userId])
+
+  useEffect(() => {
+    if (!userId) return
+    // 檢查自己有沒有角色
+    getCharacterProfile(userId).then(cp => {
+      if (!cp) { setHasCharacter(false); setShowCharCreator(true) }
+      else setHasCharacter(true)
+    })
+    // 設定自己為上線
+    updatePresence(userId, 'online')
+    // 載入辦公室資料
+    loadOfficeData()
+
+    // Realtime 訂閱角色和狀態變化
+    const officeChannel = supabase.channel('office-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'character_profiles' }, () => loadOfficeData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_presence' }, () => loadOfficeData())
+      .subscribe()
+
+    // 定期更新自己的在線狀態 (每 60 秒)
+    const presenceInterval = setInterval(() => {
+      updatePresence(userId, 'online')
+    }, 60000)
+
+    // 離開時設定離線
+    const handleBeforeUnload = () => { updatePresence(userId, 'offline') }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    return () => {
+      supabase.removeChannel(officeChannel)
+      clearInterval(presenceInterval)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      updatePresence(userId, 'offline')
+    }
+  }, [userId, loadOfficeData])
+
+  const handleSaveCharacter = async (char: CharacterAppearance) => {
+    if (!userId) return
+    await upsertCharacterProfile(userId, {
+      hair_style: char.hairStyle,
+      hair_color: char.hairColor,
+      skin_tone: char.skinTone,
+      outfit_color: char.outfitColor,
+      accessory: char.accessory,
+    })
+    setHasCharacter(true)
+    setShowCharCreator(false)
+    updatePresence(userId, 'online')
+    loadOfficeData()
+  }
 
   const totalMembers = profiles.length
   const todayCheckedIn = new Set(todayLogs.map(l => l.user_id))
@@ -82,6 +167,32 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
 
   return (
     <div className="animate-fade space-y-6">
+      {/* ── 角色創建彈窗 ── */}
+      {showCharCreator && (
+        <CharacterCreator
+          onSave={handleSaveCharacter}
+          onCancel={hasCharacter ? () => setShowCharCreator(false) : undefined}
+          isNewUser={!hasCharacter}
+        />
+      )}
+
+      {/* ── 辦公室可視化 ── */}
+      <div className="glass rounded-2xl p-4 border border-white/10">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🏢</span>
+            <h3 className="font-bold text-sm text-purple-300">穎流行銷 · 虛擬辦公室</h3>
+          </div>
+          <button
+            onClick={() => setShowCharCreator(true)}
+            className="text-xs text-gray-400 hover:text-purple-400 transition-colors px-2 py-1 rounded border border-white/10 hover:border-purple-500/30"
+          >
+            ✏️ 編輯角色
+          </button>
+        </div>
+        <OfficeCanvas members={officeMembers} />
+      </div>
+
       {/* ── 管理者專屬 ── */}
       {isManager && totalMembers > 0 && (
         <div className="glass rounded-2xl p-5 border border-purple-500/20 bg-gradient-to-r from-purple-500/5 to-amber-500/5">
