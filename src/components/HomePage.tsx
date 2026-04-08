@@ -176,21 +176,47 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
         />
       )}
 
-      {/* ── 辦公室可視化 ── */}
-      <div className="glass rounded-2xl p-4 border border-white/10 md:w-1/2">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🏢</span>
-            <h3 className="font-bold text-sm text-purple-300">穎流行銷 · 虛擬辦公室</h3>
+      {/* ── 辦公室 + 休息區 ── */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* 左：辦公室（在線 / 工作中） */}
+        <div className="glass rounded-2xl p-3 border border-white/10">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <span>🏢</span>
+              <h3 className="font-bold text-xs text-purple-300">辦公室</h3>
+              <span className="text-xs text-gray-500">
+                {officeMembers.filter(m => m.status !== 'offline').length} 人
+              </span>
+            </div>
+            <button
+              onClick={() => setShowCharCreator(true)}
+              className="text-xs text-gray-500 hover:text-purple-400 transition-colors"
+            >
+              ✏️
+            </button>
           </div>
-          <button
-            onClick={() => setShowCharCreator(true)}
-            className="text-xs text-gray-400 hover:text-purple-400 transition-colors px-2 py-1 rounded border border-white/10 hover:border-purple-500/30"
-          >
-            ✏️ 編輯角色
-          </button>
+          <OfficeCanvas
+            members={officeMembers.filter(m => m.status !== 'offline')}
+            bgImage="/office-bg.jpg"
+            emptyText="目前沒有人在工作"
+          />
         </div>
-        <OfficeCanvas members={officeMembers} />
+
+        {/* 右：休息區（離線） */}
+        <div className="glass rounded-2xl p-3 border border-white/10">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span>🛋️</span>
+            <h3 className="font-bold text-xs text-blue-300">休息區</h3>
+            <span className="text-xs text-gray-500">
+              {officeMembers.filter(m => m.status === 'offline').length} 人
+            </span>
+          </div>
+          <OfficeCanvas
+            members={officeMembers.filter(m => m.status === 'offline')}
+            bgImage="/rest-bg.jpg"
+            emptyText="大家都在工作！"
+          />
+        </div>
       </div>
 
       {/* ── 管理者專屬 ── */}
