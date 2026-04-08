@@ -1,13 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { getSpriteById } from '@/lib/sprites'
 
 export interface CharacterAppearance {
-  hairStyle: number
-  hairColor: string
-  skinTone: number
-  outfitColor: string
-  accessory: number
+  spriteId: string  // 對應 sprites.ts 裡的 SpriteDefinition.id
 }
 
 export interface OfficeMember {
@@ -236,10 +233,11 @@ export default function OfficeCanvas({
       </div>
 
       {imgLoaded && sorted.map(({ d, member }, renderIdx) => {
-        const cfg    = STATUS_CONFIG[member.status] ?? STATUS_CONFIG.offline
-        const sprite = isRest
-          ? '/sprites/dog-rest.gif'
-          : d.isMoving ? '/sprites/dog-walk.gif' : '/sprites/dog-idle.gif'
+        const cfg        = STATUS_CONFIG[member.status] ?? STATUS_CONFIG.offline
+        const spriteData = getSpriteById(member.character?.spriteId)
+        const sprite     = isRest
+          ? spriteData.restGif
+          : d.isMoving ? spriteData.walkGif : spriteData.idleGif
 
         return (
           <div
