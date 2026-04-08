@@ -65,7 +65,7 @@ export function DesktopSidebar({ page, setPage, user, role, allowedPages, onLogo
   const hasDashboard = allowedPages.includes('dashboard')
 
   return (
-    <div className="hidden md:flex w-64 min-h-screen bg-dark-800 border-r border-white/5 p-4 flex-col fixed left-0 top-0 z-20">
+    <div className="hidden md:flex w-64 h-screen bg-dark-800 border-r border-white/5 p-4 flex-col fixed left-0 top-0 z-20">
       <div className="flex items-center gap-3 mb-5 px-2">
         <span className="text-2xl">⚔️</span>
         <div>
