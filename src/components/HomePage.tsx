@@ -177,7 +177,7 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
       )}
 
       {/* ── 辦公室可視化 ── */}
-      <div className="glass rounded-2xl p-4 border border-white/10">
+      <div className="glass rounded-2xl p-4 border border-white/10 md:w-1/2">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="text-lg">🏢</span>

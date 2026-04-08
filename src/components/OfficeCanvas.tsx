@@ -63,7 +63,7 @@ export default function OfficeCanvas({ members }: OfficeCanvasProps) {
       </div>
 
       {/* 辦公室圖 + 名字標籤 */}
-      <div className="relative w-full rounded-xl overflow-hidden bg-black" style={{ aspectRatio: '1 / 1' }}>
+      <div className="relative w-full rounded-xl overflow-hidden bg-black" style={{ height: '240px' }}>
 
         <img
           src="/office-bg.jpg"
