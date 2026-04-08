@@ -90,24 +90,24 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
             <h3 className="font-pixel text-xs text-gold-400">
               {role === 'boss' ? '老闆視角 · 全公司今日狀態' : '主管視角 · 團隊今日狀態'}
             </h3>
-            <span className="ml-auto text-xs text-text-muted">{dateStr}</span>
+            <span className="ml-auto text-xs text-gray-500">{dateStr}</span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center">
               <div className="text-2xl font-black text-rpg-green">{totalMembers}</div>
-              <div className="text-xs text-text-muted mt-1">團隊成員</div>
+              <div className="text-xs text-gray-500 mt-1">團隊成員</div>
             </div>
             <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center">
               <div className="text-2xl font-black text-rpg-cyan">{todayCheckedIn.size}</div>
-              <div className="text-xs text-text-muted mt-1">今日打卡</div>
+              <div className="text-xs text-gray-500 mt-1">今日打卡</div>
             </div>
             <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center">
               <div className="text-2xl font-black text-rpg-red">{totalMembers - todayCheckedIn.size}</div>
-              <div className="text-xs text-text-muted mt-1">未打卡</div>
+              <div className="text-xs text-gray-500 mt-1">未打卡</div>
             </div>
             <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center">
               <div className="text-2xl font-black text-rpg-gold">{totalMembers > 0 ? Math.round((todayCheckedIn.size / totalMembers) * 100) : 0}%</div>
-              <div className="text-xs text-text-muted mt-1">打卡率</div>
+              <div className="text-xs text-gray-500 mt-1">打卡率</div>
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -137,25 +137,25 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-2xl font-black text-text-primary">{user?.name}</h1>
+              <h1 className="text-2xl font-black text-white">{user?.name}</h1>
               <span style={{ background: 'var(--rpg-purple)', border: '2px solid var(--wood-dark)' }} className="text-xs text-white px-2 py-0.5">Lv.{state.level}</span>
               <span className="text-rpg-red text-sm font-bold">🔥 {state.streak} 天</span>
             </div>
-            <p className="text-text-secondary text-sm mb-4">
+            <p className="text-gray-400 text-sm mb-4">
               {isManager ? <span className="text-rpg-gold text-xs">{role === 'boss' ? '👑 最高指揮官' : '🛡️ 隊長'} · 今天是 {dateStr}</span> : `今天是 ${dateStr}`}
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center">
-                <div className="text-xs text-text-muted mb-1">XP</div>
+                <div className="text-xs text-gray-500 mb-1">XP</div>
                 <div className="text-lg font-bold text-xp-400">✦ {state.xp.toLocaleString()}</div>
                 <div style={{ background: 'var(--bg-700)', border: '2px solid var(--wood-dark)' }} className="w-full h-1.5 mt-1.5 overflow-hidden">
-                  <div style={{ background: 'var(--rpg-cyan)' }} className="h-full progress-bar" style={{ width: `${(state.xp / state.xpMax) * 100}%` }} />
+                  <div className="h-full progress-bar" style={{ background: 'var(--rpg-cyan)', width: `${(state.xp / state.xpMax) * 100}%` }} />
                 </div>
-                <div className="text-[10px] text-text-muted mt-0.5">{state.xp}/{state.xpMax}</div>
+                <div className="text-[10px] text-gray-500 mt-0.5">{state.xp}/{state.xpMax}</div>
               </div>
-              <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center"><div className="text-xs text-text-muted mb-1">SP</div><div className="text-lg font-bold text-sp-400">🔮 {state.sp}</div></div>
-              <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center"><div className="text-xs text-text-muted mb-1">Gold</div><div className="text-lg font-bold text-gold-400">🪙 {state.gold.toLocaleString()}</div></div>
-              <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center"><div className="text-xs text-text-muted mb-1">鑽石</div><div className="text-lg font-bold text-rpg-cyan">💎 {state.diamond}</div></div>
+              <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center"><div className="text-xs text-gray-500 mb-1">SP</div><div className="text-lg font-bold text-sp-400">🔮 {state.sp}</div></div>
+              <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center"><div className="text-xs text-gray-500 mb-1">Gold</div><div className="text-lg font-bold text-gold-400">🪙 {state.gold.toLocaleString()}</div></div>
+              <div style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="p-3 text-center"><div className="text-xs text-gray-500 mb-1">鑽石</div><div className="text-lg font-bold text-rpg-cyan">💎 {state.diamond}</div></div>
             </div>
           </div>
         </div>
@@ -169,10 +169,10 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
             <h3 className="font-pixel text-xs text-gold-400">Season Pass {SEASON_PASS.season}</h3>
             <span style={{ background: 'var(--rpg-gold)', color: 'var(--wood-darkest)' }} className="text-xs px-2 py-0.5 font-bold">{SEASON_PASS.name}</span>
           </div>
-          <span className="text-xs text-text-muted">{state.seasonXp.toLocaleString()} / {state.seasonXpMax.toLocaleString()} 賽季XP</span>
+          <span className="text-xs text-gray-500">{state.seasonXp.toLocaleString()} / {state.seasonXpMax.toLocaleString()} 賽季XP</span>
         </div>
         <div style={{ background: 'var(--bg-700)', border: '2px solid var(--wood-dark)' }} className="w-full h-2 overflow-hidden mb-4 relative">
-          <div style={{ background: 'var(--rpg-gold)' }} className="h-full progress-bar" style={{ width: `${(state.seasonXp / state.seasonXpMax) * 100}%` }} />
+          <div className="h-full progress-bar" style={{ background: 'var(--rpg-gold)', width: `${(state.seasonXp / state.seasonXpMax) * 100}%` }} />
           <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white pointer-events-none">
             {Math.round((state.seasonXp / state.seasonXpMax) * 100)}%
           </div>
@@ -194,12 +194,12 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
                 {canClaim && (
                   <div style={{ background: 'var(--rpg-red)' }} className="absolute -top-2 -right-2 w-5 h-5 animate-pulse" />
                 )}
-                <div className="text-xs text-text-muted mb-1">Tier {tier.tier}</div>
+                <div className="text-xs text-gray-500 mb-1">Tier {tier.tier}</div>
                 <div className="text-lg mb-1">{tier.icon}</div>
-                <div className="text-[10px] text-text-secondary truncate">{tier.rewardText}</div>
+                <div className="text-[10px] text-gray-400 truncate">{tier.rewardText}</div>
                 {isClaimed && <div className="text-[10px] text-white mt-1">✅ 已領取</div>}
                 {!isClaimed && !isUnlocked && (
-                  <div className="text-[10px] text-text-muted mt-1">🔒</div>
+                  <div className="text-[10px] text-gray-500 mt-1">🔒</div>
                 )}
                 {canClaim && (
                   <button onClick={() => handleClaimTier(tier)}
@@ -219,13 +219,13 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
         <div className="glass p-6">
           <div style={{ background: 'linear-gradient(to right, var(--wood-mid), var(--wood-frame))', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-light)', borderLeftColor: 'var(--wood-light)', padding: '0.75rem 1rem', marginBottom: '1rem' }} className="flex items-center justify-between">
             <h3 className="font-pixel text-xs text-gold-400">⚡ 待完成任務</h3>
-            <span className="text-xs text-text-muted">{doneTasks.length}/{myTasks.length}</span>
+            <span className="text-xs text-gray-500">{doneTasks.length}/{myTasks.length}</span>
           </div>
           {activeTasks.length === 0 ? (
             <div className="text-center py-6">
               <span className="text-3xl block mb-2">🎯</span>
-              <p className="text-text-secondary text-sm mb-2">還沒有待完成的任務</p>
-              <p className="text-text-muted text-xs">去「任務委托」指派任務，或等主管分配吧！</p>
+              <p className="text-gray-400 text-sm mb-2">還沒有待完成的任務</p>
+              <p className="text-gray-500 text-xs">去「任務委托」指派任務，或等主管分配吧！</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -233,8 +233,8 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
                 <div key={t.id} style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="flex items-center gap-3 p-3">
                   <div style={{ border: '2px solid var(--rpg-gold)' }} className="w-5 h-5" />
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm truncate text-text-primary">{t.title}</div>
-                    <div className="text-[10px] text-text-muted">來自 {t.assigned_by_name}</div>
+                    <div className="text-sm truncate text-white">{t.title}</div>
+                    <div className="text-[10px] text-gray-500">來自 {t.assigned_by_name}</div>
                   </div>
                   {t.xp_reward > 0 && <div className="text-xs text-xp-400 whitespace-nowrap">+{t.xp_reward} XP</div>}
                 </div>
@@ -251,8 +251,8 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
           {myLogs.length === 0 ? (
             <div className="text-center py-6">
               <span className="text-3xl block mb-2">📖</span>
-              <p className="text-text-secondary text-sm mb-2">還沒有日誌紀錄</p>
-              <p className="text-text-muted text-xs">去「賢者之書」寫下今天的冒險吧！</p>
+              <p className="text-gray-400 text-sm mb-2">還沒有日誌紀錄</p>
+              <p className="text-gray-500 text-xs">去「賢者之書」寫下今天的冒險吧！</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -260,8 +260,8 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
                 <div key={log.id} style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }} className="flex items-center gap-3 p-3">
                   <div className="text-2xl">{log.mood}</div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate text-text-primary">{log.highlight || '(無亮點)'}</div>
-                    <div className="text-xs text-text-muted">{log.date} · {log.quest}</div>
+                    <div className="text-sm font-medium truncate text-white">{log.highlight || '(無亮點)'}</div>
+                    <div className="text-xs text-gray-500">{log.date} · {log.quest}</div>
                   </div>
                   <div className="flex gap-0.5">
                     {[...Array(5)].map((_, j) => (
