@@ -7,12 +7,13 @@ export interface SpriteDefinition {
   id: string
   name: string
   description: string
-  idleGif: string    // 待機動作
-  walkGif: string    // 走路動作
-  restGif: string    // 休息區動作
+  idleGif: string
+  walkGif: string
+  restGif: string
 }
 
 export const SPRITE_REGISTRY: SpriteDefinition[] = [
+  // ── 狗狗系列 ────────────────────────────────────────────────────────────────
   {
     id: 'dog-chill',
     name: '慵懶狗',
@@ -45,31 +46,31 @@ export const SPRITE_REGISTRY: SpriteDefinition[] = [
     walkGif: '/sprites/Sprite-0003.gif',
     restGif: '/sprites/Sprite-0017.gif',
   },
-  // ── 新角色（上傳 PNG 後解開註解）────────────────────────────────────────────
-  // {
-  //   id: 'char-blue',
-  //   name: '藍甲角色',
-  //   description: '你上傳的角色 1',
-  //   idleGif: '/sprites/char-blue-idle.gif',
-  //   walkGif: '/sprites/char-blue-walk.gif',
-  //   restGif: '/sprites/char-blue-idle.gif',
-  // },
-  // {
-  //   id: 'char-muscle',
-  //   name: '壯漢',
-  //   description: '你上傳的角色 2',
-  //   idleGif: '/sprites/char-muscle-idle.gif',
-  //   walkGif: '/sprites/char-muscle-walk.gif',
-  //   restGif: '/sprites/char-muscle-idle.gif',
-  // },
-  // {
-  //   id: 'char-bluehair',
-  //   name: '藍髮角色',
-  //   description: '你上傳的角色 3',
-  //   idleGif: '/sprites/char-bluehair-idle.gif',
-  //   walkGif: '/sprites/char-bluehair-walk.gif',
-  //   restGif: '/sprites/char-bluehair-idle.gif',
-  // },
+  // ── 人類系列 ────────────────────────────────────────────────────────────────
+  {
+    id: 'dwarf',
+    name: '矮人戰士',
+    description: '矮小但衝勁十足的戰場老手',
+    idleGif: '/sprites/dwarf-idle.gif',
+    walkGif: '/sprites/dwarf-walk.gif',
+    restGif: '/sprites/dwarf-rest.gif',
+  },
+  {
+    id: 'gladiator',
+    name: '鬥士',
+    description: '戴鐵面具的神秘格鬥家',
+    idleGif: '/sprites/gladiator-idle.gif',
+    walkGif: '/sprites/gladiator-walk.gif',
+    restGif: '/sprites/gladiator-rest.gif',
+  },
+  {
+    id: 'cyclops',
+    name: '獨眼巨人',
+    description: '壯碩有力，辦公室最重量級成員',
+    idleGif: '/sprites/cyclops-idle.gif',
+    walkGif: '/sprites/cyclops-walk.gif',
+    restGif: '/sprites/cyclops-rest.gif',
+  },
 ]
 
 /** 根據 ID 取得 sprite，找不到時回傳第一個 */
