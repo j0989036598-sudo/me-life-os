@@ -169,7 +169,7 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
       )}
 
       {/* ── 辦公室 + 休息區 ── */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* 左：辦公室（在線 / 工作中） */}
         <div className="glass rounded-2xl p-3 border border-white/10">
           <div className="flex items-center justify-between mb-2">
