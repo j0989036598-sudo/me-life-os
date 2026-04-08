@@ -6,7 +6,12 @@ const config: Config = {
     extend: {
       fontFamily: { sans: ['"Noto Sans TC"', 'sans-serif'] },
       colors: {
-        dark: { 900: '#0a0e1a', 800: '#111827', 700: '#1a2035', 600: '#232b42' },
+        dark: {
+          900: 'var(--bg-900)',
+          800: 'var(--bg-800)',
+          700: 'var(--bg-700)',
+          600: 'var(--bg-600)',
+        },
         gold: { 400: '#fbbf24', 500: '#f59e0b' },
         xp: { 400: '#a78bfa', 500: '#8b5cf6' },
         sp: { 400: '#34d399', 500: '#10b981' },
