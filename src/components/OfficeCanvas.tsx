@@ -17,7 +17,7 @@ export interface OfficeMember {
   character: CharacterAppearance | null
 }
 
-// 辦公室座位位置
+// 辦公室座位位置（百分比）
 const OFFICE_SEATS = [
   { x: 16, y: 64 },
   { x: 30, y: 72 },
@@ -44,6 +44,13 @@ const STATUS_CONFIG = {
   offline: { color: '#6b7280', label: 'Offline' },
 }
 
+// 根據狀態選狗狗動作
+function getSpriteForStatus(status: OfficeMember['status'], isRest: boolean) {
+  if (isRest) return '/sprites/dog-rest.gif'
+  if (status === 'working') return '/sprites/dog-walk.gif'
+  return '/sprites/dog-idle.gif'
+}
+
 interface OfficeCanvasProps {
   members: OfficeMember[]
   bgImage?: string
@@ -56,10 +63,15 @@ export default function OfficeCanvas({
   emptyText = '目前沒有人在這裡',
 }: OfficeCanvasProps) {
   const [imgLoaded, setImgLoaded] = useState(false)
-  const seats = bgImage.includes('rest') ? REST_SEATS : OFFICE_SEATS
+  const isRest = bgImage.includes('rest')
+  const seats = isRest ? REST_SEATS : OFFICE_SEATS
 
   return (
-    <div className="relative w-full rounded-xl overflow-hidden bg-black" style={{ aspectRatio: '1 / 1' }}>
+    <div
+      className="relative w-full rounded-xl overflow-hidden bg-black"
+      style={{ aspectRatio: '1 / 1' }}
+    >
+      {/* 背景圖 */}
       <img
         src={bgImage}
         alt="場景"
@@ -68,10 +80,12 @@ export default function OfficeCanvas({
         onLoad={() => setImgLoaded(true)}
       />
 
-      {/* 名字標籤 */}
+      {/* 狗狗員工 */}
       {imgLoaded && members.map((member, i) => {
         const seat = seats[i % seats.length]
-        const cfg  = STATUS_CONFIG[member.status] ?? STATUS_CONFIG.offline
+        const cfg = STATUS_CONFIG[member.status] ?? STATUS_CONFIG.offline
+        const sprite = getSpriteForStatus(member.status, isRest)
+
         return (
           <div
             key={member.id}
@@ -83,26 +97,34 @@ export default function OfficeCanvas({
               pointerEvents: 'none',
             }}
           >
+            {/* 名字標籤 */}
             <div
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white text-xs font-semibold whitespace-nowrap shadow-lg"
+              className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-white text-xs font-semibold whitespace-nowrap shadow-lg mb-1"
               style={{
-                background: 'rgba(10, 10, 20, 0.78)',
+                background: 'rgba(10, 10, 20, 0.82)',
                 backdropFilter: 'blur(6px)',
                 border: `1.5px solid ${cfg.color}55`,
               }}
             >
               <span
-                className="w-2 h-2 rounded-full flex-shrink-0 animate-pulse"
-                style={{ background: cfg.color, boxShadow: `0 0 5px ${cfg.color}` }}
+                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                style={{ background: cfg.color, boxShadow: `0 0 4px ${cfg.color}` }}
               />
               {member.name}
             </div>
-            <div style={{
-              width: 0, height: 0,
-              borderLeft: '4px solid transparent',
-              borderRight: '4px solid transparent',
-              borderTop: '5px solid rgba(10,10,20,0.78)',
-            }} />
+
+            {/* 狗狗 Sprite */}
+            <img
+              src={sprite}
+              alt={member.name}
+              style={{
+                width: '48px',
+                height: '48px',
+                imageRendering: 'pixelated',
+                objectFit: 'none',
+                objectPosition: '0 0',
+              }}
+            />
           </div>
         )
       })}
