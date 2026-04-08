@@ -794,3 +794,37 @@ export async function createNotification(notification: {
   if (error) { console.error('createNotification error:', error); return false }
   return true
 }
+
+/** 取得所有老闆和主管的 user_id（用於群發通知） */
+export async function getBossAndManagerIds(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('user_id')
+    .in('role', ['boss', 'manager'])
+  if (error) { console.error('getBossAndManagerIds error:', error); return [] }
+  return (data || []).map(d => d.user_id)
+}
+
+/** 批次發送通知給多位使用者 */
+export async function createNotificationBatch(
+  userIds: string[],
+  notification: {
+    type: Notification['type']
+    title: string
+    message: string
+    link_to?: string
+  }
+): Promise<boolean> {
+  if (userIds.length === 0) return true
+  const rows = userIds.map(uid => ({
+    user_id: uid,
+    type: notification.type,
+    title: notification.title,
+    message: notification.message,
+    link_to: notification.link_to || null,
+    read: false,
+  }))
+  const { error } = await supabase.from('notifications').insert(rows)
+  if (error) { console.error('createNotificationBatch error:', error); return false }
+  return true
+}
