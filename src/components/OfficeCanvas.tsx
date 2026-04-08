@@ -18,31 +18,43 @@ export interface OfficeMember {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 俯視地圖：可行走範圍（百分比）
-// 辦公室圖：桌子之間的走廊、中央空地
-const OFFICE_BOUNDS = { minX: 14, maxX: 86, minY: 14, maxY: 88 }
-
-// 休息區（海灘）圖：中央沙地、傢具間空間
-const REST_BOUNDS = { minX: 22, maxX: 78, minY: 22, maxY: 84 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 初始出現位置（對應各自地圖的桌子 / 躺椅位置）
-const OFFICE_STARTS = [
-  { x: 42, y: 28 }, // 上方桌排左
-  { x: 62, y: 28 }, // 上方桌排右
-  { x: 75, y: 55 }, // 右側桌群
-  { x: 25, y: 68 }, // 左下桌
-  { x: 62, y: 72 }, // 右下桌
-  { x: 48, y: 82 }, // 底部走道
+// 辦公室安全走道點（只在空曠地板上）
+// 對應俯視辦公室地圖的走廊和桌子間隙
+const OFFICE_WAYPOINTS = [
+  { x: 36, y: 48 }, // 上方桌排下方走道左
+  { x: 50, y: 48 }, // 上方桌排下方走道中
+  { x: 60, y: 48 }, // 上方桌排下方走道右
+  { x: 36, y: 60 }, // 中央走道左
+  { x: 50, y: 60 }, // 中央走道中
+  { x: 62, y: 60 }, // 中央走道右
+  { x: 36, y: 72 }, // 下方走道左
+  { x: 50, y: 72 }, // 下方走道中
+  { x: 62, y: 72 }, // 下方走道右
+  { x: 44, y: 82 }, // 入口走道左
+  { x: 56, y: 82 }, // 入口走道右
 ]
 
+// 休息區（海灘）安全走道點（只在沙地上）
+const REST_WAYPOINTS = [
+  { x: 38, y: 44 }, // 上方沙地左
+  { x: 52, y: 44 }, // 上方沙地中
+  { x: 62, y: 44 }, // 上方沙地右
+  { x: 36, y: 55 }, // 中央沙地左
+  { x: 50, y: 55 }, // 中央沙地中
+  { x: 62, y: 55 }, // 中央沙地右
+  { x: 40, y: 66 }, // 下方沙地左
+  { x: 54, y: 66 }, // 下方沙地中
+  { x: 50, y: 76 }, // 木棧道旁
+]
+
+// 初始出現位置（接近各自地圖的桌子/躺椅）
+const OFFICE_STARTS = [
+  { x: 36, y: 48 }, { x: 50, y: 48 }, { x: 60, y: 60 },
+  { x: 36, y: 72 }, { x: 62, y: 72 }, { x: 50, y: 82 },
+]
 const REST_STARTS = [
-  { x: 35, y: 32 }, // 上方躺椅區左
-  { x: 55, y: 32 }, // 上方躺椅區右
-  { x: 70, y: 32 }, // 上方躺椅區最右
-  { x: 30, y: 68 }, // 餐桌區
-  { x: 65, y: 70 }, // 吧台區
-  { x: 50, y: 55 }, // 中央沙地
+  { x: 38, y: 44 }, { x: 52, y: 44 }, { x: 62, y: 44 },
+  { x: 36, y: 55 }, { x: 62, y: 66 }, { x: 50, y: 76 },
 ]
 
 const STATUS_CONFIG = {
@@ -52,11 +64,22 @@ const STATUS_CONFIG = {
   offline: { color: '#6b7280' },
 }
 
-// 移動速度：% per second
-const SPEED = 10
+const SPEED = 10 // % per second
 
 function rand(min: number, max: number) {
   return min + Math.random() * (max - min)
+}
+
+function pickWaypoint(
+  waypoints: { x: number; y: number }[],
+  current: { x: number; y: number }
+) {
+  // 避免選到目前所在的同一個點
+  const others = waypoints.filter(
+    w => Math.abs(w.x - current.x) > 3 || Math.abs(w.y - current.y) > 3
+  )
+  const pool = others.length > 0 ? others : waypoints
+  return pool[Math.floor(Math.random() * pool.length)]
 }
 
 interface DogState {
@@ -83,13 +106,13 @@ export default function OfficeCanvas({
   const [imgLoaded, setImgLoaded]           = useState(false)
   const [containerWidth, setContainerWidth] = useState(400)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [dogs, setDogs]     = useState<DogState[]>([])
-  const dogsRef             = useRef<DogState[]>([])
-  const timeoutsRef         = useRef<ReturnType<typeof setTimeout>[]>([])
+  const [dogs, setDogs]   = useState<DogState[]>([])
+  const dogsRef           = useRef<DogState[]>([])
+  const timeoutsRef       = useRef<ReturnType<typeof setTimeout>[]>([])
 
-  const isRest  = bgImage.includes('rest')
-  const bounds  = isRest ? REST_BOUNDS  : OFFICE_BOUNDS
-  const starts  = isRest ? REST_STARTS  : OFFICE_STARTS
+  const isRest    = bgImage.includes('rest')
+  const waypoints = isRest ? REST_WAYPOINTS : OFFICE_WAYPOINTS
+  const starts    = isRest ? REST_STARTS    : OFFICE_STARTS
 
   // 容器寬度偵測
   useEffect(() => {
@@ -101,10 +124,9 @@ export default function OfficeCanvas({
     return () => obs.disconnect()
   }, [])
 
-  // 俯視地圖：固定 sprite 大小（不需深度縮放）
   const spriteSize = Math.round(containerWidth * 0.065)
 
-  // 初始化狗狗
+  // 初始化
   useEffect(() => {
     const initial: DogState[] = members.map((_, i) => {
       const s = starts[i % starts.length]
@@ -116,23 +138,23 @@ export default function OfficeCanvas({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [members.length, isRest])
 
-  // 單隻狗的移動排程
+  // 移動排程（只走 waypoints 之間）
   function scheduleDog(index: number, waitMs: number) {
-    if (isRest) return // 休息區靜止
+    if (isRest) return
 
     const t = setTimeout(() => {
       const current = dogsRef.current[index]
       if (!current) return
 
-      const targetX = rand(bounds.minX, bounds.maxX)
-      const targetY = rand(bounds.minY, bounds.maxY)
-      const dx = targetX - current.x
-      const dy = targetY - current.y
+      const wp = pickWaypoint(waypoints, { x: current.x, y: current.y })
+      const dx = wp.x - current.x
+      const dy = wp.y - current.y
       const dist = Math.sqrt(dx * dx + dy * dy)
       const transitionMs = Math.max(800, Math.round((dist / SPEED) * 1000))
 
       const moving: DogState = {
-        ...current, targetX, targetY,
+        ...current,
+        targetX: wp.x, targetY: wp.y,
         isMoving: true, facingLeft: dx < 0, transitionMs,
       }
       dogsRef.current = dogsRef.current.map((d, i) => i === index ? moving : d)
@@ -141,7 +163,7 @@ export default function OfficeCanvas({
       const arrive = setTimeout(() => {
         const arrived: DogState = {
           ...dogsRef.current[index],
-          x: targetX, y: targetY,
+          x: wp.x, y: wp.y,
           isMoving: false, transitionMs: 0,
         }
         dogsRef.current = dogsRef.current.map((d, i) => i === index ? arrived : d)
@@ -155,7 +177,6 @@ export default function OfficeCanvas({
     timeoutsRef.current.push(t)
   }
 
-  // 圖片載入後啟動走動
   useEffect(() => {
     if (!imgLoaded || members.length === 0) return
     timeoutsRef.current.forEach(clearTimeout)
@@ -165,7 +186,6 @@ export default function OfficeCanvas({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imgLoaded, members.length, isRest])
 
-  // 俯視圖依 y 值排序（靠下的角色蓋在靠上的上面）
   const sorted = dogs
     .map((d, i) => ({ d, i, member: members[i] }))
     .filter(x => x.member)
@@ -175,9 +195,8 @@ export default function OfficeCanvas({
     <div
       ref={containerRef}
       className="relative w-full rounded-xl bg-black"
-      style={{ aspectRatio: '1 / 1' }} // 這兩張圖都是正方形
+      style={{ aspectRatio: '1 / 1' }}
     >
-      {/* 背景圖 */}
       <div className="absolute inset-0 rounded-xl overflow-hidden">
         <img
           src={bgImage}
@@ -188,7 +207,6 @@ export default function OfficeCanvas({
         />
       </div>
 
-      {/* 狗狗員工 */}
       {imgLoaded && sorted.map(({ d, member }, renderIdx) => {
         const cfg    = STATUS_CONFIG[member.status] ?? STATUS_CONFIG.offline
         const sprite = isRest
@@ -210,7 +228,6 @@ export default function OfficeCanvas({
               zIndex: 10 + renderIdx,
             }}
           >
-            {/* 名字標籤 */}
             <div
               className="flex items-center gap-1 px-2 py-0.5 rounded-full text-white font-semibold whitespace-nowrap shadow-lg mb-0.5"
               style={{
@@ -232,7 +249,6 @@ export default function OfficeCanvas({
               {member.name}
             </div>
 
-            {/* 狗狗 Sprite */}
             <img
               src={sprite}
               alt={member.name}
@@ -247,7 +263,6 @@ export default function OfficeCanvas({
         )
       })}
 
-      {/* 空狀態 */}
       {imgLoaded && members.length === 0 && (
         <div className="absolute inset-0 flex items-end justify-center pb-6">
           <span className="bg-black/60 backdrop-blur-sm text-gray-300 text-xs px-4 py-2 rounded-full">
@@ -256,7 +271,6 @@ export default function OfficeCanvas({
         </div>
       )}
 
-      {/* 載入中 */}
       {!imgLoaded && (
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="text-gray-400 text-sm animate-pulse">載入中...</span>
