@@ -18,12 +18,14 @@ import TeamLogsPage from '@/components/TeamLogsPage'
 import TaskDelegatePage from '@/components/TaskDelegatePage'
 import RewardPage from '@/components/RewardPage'
 import PerformancePage from '@/components/PerformancePage'
+import DashboardPage from '@/components/DashboardPage'
+import NotificationCenter from '@/components/NotificationCenter'
 
 export type { UserRole }
 
 const ROLE_PAGES: Record<UserRole, string[]> = {
-  boss:    ['home', 'log', 'tasks', 'metronome', 'skills', 'guild', 'market', 'rewards', 'performance', 'team-logs', 'task-delegate', 'settings', 'admin'],
-  manager: ['home', 'log', 'tasks', 'metronome', 'skills', 'guild', 'market', 'rewards', 'performance', 'team-logs', 'task-delegate', 'settings', 'admin'],
+  boss:    ['home', 'dashboard', 'log', 'tasks', 'metronome', 'skills', 'guild', 'market', 'rewards', 'performance', 'team-logs', 'task-delegate', 'settings', 'admin'],
+  manager: ['home', 'dashboard', 'log', 'tasks', 'metronome', 'skills', 'guild', 'market', 'rewards', 'performance', 'team-logs', 'task-delegate', 'settings', 'admin'],
   member:  ['home', 'log', 'tasks', 'metronome', 'skills', 'guild', 'market', 'rewards', 'task-delegate', 'settings'],
 }
 
@@ -44,6 +46,7 @@ function AppContent({ profile, onLogout, onProfileUpdate }: { profile: Profile; 
   const renderPage = () => {
     switch (safePage) {
       case 'home': return <HomePage user={sidebarUser} role={role} userId={profile.user_id} />
+      case 'dashboard': return <DashboardPage role={role} />
       case 'log': return <DailyLogPage role={role} profile={profile} />
       case 'tasks': return <TasksPage role={role} profile={profile} />
       case 'skills': return <SkillsPage profile={profile} />
@@ -64,6 +67,10 @@ function AppContent({ profile, onLogout, onProfileUpdate }: { profile: Profile; 
     <div className="min-h-screen bg-dark-900">
       <DesktopSidebar page={safePage} setPage={setPage} user={sidebarUser} role={role} allowedPages={allowedPages} onLogout={onLogout} />
       <BottomTabBar page={safePage} setPage={setPage} allowedPages={allowedPages} onLogout={onLogout} />
+      {/* 通知鈴鐺（固定右上角） */}
+      <div className="fixed top-4 right-4 z-30">
+        <NotificationCenter userId={profile.user_id} onNavigate={setPage} />
+      </div>
       <main className="md:ml-64 p-4 md:p-8 pb-24 md:pb-8 min-h-screen">
         {renderPage()}
       </main>
