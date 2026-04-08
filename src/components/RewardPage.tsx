@@ -238,10 +238,10 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
           <p className="text-gray-400 text-sm">用金幣和鑽石兌換獎勵</p>
         </div>
         <div className="flex gap-2 sm:gap-3">
-          <div className="glass px-3 sm:px-4 py-2 text-sm">
+          <div className="glass rounded-xl px-3 sm:px-4 py-2 text-sm">
             <span className="text-amber-400 font-bold">🪙 {state.gold.toLocaleString()}</span>
           </div>
-          <div className="glass px-3 sm:px-4 py-2 text-sm">
+          <div className="glass rounded-xl px-3 sm:px-4 py-2 text-sm">
             <span className="text-blue-400 font-bold">💎 {state.diamond}</span>
           </div>
         </div>
@@ -251,7 +251,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
       <div className="flex gap-2 mb-6 overflow-x-auto">
         <button
           onClick={() => setTab('shop')}
-          className={`px-5 py-2.5 text-sm font-bold whitespace-nowrap transition-all ${
+          className={`px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
             tab === 'shop' ? 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/30' : 'glass text-gray-400'
           }`}
         >
@@ -259,7 +259,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
         </button>
         <button
           onClick={() => setTab('history')}
-          className={`px-5 py-2.5 text-sm font-bold whitespace-nowrap transition-all ${
+          className={`px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
             tab === 'history' ? 'bg-blue-500/20 text-blue-300 ring-1 ring-blue-400/30' : 'glass text-gray-400'
           }`}
         >
@@ -268,7 +268,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
         {role === 'boss' && (
           <button
             onClick={() => setTab('manage')}
-            className={`px-5 py-2.5 text-sm font-bold whitespace-nowrap transition-all ${
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
               tab === 'manage' ? 'bg-purple-500/20 text-purple-300 ring-1 ring-purple-400/30' : 'glass text-gray-400'
             }`}
           >
@@ -293,13 +293,13 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
           )}
 
           {confirmingRedemption && selectedReward && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="glass p-6 max-w-sm w-full border border-white/10">
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="glass rounded-2xl p-6 max-w-sm w-full border border-white/10">
                 <div className="text-center">
                   <div className="text-6xl mb-4">{selectedReward.icon}</div>
                   <h3 className="text-xl font-bold mb-2">{selectedReward.name}</h3>
                   <p className="text-gray-400 text-sm mb-4">{selectedReward.description}</p>
-                  <div className="mb-6 p-4" style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }}>
+                  <div className="mb-6 p-4 bg-dark-700/50 rounded-xl">
                     <div className="text-sm text-gray-400 mb-2">消耗資源：</div>
                     {selectedReward.cost_gold > 0 && (
                       <div className="flex items-center justify-center gap-2 mb-2">
@@ -324,13 +324,13 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
                         setConfirmingRedemption(false)
                         setSelectedReward(null)
                       }}
-                      className="flex-1 px-4 py-2 glass text-gray-300 font-bold text-sm"
+                      className="flex-1 px-4 py-2 rounded-lg glass text-gray-300 font-bold text-sm"
                     >
                       取消
                     </button>
                     <button
                       onClick={() => handleRedeem(selectedReward)}
-                      className="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 text-dark-900 font-bold text-sm hover:opacity-90"
+                      className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-dark-900 font-bold text-sm hover:opacity-90"
                     >
                       確認兌換
                     </button>
@@ -346,7 +346,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
               <button
                 key={cat}
                 onClick={() => setFilterCategory(cat)}
-                className={`px-3 py-1.5 text-xs font-medium transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   filterCategory === cat
                     ? 'bg-purple-500/30 text-purple-300 border border-purple-500/30'
                     : 'bg-dark-700 text-gray-400 hover:text-white border border-white/5'
@@ -364,7 +364,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
               return (
                 <div
                   key={reward.id}
-                  className="glass p-5 transition-all hover:border-white/20 cursor-pointer group"
+                  className="glass rounded-2xl p-5 transition-all hover:border-white/20 cursor-pointer group"
                   onClick={() => {
                     setSelectedReward(reward)
                     setConfirmingRedemption(true)
@@ -386,7 +386,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
                           </span>
                         )}
                         <button
-                          className={`ml-auto px-3 py-1.5 text-xs font-bold transition-all ${
+                          className={`ml-auto px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                             canAfford
                               ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-dark-900 hover:opacity-90'
                               : 'bg-dark-600 text-gray-600 cursor-not-allowed'
@@ -409,7 +409,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
       {tab === 'history' && (
         <div className="space-y-3">
           {redemptions.filter(r => r.user_id === profile.user_id).length === 0 ? (
-            <div className="glass p-8 text-center text-gray-400">
+            <div className="glass rounded-2xl p-8 text-center text-gray-400">
               <div className="text-4xl mb-2">📋</div>
               <p>暫無兌換紀錄</p>
             </div>
@@ -417,7 +417,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
             redemptions
               .filter(r => r.user_id === profile.user_id)
               .map(redemption => (
-                <div key={redemption.id} className="glass p-5 border border-white/5">
+                <div key={redemption.id} className="glass rounded-2xl p-5 border border-white/5">
                   <div className="flex items-start gap-4">
                     <div className="text-3xl">{redemption.reward_icon}</div>
                     <div className="flex-1">
@@ -467,7 +467,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
       {tab === 'manage' && role === 'boss' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Create New Reward */}
-          <div className="glass p-6 border border-white/5">
+          <div className="glass rounded-2xl p-6 border border-white/5">
             <h3 className="text-lg font-bold mb-4">➕ 新增獎勵</h3>
             {creatingMsg && (
               <div
@@ -487,7 +487,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
                   type="text"
                   value={newRewardIcon}
                   onChange={e => setNewRewardIcon(e.target.value)}
-                  className="w-full bg-dark-700 border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-400"
+                  className="w-full bg-dark-700 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-400"
                   placeholder="🎁"
                 />
               </div>
@@ -497,7 +497,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
                   type="text"
                   value={newRewardName}
                   onChange={e => setNewRewardName(e.target.value)}
-                  className="w-full bg-dark-700 border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-400"
+                  className="w-full bg-dark-700 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-400"
                   placeholder="e.g. 獎金 500 元"
                 />
               </div>
@@ -507,7 +507,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
                   type="text"
                   value={newRewardDesc}
                   onChange={e => setNewRewardDesc(e.target.value)}
-                  className="w-full bg-dark-700 border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-400"
+                  className="w-full bg-dark-700 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-400"
                   placeholder="詳細描述"
                 />
               </div>
@@ -518,7 +518,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
                     type="number"
                     value={newRewardGold}
                     onChange={e => setNewRewardGold(parseInt(e.target.value) || 0)}
-                    className="w-full bg-dark-700 border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-400"
+                    className="w-full bg-dark-700 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-400"
                     min="0"
                   />
                 </div>
@@ -528,7 +528,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
                     type="number"
                     value={newRewardDiamond}
                     onChange={e => setNewRewardDiamond(parseInt(e.target.value) || 0)}
-                    className="w-full bg-dark-700 border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-400"
+                    className="w-full bg-dark-700 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-400"
                     min="0"
                   />
                 </div>
@@ -538,7 +538,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
                 <select
                   value={newRewardCategory}
                   onChange={e => setNewRewardCategory(e.target.value as 'leave' | 'bonus' | 'gift' | 'custom')}
-                  className="w-full bg-dark-700 border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-400"
+                  className="w-full bg-dark-700 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-400"
                 >
                   <option value="leave">假期</option>
                   <option value="bonus">獎金</option>
@@ -548,7 +548,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
               </div>
               <button
                 onClick={handleCreateReward}
-                className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-bold text-sm hover:opacity-90"
+                className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 text-white font-bold text-sm hover:opacity-90"
               >
                 新增獎勵
               </button>
@@ -556,7 +556,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
           </div>
 
           {/* Review Redemptions */}
-          <div className="glass p-6 border border-white/5">
+          <div className="glass rounded-2xl p-6 border border-white/5">
             <h3 className="text-lg font-bold mb-4">📋 待審批的兌換</h3>
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {redemptions.filter(r => r.status === 'pending').length === 0 ? (
@@ -567,7 +567,7 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
                 redemptions
                   .filter(r => r.status === 'pending')
                   .map(redemption => (
-                    <div key={redemption.id} className="p-4" style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }}>
+                    <div key={redemption.id} className="p-4 bg-dark-700/50 rounded-xl border border-yellow-500/20">
                       <div className="flex items-start justify-between gap-3 mb-3">
                         <div className="flex items-center gap-2">
                           <span className="text-2xl">{redemption.reward_icon}</span>
@@ -581,13 +581,13 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleReviewRedemption(redemption.id, 'approved')}
-                          className="flex-1 px-3 py-1.5 bg-emerald-600/30 text-emerald-400 font-bold text-xs hover:bg-emerald-600/50"
+                          className="flex-1 px-3 py-1.5 rounded-lg bg-emerald-600/30 text-emerald-400 font-bold text-xs hover:bg-emerald-600/50"
                         >
                           ✅ 批准
                         </button>
                         <button
                           onClick={() => handleReviewRedemption(redemption.id, 'rejected')}
-                          className="flex-1 px-3 py-1.5 bg-red-600/30 text-red-400 font-bold text-xs hover:bg-red-600/50"
+                          className="flex-1 px-3 py-1.5 rounded-lg bg-red-600/30 text-red-400 font-bold text-xs hover:bg-red-600/50"
                         >
                           ❌ 拒絕
                         </button>
@@ -603,12 +603,12 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
             <h3 className="text-lg font-bold mb-4">🎁 所有獎勵</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {rewards.map(reward => (
-                <div key={reward.id} className="glass p-4 border border-white/5">
+                <div key={reward.id} className="glass rounded-2xl p-4 border border-white/5">
                   <div className="flex items-start justify-between mb-3">
                     <span className="text-3xl">{reward.icon}</span>
                     <button
                       onClick={() => handleDeleteReward(reward.id)}
-                      className="px-2 py-1 bg-red-600/30 text-red-400 text-xs font-bold hover:bg-red-600/50"
+                      className="px-2 py-1 rounded-lg bg-red-600/30 text-red-400 text-xs font-bold hover:bg-red-600/50"
                     >
                       刪除
                     </button>

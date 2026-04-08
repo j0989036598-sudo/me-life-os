@@ -95,7 +95,7 @@ export default function MetronomePage({ profile }: { profile: Profile }) {
           <span className="text-3xl">⏱️</span>
           <div><h2 className="text-2xl font-black">節拍器</h2><p className="text-gray-400 text-sm">載入中...</p></div>
         </div>
-        <div className="glass p-12 text-center"><div className="text-4xl mb-3 animate-pulse">⏳</div></div>
+        <div className="glass rounded-2xl p-12 text-center"><div className="text-4xl mb-3 animate-pulse">⏳</div></div>
       </div>
     )
   }
@@ -108,7 +108,7 @@ export default function MetronomePage({ profile }: { profile: Profile }) {
           <h2 className="text-2xl font-black">節拍器</h2>
           <p className="text-gray-400 text-sm">週期性的靈魂儀式，維持你的冒險節奏</p>
         </div>
-        <div className="ml-auto glass px-4 py-2">
+        <div className="ml-auto glass rounded-xl px-4 py-2">
           <span className="text-emerald-400 font-bold text-sm">{totalDone}/{totalItems} 完成</span>
         </div>
       </div>
@@ -121,7 +121,7 @@ export default function MetronomePage({ profile }: { profile: Profile }) {
             </h3>
             <div className="space-y-3">
               {sec.items.map((item) => (
-                <div key={item.id} className={`glass p-5 transition-all relative overflow-hidden ${
+                <div key={item.id} className={`glass rounded-2xl p-5 transition-all relative overflow-hidden ${
                   item.done_this_period ? 'border border-emerald-500/20 bg-emerald-500/5' : 'hover:border-white/10'
                 }`}>
                   {completeAnim === item.name && (
@@ -145,7 +145,7 @@ export default function MetronomePage({ profile }: { profile: Profile }) {
                     </div>
                     {!item.done_this_period && (
                       <button onClick={() => handleComplete(item)}
-                        className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-500 text-sm font-bold hover:opacity-90 transition-all whitespace-nowrap">
+                        className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-500 rounded-xl text-sm font-bold hover:opacity-90 transition-all whitespace-nowrap">
                         ⚔️ 打卡
                       </button>
                     )}

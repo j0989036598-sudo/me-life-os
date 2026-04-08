@@ -93,14 +93,14 @@ export default function TeamLogsPage() {
       </div>
 
       {/* 月度出勤率摘要 */}
-      <div className="glass p-5 mb-6 border border-white/5">
+      <div className="glass rounded-2xl p-5 mb-6 border border-white/5">
         <h3 className="font-bold text-sm text-amber-300 mb-4">📊 本月出勤統計</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="flex items-center justify-between p-3" style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }}>
+          <div className="flex items-center justify-between p-3 bg-dark-700/50 rounded-xl">
             <span className="text-sm text-gray-400">團隊平均出勤率</span>
             <span className={`text-xl font-bold ${getAttendanceColor(teamAvgAttendance)}`}>{teamAvgAttendance.toFixed(1)}%</span>
           </div>
-          <div className="flex items-center justify-between p-3" style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }}>
+          <div className="flex items-center justify-between p-3 bg-dark-700/50 rounded-xl">
             <span className="text-sm text-gray-400">本月工作日數</span>
             <span className="text-xl font-bold text-gray-300">{workdaysThisMonth} 天</span>
           </div>
@@ -112,13 +112,10 @@ export default function TeamLogsPage() {
               <div key={m.profile.user_id} className="flex items-center gap-2 text-xs">
                 <span className="text-lg">{m.profile.avatar}</span>
                 <span className="text-gray-400 w-16">{m.profile.name}</span>
-                <div className="flex-1 h-4 overflow-hidden" style={{ background: 'var(--wood-darkest)', border: '3px solid var(--wood-dark)' }}>
-                  <div className={`h-full transition-all ${
+                <div className="flex-1 h-1.5 bg-dark-600 rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full transition-all ${
                     m.percentage >= 90 ? 'bg-emerald-400' : m.percentage >= 70 ? 'bg-yellow-400' : 'bg-red-400'
-                  }`} style={{
-                    width: `${m.percentage}%`,
-                    backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(0,0,0,0.15) 6px, rgba(0,0,0,0.15) 8px)'
-                  }} />
+                  }`} style={{ width: `${m.percentage}%` }} />
                 </div>
                 <span className={`w-12 text-right ${getAttendanceColor(m.percentage)}`}>{m.percentage.toFixed(0)}%</span>
               </div>
@@ -143,7 +140,7 @@ export default function TeamLogsPage() {
       </div>
 
       {loading ? (
-        <div className="glass p-12 text-center text-gray-500">
+        <div className="glass rounded-2xl p-12 text-center text-gray-500">
           <div className="text-4xl mb-3 animate-pulse">⏳</div>
           <p>載入中...</p>
         </div>
@@ -155,7 +152,7 @@ export default function TeamLogsPage() {
               {logs.map(log => {
                 const profile = getProfileByUserId(log.user_id)
                 return (
-                  <div key={log.id} className="glass p-5 border border-emerald-500/10">
+                  <div key={log.id} className="glass rounded-2xl p-5 border border-emerald-500/10">
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-2xl">{profile?.avatar || '👤'}</span>
                       <div>
@@ -165,25 +162,25 @@ export default function TeamLogsPage() {
                       <span className="text-3xl ml-auto">{log.mood}</span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="p-3" style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }}>
+                      <div className="bg-dark-700/50 rounded-xl p-3">
                         <div className="text-xs text-gray-500 mb-1">🎯 今日重點</div>
                         <div className="text-sm">{log.highlight || '—'}</div>
                       </div>
-                      <div className="p-3" style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }}>
+                      <div className="bg-dark-700/50 rounded-xl p-3">
                         <div className="text-xs text-gray-500 mb-1">⚔️ 任務</div>
                         <div className="text-sm">{log.quest || '—'}</div>
                       </div>
-                      <div className="p-3" style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }}>
+                      <div className="bg-dark-700/50 rounded-xl p-3">
                         <div className="text-xs text-gray-500 mb-1">🏆 成就</div>
                         <div className="text-sm">{log.wins || '—'}</div>
                       </div>
-                      <div className="p-3" style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }}>
+                      <div className="bg-dark-700/50 rounded-xl p-3">
                         <div className="text-xs text-gray-500 mb-1">🚧 障礙</div>
                         <div className="text-sm">{log.blocks || '—'}</div>
                       </div>
                     </div>
                     {log.reflection && (
-                      <div className="mt-3 p-3" style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }}>
+                      <div className="mt-3 bg-dark-700/50 rounded-xl p-3">
                         <div className="text-xs text-gray-500 mb-1">💭 反思</div>
                         <div className="text-sm">{log.reflection}</div>
                       </div>
@@ -192,7 +189,7 @@ export default function TeamLogsPage() {
                       <span className="text-xs text-gray-500">精力值</span>
                       <div className="flex gap-0.5">
                         {[...Array(5)].map((_, j) => (
-                          <div key={j} className={`w-2 h-5 ${j < log.energy ? 'bg-amber-400' : 'bg-dark-600'}`} />
+                          <div key={j} className={`w-2 h-5 rounded-full ${j < log.energy ? 'bg-amber-400' : 'bg-dark-600'}`} />
                         ))}
                       </div>
                     </div>
@@ -201,7 +198,7 @@ export default function TeamLogsPage() {
               })}
             </div>
           ) : (
-            <div className="glass p-12 text-center text-gray-500 mb-6">
+            <div className="glass rounded-2xl p-12 text-center text-gray-500 mb-6">
               <div className="text-4xl mb-3">📋</div>
               <p>今日尚無員工提交日誌</p>
             </div>
@@ -209,13 +206,13 @@ export default function TeamLogsPage() {
 
           {/* 未提交的成員 */}
           {notLoggedProfiles.length > 0 && (
-            <div className="glass p-5">
+            <div className="glass rounded-2xl p-5">
               <h3 className="font-bold text-sm text-gray-400 mb-3">⏳ 尚未提交（{notLoggedProfiles.length} 人）</h3>
               <div className="flex flex-wrap gap-2">
                 {notLoggedProfiles.map(p => (
-                  <div key={p.id} className="flex items-center gap-1.5 px-3 py-1.5 text-xs" style={{ background: 'var(--bg-800)', border: '3px solid var(--wood-dark)', borderTopColor: 'var(--wood-mid)', borderLeftColor: 'var(--wood-mid)' }}>
+                  <div key={p.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-dark-700/50 border border-white/5 text-gray-500">
                     <span>{p.avatar}</span>
-                    <span className="text-gray-500">{p.name}</span>
+                    <span>{p.name}</span>
                     <span>⏳</span>
                   </div>
                 ))}

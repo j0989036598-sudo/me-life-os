@@ -89,34 +89,34 @@ export default function AdminPage({ role, currentUserId }: { role: UserRole; cur
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="glass p-6 text-center">
+        <div className="glass rounded-2xl p-6 text-center">
           <div className="text-4xl font-black text-emerald-400">{profiles.length}</div>
           <div className="text-sm text-gray-400 mt-2">已加入成員</div>
         </div>
-        <div className="glass p-6 text-center">
+        <div className="glass rounded-2xl p-6 text-center">
           <div className="text-4xl font-black text-purple-400">{invited.length}</div>
           <div className="text-sm text-gray-400 mt-2">待加入邀請</div>
         </div>
-        <div className="glass p-6 text-center">
+        <div className="glass rounded-2xl p-6 text-center">
           <div className="text-4xl font-black text-amber-400">{profiles.length + invited.length}</div>
           <div className="text-sm text-gray-400 mt-2">總名額</div>
         </div>
       </div>
 
-      <div className="flex gap-2 mb-4 p-1 glass w-fit">
+      <div className="flex gap-2 mb-4 p-1 glass rounded-xl w-fit">
         <button className={tabClass('members')} onClick={() => setTab('members')}>🧑‍🤝‍🧑 成員列表 ({profiles.length})</button>
         <button className={tabClass('invite')} onClick={() => setTab('invite')}>➕ 邀請員工</button>
         <button className={tabClass('invited')} onClick={() => setTab('invited')}>📋 邀請名單 ({invited.length})</button>
       </div>
 
       {loading ? (
-        <div className="glass p-12 text-center text-gray-500">
+        <div className="glass rounded-2xl p-12 text-center text-gray-500">
           <div className="text-4xl mb-3 animate-pulse">⏳</div><p>載入中...</p>
         </div>
       ) : (
         <>
           {tab === 'members' && (
-            <div className="glass overflow-hidden">
+            <div className="glass rounded-2xl overflow-hidden">
               {profiles.length === 0 ? (
                 <div className="p-12 text-center text-gray-500"><div className="text-4xl mb-3">🏰</div><p>尚無成員加入，先邀請員工吧！</p></div>
               ) : (
@@ -171,10 +171,10 @@ export default function AdminPage({ role, currentUserId }: { role: UserRole; cur
           )}
 
           {tab === 'invite' && (
-            <div className="glass p-6">
+            <div className="glass rounded-2xl p-6">
               <h3 className="font-bold mb-5">➕ 邀請新員工</h3>
               {inviteMsg && (
-                <div className={`p-3 mb-4 text-sm text-center ${
+                <div className={`rounded-xl p-3 mb-4 text-sm text-center ${
                   inviteMsg.type === 'success' ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
                   : 'bg-red-500/10 text-red-300 border border-red-500/20'
                 }`}>{inviteMsg.text}</div>
@@ -183,25 +183,25 @@ export default function AdminPage({ role, currentUserId }: { role: UserRole; cur
                 <div>
                   <label className="text-sm text-gray-400 mb-1.5 block">員工 Gmail *</label>
                   <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="example@gmail.com"
-                    className="w-full bg-dark-700 border border-white/10 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50" />
+                    className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50" />
                 </div>
                 <div>
                   <label className="text-sm text-gray-400 mb-1.5 block">職稱 *</label>
                   <input type="text" value={inviteJobTitle} onChange={e => setInviteJobTitle(e.target.value)} placeholder="例：資深設計師"
-                    className="w-full bg-dark-700 border border-white/10 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50" />
+                    className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm text-gray-400 mb-1.5 block">部門</label>
                     <select value={inviteDept} onChange={e => setInviteDept(e.target.value)}
-                      className="w-full bg-dark-700 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50">
+                      className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50">
                       {DEPARTMENT_OPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="text-sm text-gray-400 mb-1.5 block">角色</label>
                     <select value={inviteRole} onChange={e => setInviteRole(e.target.value as UserRole)}
-                      className="w-full bg-dark-700 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50">
+                      className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50">
                       <option value="member">⚔️ 員工</option><option value="manager">🛡️ 主管</option>
                     </select>
                   </div>
@@ -209,10 +209,10 @@ export default function AdminPage({ role, currentUserId }: { role: UserRole; cur
                 <div>
                   <label className="text-sm text-gray-400 mb-1.5 block">備註（選填）</label>
                   <input type="text" value={inviteNote} onChange={e => setInviteNote(e.target.value)} placeholder="例：新進員工、試用期 3 個月"
-                    className="w-full bg-dark-700 border border-white/10 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50" />
+                    className="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50" />
                 </div>
                 <button onClick={handleInvite} disabled={inviting}
-                  className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-bold text-sm transition-all shadow-lg shadow-purple-500/20 disabled:opacity-50">
+                  className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-purple-500/20 disabled:opacity-50">
                   {inviting ? '邀請中...' : '✉️ 送出邀請'}
                 </button>
               </div>
@@ -221,7 +221,7 @@ export default function AdminPage({ role, currentUserId }: { role: UserRole; cur
           )}
 
           {tab === 'invited' && (
-            <div className="glass overflow-hidden">
+            <div className="glass rounded-2xl overflow-hidden">
               {invited.length === 0 ? (
                 <div className="p-12 text-center text-gray-500"><div className="text-4xl mb-3">📋</div><p>尚無待加入邀請</p></div>
               ) : (

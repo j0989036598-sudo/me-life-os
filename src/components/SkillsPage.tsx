@@ -95,7 +95,7 @@ export default function SkillsPage({ profile }: { profile: Profile }) {
           <span className="text-3xl">🌳</span>
           <div><h2 className="text-2xl font-black">成長技能樹</h2><p className="text-gray-400 text-sm">載入中...</p></div>
         </div>
-        <div className="glass p-12 text-center"><div className="text-4xl mb-3 animate-pulse">⏳</div></div>
+        <div className="glass rounded-2xl p-12 text-center"><div className="text-4xl mb-3 animate-pulse">⏳</div></div>
       </div>
     )
   }
@@ -108,13 +108,13 @@ export default function SkillsPage({ profile }: { profile: Profile }) {
           <h2 className="text-2xl font-black">成長技能樹</h2>
           <p className="text-gray-400 text-sm">消耗 SP 來升級你的技能</p>
         </div>
-        <div className="ml-auto glass px-4 py-2 text-sm">
+        <div className="ml-auto glass rounded-xl px-4 py-2 text-sm">
           <span className="text-sp-400 font-bold">🔮 {state.sp} SP</span>
         </div>
       </div>
 
       {/* XP Bonus Display */}
-      <div className="glass p-4 mb-6 bg-gradient-to-r from-xp-500/10 to-amber-500/10 border border-xp-400/20">
+      <div className="glass rounded-2xl p-4 mb-6 bg-gradient-to-r from-xp-500/10 to-amber-500/10 border border-xp-400/20">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-xs text-gray-400 mb-1">你的 XP 加成</div>
@@ -141,7 +141,7 @@ export default function SkillsPage({ profile }: { profile: Profile }) {
       <div className="flex gap-2 mt-4 mb-6">
         {CATEGORIES.map(c => (
           <button key={c} onClick={() => setCategory(c)}
-            className={`px-4 py-2 text-sm transition-all ${
+            className={`px-4 py-2 rounded-xl text-sm transition-all ${
               category === c ? 'bg-purple-500/20 text-purple-300 ring-1 ring-purple-400/30' : 'glass text-gray-400 hover:text-white'
             }`}>
             {c}
@@ -165,7 +165,7 @@ export default function SkillsPage({ profile }: { profile: Profile }) {
                 const canUpgrade = s.unlocked && s.level < s.max_level && state.sp >= s.sp_cost
                 const isAnimating = upgradeAnim === s.name
                 return (
-                  <div key={s.id} className={`glass p-4 transition-all relative ${
+                  <div key={s.id} className={`glass rounded-2xl p-4 transition-all relative ${
                     !s.unlocked ? 'opacity-50 grayscale' : isAnimating ? 'ring-2 ring-emerald-400 scale-[1.02]' : 'hover:border-white/10'
                   }`}>
                     <div className="flex items-start gap-3">
@@ -180,15 +180,15 @@ export default function SkillsPage({ profile }: { profile: Profile }) {
                         )}
                         <div className={`text-xs mt-0.5 ${!s.unlocked ? 'text-gray-600' : 'text-gray-500'}`}>{s.description}</div>
                         <div className="flex items-center gap-2 mt-2">
-                          <div className="flex-1 h-2 bg-dark-600 overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-xp-500 to-xp-400 progress-bar"
+                          <div className="flex-1 h-2 bg-dark-600 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-xp-500 to-xp-400 rounded-full progress-bar"
                               style={{ width: `${(s.level / s.max_level) * 100}%` }} />
                           </div>
                           <span className="text-[10px] text-gray-400 whitespace-nowrap">Lv.{s.level}/{s.max_level}</span>
                         </div>
                         {s.unlocked && s.level < s.max_level && (
                           <button onClick={() => handleUpgrade(s)}
-                            className={`mt-2 w-full py-1.5 text-xs font-bold transition-all ${
+                            className={`mt-2 w-full py-1.5 rounded-lg text-xs font-bold transition-all ${
                               canUpgrade
                                 ? 'bg-sp-400/20 text-sp-400 hover:bg-sp-400/30'
                                 : 'bg-dark-600 text-gray-600 cursor-not-allowed'

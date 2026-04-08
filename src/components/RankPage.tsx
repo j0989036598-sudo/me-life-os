@@ -57,7 +57,7 @@ export default function RankPage({ role }: { role?: UserRole }) {
         </p>
       </div>
       {isManager && (
-        <div className="ml-auto glass px-3 py-2 text-xs text-amber-300 border border-amber-500/20">
+        <div className="ml-auto glass rounded-xl px-3 py-2 text-xs text-amber-300 border border-amber-500/20">
           {role === 'boss' ? '👑 公會會長' : '🛡️ 副會長'}
         </div>
       )}
@@ -68,7 +68,7 @@ export default function RankPage({ role }: { role?: UserRole }) {
     return (
       <div className="animate-fade">
         <Header />
-        <div className="glass p-12 text-center">
+        <div className="glass rounded-2xl p-12 text-center">
           <div className="text-4xl mb-3 animate-pulse">⏳</div>
           <p className="text-gray-500">載入成員資料...</p>
         </div>
@@ -80,7 +80,7 @@ export default function RankPage({ role }: { role?: UserRole }) {
     return (
       <div className="animate-fade">
         <Header />
-        <div className="glass p-16 text-center">
+        <div className="glass rounded-2xl p-16 text-center">
           <div className="text-6xl mb-4">🏰</div>
           <h3 className="text-xl font-bold text-white mb-2">公會尚無成員</h3>
           <p className="text-gray-400 text-sm leading-relaxed">
@@ -103,7 +103,7 @@ export default function RankPage({ role }: { role?: UserRole }) {
           if (!m) return null
           const isFirst = idx === 0
           return (
-            <div key={m.id} className={`glass p-5 text-center flex-1 max-w-[200px] transition-all ${
+            <div key={m.id} className={`glass rounded-2xl p-5 text-center flex-1 max-w-[200px] transition-all ${
               isFirst ? 'ring-2 ring-amber-400/50' : ''
             }`}>
               <div className="text-4xl mb-1">{medals[idx]}</div>
@@ -128,7 +128,7 @@ export default function RankPage({ role }: { role?: UserRole }) {
       </div>
 
       {/* 排行表 */}
-      <div className="glass overflow-hidden">
+      <div className="glass rounded-2xl overflow-hidden">
         <div className="p-4 border-b border-white/5">
           <h3 className="font-bold text-sm">🏆 全體成員排行（依等級 + XP）</h3>
         </div>

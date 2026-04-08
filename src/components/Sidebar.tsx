@@ -5,37 +5,26 @@ import { useGame } from '@/lib/GameContext'
 import { UserRole } from '@/app/page'
 
 const ROLE_LABELS: Record<UserRole, { label: string; color: string; icon: string }> = {
-  boss: { label: '老闆', color: 'text-amber-400', icon: '👑' },
-  manager: { label: '主管', color: 'text-blue-400', icon: '🛡️' },
-  member: { label: '員工', color: 'text-purple-400', icon: '⚔️' },
+  boss: { label: '老闆', color: 'text-amber-400 bg-amber-500/10', icon: '👑' },
+  manager: { label: '主管', color: 'text-blue-400 bg-blue-500/10', icon: '🛡️' },
+  member: { label: '員工', color: 'text-purple-400 bg-purple-500/10', icon: '⚔️' },
 }
 
-/* ── 選單分組，對應參考圖頂部 tab ── */
-const MENU_GROUPS: { id: string; label: string; icon: string; pages: string[] }[] = [
-  { id: 'file', label: 'FILE', icon: '🔧', pages: ['settings', 'admin'] },
-  { id: 'edit', label: 'EDIT', icon: '📝', pages: ['log', 'tasks'] },
-  { id: 'view', label: 'VIEW', icon: '👁️', pages: ['dashboard', 'performance'] },
-  { id: 'corp', label: 'CORP.', icon: '🏢', pages: ['home'] },
-  { id: 'battle', label: 'BATTLE', icon: '⚔️', pages: ['metronome', 'task-delegate'] },
-  { id: 'map', label: 'MAP', icon: '🗺️', pages: ['guild', 'skills'] },
-  { id: 'system', label: 'SYSTEM', icon: '⚙️', pages: ['market', 'rewards', 'team-logs'] },
-]
-
 const ALL_NAV = [
-  { id: 'home', icon: '🏠', label: '冒險首頁' },
-  { id: 'dashboard', icon: '📊', label: '儀表板' },
-  { id: 'log', icon: '📖', label: '賢者之書' },
-  { id: 'tasks', icon: '⚡', label: '任務中心' },
-  { id: 'metronome', icon: '⏱️', label: '節拍器' },
-  { id: 'skills', icon: '🌳', label: '技能樹' },
-  { id: 'guild', icon: '⚔️', label: '公會' },
-  { id: 'market', icon: '🏪', label: '市集' },
-  { id: 'rewards', icon: '🎁', label: '獎勵中心' },
-  { id: 'team-logs', icon: '📋', label: '員工日誌' },
-  { id: 'performance', icon: '📈', label: '績效報表' },
-  { id: 'task-delegate', icon: '📝', label: '任務委托' },
-  { id: 'settings', icon: '⚙️', label: '個人設定' },
-  { id: 'admin', icon: '👁️', label: '管理後台' },
+  { id: 'home', icon: '🏠', label: '首頁', badge: undefined },
+  { id: 'dashboard', icon: '📊', label: '儀表板', badge: undefined },
+  { id: 'log', icon: '📖', label: '賢者之書', badge: undefined },
+  { id: 'tasks', icon: '⚡', label: '任務中心', badge: undefined },
+  { id: 'metronome', icon: '⏱️', label: '節拍器', badge: undefined },
+  { id: 'skills', icon: '🌳', label: '技能樹', badge: undefined },
+  { id: 'guild', icon: '⚔️', label: '公會', badge: undefined },
+  { id: 'market', icon: '🏪', label: '市集', badge: undefined },
+  { id: 'rewards', icon: '🎁', label: '獎勵中心', badge: undefined },
+  { id: 'team-logs', icon: '📋', label: '員工日誌', badge: undefined },
+  { id: 'performance', icon: '📈', label: '績效報表', badge: undefined },
+  { id: 'task-delegate', icon: '📝', label: '任務委托', badge: undefined },
+  { id: 'settings', icon: '⚙️', label: '個人設定', badge: undefined },
+  { id: 'admin', icon: '👁️', label: '管理後台', badge: undefined },
 ]
 
 interface SidebarProps {
@@ -47,213 +36,105 @@ interface SidebarProps {
   onLogout: () => void
 }
 
-/* ═══════════════════════════════════════
-   桌面版：頂部選單列（FILE/EDIT/VIEW...）
-   ═══════════════════════════════════════ */
+function NavItem({ icon, label, active, onClick, badge }: {
+  icon: string; label: string; active: boolean; onClick: () => void; badge?: string
+}) {
+  return (
+    <button onClick={onClick} className={`flex items-center gap-3 w-full px-4 py-2.5 rounded-xl transition-all duration-200 ${
+      active ? 'bg-gradient-to-r from-purple-500/20 to-transparent text-white font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-dark-600'
+    }`}>
+      <span className="text-lg">{icon}</span>
+      <span className="text-sm">{label}</span>
+      {badge && <span className="ml-auto text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full">{badge}</span>}
+    </button>
+  )
+}
+
 export function DesktopSidebar({ page, setPage, user, role, allowedPages, onLogout }: SidebarProps) {
   const { state } = useGame()
-  const [openMenu, setOpenMenu] = useState<string | null>(null)
+  const roleInfo = ROLE_LABELS[role]
 
-  const handleTabClick = (group: typeof MENU_GROUPS[0]) => {
-    // 如果群組只有一個可用頁面，直接導航
-    const available = group.pages.filter(p => allowedPages.includes(p))
-    if (available.length === 1) {
-      setPage(available[0])
-      setOpenMenu(null)
-    } else if (available.length > 0) {
-      setOpenMenu(openMenu === group.id ? null : group.id)
-    }
-  }
-
-  const currentGroup = MENU_GROUPS.find(g => g.pages.includes(page))
+  const mainNav = ALL_NAV.filter(n =>
+    allowedPages.includes(n.id) && n.id !== 'admin' && n.id !== 'settings' && n.id !== 'team-logs' && n.id !== 'task-delegate' && n.id !== 'performance' && n.id !== 'dashboard'
+  )
+  const hasAdmin = allowedPages.includes('admin')
+  const hasSettings = allowedPages.includes('settings')
+  const hasTeamLogs = allowedPages.includes('team-logs')
+  const hasTaskDelegate = allowedPages.includes('task-delegate')
+  const hasPerformance = allowedPages.includes('performance')
+  const hasDashboard = allowedPages.includes('dashboard')
 
   return (
-    <div className="hidden md:block">
-      {/* 頂部選單列 */}
-      <div className="fixed top-0 left-0 right-0 z-40 flex items-stretch"
-        style={{
-          background: 'linear-gradient(180deg, var(--wood-light) 0%, var(--wood-frame) 60%, var(--wood-mid) 100%)',
-          borderBottom: '4px solid var(--wood-dark)',
-          minHeight: '44px',
-        }}
-      >
-        {MENU_GROUPS.map((group) => {
-          const available = group.pages.filter(p => allowedPages.includes(p))
-          if (available.length === 0) return null
-          const isActive = currentGroup?.id === group.id
+    <div className="hidden md:flex w-64 min-h-screen bg-dark-800 border-r border-white/5 p-4 flex-col fixed left-0 top-0 z-20">
+      <div className="flex items-center gap-3 mb-5 px-2">
+        <span className="text-2xl">⚔️</span>
+        <div>
+          <div className="font-bold text-lg bg-gradient-to-r from-amber-400 to-purple-400 text-transparent bg-clip-text">ME Life OS</div>
+          <div className="text-[10px] text-gray-500">穎流行銷</div>
+        </div>
+      </div>
 
-          return (
-            <div key={group.id} className="relative">
-              <button
-                onClick={() => handleTabClick(group)}
-                className="flex items-center gap-1.5 px-4 h-full"
-                style={{
-                  fontFamily: '"Press Start 2P", monospace',
-                  fontSize: '10px',
-                  color: isActive ? 'var(--rpg-gold)' : 'var(--text-primary)',
-                  textShadow: '1px 1px 0 rgba(0,0,0,0.6)',
-                  letterSpacing: '1px',
-                  background: isActive ? 'var(--bg-700)' : 'transparent',
-                  borderLeft: '3px solid transparent',
-                  borderRight: '3px solid transparent',
-                  borderTop: '3px solid transparent',
-                  borderTopColor: isActive ? 'var(--wood-highlight)' : 'transparent',
-                  borderLeftColor: isActive ? 'var(--wood-light)' : 'transparent',
-                  borderRightColor: isActive ? 'var(--wood-mid)' : 'transparent',
-                  marginTop: '4px',
-                }}
-              >
-                <span style={{ fontSize: '12px' }}>{group.icon}</span>
-                {group.label}
-              </button>
-
-              {/* 下拉選單 */}
-              {openMenu === group.id && available.length > 1 && (
-                <div
-                  className="absolute top-full left-0 z-50 min-w-[200px]"
-                  style={{
-                    background: 'var(--bg-700)',
-                    border: '4px solid var(--wood-frame)',
-                    borderTopColor: 'var(--wood-highlight)',
-                    borderLeftColor: 'var(--wood-light)',
-                    borderRightColor: 'var(--wood-mid)',
-                    borderBottomColor: 'var(--wood-dark)',
-                    boxShadow: '3px 3px 0 rgba(0,0,0,0.4)',
-                  }}
-                >
-                  {available.map(pid => {
-                    const nav = ALL_NAV.find(n => n.id === pid)
-                    if (!nav) return null
-                    return (
-                      <button
-                        key={pid}
-                        onClick={() => { setPage(pid); setOpenMenu(null) }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm transition-none"
-                        style={{
-                          color: page === pid ? 'var(--rpg-gold)' : 'var(--text-primary)',
-                          background: page === pid ? 'rgba(232,200,64,0.08)' : 'transparent',
-                          borderBottom: '2px solid var(--wood-dark)',
-                        }}
-                      >
-                        <span>{nav.icon}</span>
-                        <span>{nav.label}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          )
-        })}
-
-        {/* 右側：用戶資訊 */}
-        <div className="ml-auto flex items-center gap-3 px-4" style={{ fontSize: '12px' }}>
-          <span style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '9px', color: 'var(--rpg-gold)' }}>
-            Lv.{state.level}
+      <div className="glass rounded-xl p-3 mb-4">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="text-2xl">{user.avatar}</div>
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-sm truncate">{user.name}</div>
+            <div className="text-[10px] text-gray-400">Lv.{state.level} · {user.title}</div>
+          </div>
+          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap ${roleInfo.color}`}>
+            {roleInfo.icon} {roleInfo.label}
           </span>
-          <span style={{ color: 'var(--text-secondary)' }}>{user.name}</span>
-          <div
-            className="flex items-center justify-center text-xl"
-            style={{
-              width: '32px', height: '32px',
-              background: 'var(--wood-darkest)',
-              border: '3px solid var(--wood-highlight)',
-              boxShadow: '2px 2px 0 rgba(0,0,0,0.4)',
-            }}
-          >
-            {user.avatar}
-          </div>
-          <button
-            onClick={onLogout}
-            className="text-sm"
-            style={{ color: 'var(--rpg-red)' }}
-            title="登出"
-          >🚪</button>
+        </div>
+        <div className="w-full h-1.5 bg-dark-600 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-xp-500 to-xp-400 rounded-full progress-bar" style={{ width: `${(state.xp / state.xpMax) * 100}%` }} />
+        </div>
+        <div className="mt-1.5 grid grid-cols-4 gap-1 text-[10px]">
+          <span className="text-xp-400">✦{state.xp}</span>
+          <span className="text-gold-400">🪙{state.gold.toLocaleString()}</span>
+          <span className="text-sp-400">🔮{state.sp}</span>
+          <span className="text-blue-400">💎{state.diamond}</span>
         </div>
       </div>
 
-      {/* 底部資源列 + 動作按鈕 */}
-      <div className="fixed bottom-0 left-0 right-0 z-40">
-        {/* 圖標工具列 */}
-        <div className="flex items-center gap-0.5 px-2 py-1"
-          style={{
-            background: 'linear-gradient(180deg, var(--wood-mid) 0%, var(--wood-dark) 100%)',
-            borderTop: '3px solid var(--wood-frame)',
-            borderBottom: '2px solid var(--wood-dark)',
-          }}
-        >
-          {['🔧', '📊', '⬆️', '⬇️'].map((icon, i) => (
-            <div key={i}
-              className="flex items-center justify-center cursor-pointer"
-              style={{
-                width: '28px', height: '28px',
-                background: 'var(--wood-frame)',
-                border: '2px solid var(--wood-dark)',
-                borderTopColor: 'var(--wood-highlight)',
-                borderLeftColor: 'var(--wood-light)',
-                fontSize: '14px',
-                boxShadow: '1px 1px 0 rgba(0,0,0,0.3)',
-              }}
-            >{icon}</div>
-          ))}
-          <div style={{ width: '2px', height: '22px', background: 'var(--wood-dark)', margin: '0 4px' }} />
-          {['👤', '🏗️', '⚔️', '📦'].map((icon, i) => (
-            <div key={i}
-              className="flex items-center justify-center cursor-pointer"
-              style={{
-                width: '28px', height: '28px',
-                background: 'var(--wood-frame)',
-                border: '2px solid var(--wood-dark)',
-                borderTopColor: 'var(--wood-highlight)',
-                borderLeftColor: 'var(--wood-light)',
-                fontSize: '14px',
-                boxShadow: '1px 1px 0 rgba(0,0,0,0.3)',
-              }}
-            >{icon}</div>
-          ))}
-        </div>
+      <nav className="flex flex-col gap-0.5 flex-1 overflow-y-auto">
+        {mainNav.map(n => (
+          <NavItem key={n.id} icon={n.icon} label={n.label} active={page === n.id} onClick={() => setPage(n.id)} badge={n.badge} />
+        ))}
 
-        {/* 動作按鈕 + 資源 */}
-        <div className="flex items-center px-2 py-1 gap-1"
-          style={{
-            background: 'linear-gradient(180deg, var(--wood-frame) 0%, var(--wood-mid) 50%, var(--wood-dark) 100%)',
-            borderTop: '3px solid var(--wood-highlight)',
-          }}
-        >
-          {['CONSTRUCT', 'RECRUIT', 'INVEST', 'ATTACK'].map(label => (
-            <button key={label} className="pixel-btn" style={{ padding: '5px 12px', fontSize: '9px', fontFamily: '"Press Start 2P", monospace', letterSpacing: '1px' }}>
-              {label}
-            </button>
-          ))}
+        {(hasDashboard || hasTeamLogs || hasTaskDelegate || hasPerformance) && (
+          <>
+            <div className="border-t border-white/5 my-2" />
+            <div className="px-3 py-1 text-[10px] text-gray-600 uppercase tracking-wider">管理工具</div>
+            {hasDashboard && <NavItem icon="📊" label="儀表板" active={page === 'dashboard'} onClick={() => setPage('dashboard')} />}
+            {hasTeamLogs && <NavItem icon="📋" label="員工日誌" active={page === 'team-logs'} onClick={() => setPage('team-logs')} />}
+            {hasPerformance && <NavItem icon="📈" label="績效報表" active={page === 'performance'} onClick={() => setPage('performance')} />}
+            {hasTaskDelegate && <NavItem icon="📝" label="任務委托" active={page === 'task-delegate'} onClick={() => setPage('task-delegate')} />}
+          </>
+        )}
 
-          <div className="ml-auto flex items-center gap-4 pr-2">
-            <span className="flex items-center gap-1" style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '9px' }}>
-              <span>🪵</span><span style={{ color: 'var(--text-dim)', fontSize: '7px' }}>WOOD:</span><span style={{ color: 'var(--text-primary)' }}>{state.gold > 0 ? Math.floor(state.gold * 1.5).toLocaleString() : '0'}</span>
-            </span>
-            <span className="flex items-center gap-1" style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '9px' }}>
-              <span>🪨</span><span style={{ color: 'var(--text-dim)', fontSize: '7px' }}>STONE:</span><span style={{ color: 'var(--text-primary)' }}>{state.sp > 0 ? (state.sp * 50).toLocaleString() : '0'}</span>
-            </span>
-            <span className="flex items-center gap-1" style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '9px' }}>
-              <span>⛏️</span><span style={{ color: 'var(--text-dim)', fontSize: '7px' }}>IRON:</span><span style={{ color: 'var(--text-primary)' }}>{state.diamond > 0 ? (state.diamond * 100).toLocaleString() : '0'}</span>
-            </span>
-            <span className="flex items-center gap-1" style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '9px' }}>
-              <span style={{ color: 'var(--rpg-purple)' }}>🔮</span><span style={{ color: 'var(--rpg-pink)', fontSize: '7px' }}>MANA:</span><span style={{ color: 'var(--rpg-pink)' }}>{state.xp > 0 ? Math.floor(state.xp / 10).toLocaleString() : '0'}</span>
-            </span>
-          </div>
-        </div>
-      </div>
+        {hasSettings && (
+          <>
+            <div className="border-t border-white/5 my-2" />
+            <NavItem icon="⚙️" label="個人設定" active={page === 'settings'} onClick={() => setPage('settings')} />
+          </>
+        )}
 
-      {/* 點擊外部關閉下拉選單 */}
-      {openMenu && (
-        <div className="fixed inset-0 z-30" onClick={() => setOpenMenu(null)} />
-      )}
+        {hasAdmin && (
+          <>
+            <div className="border-t border-white/5 my-2" />
+            <NavItem icon="👁️" label="管理後台" active={page === 'admin'} onClick={() => setPage('admin')} />
+          </>
+        )}
+      </nav>
+
+      <button onClick={onLogout} className="mt-4 flex items-center gap-2 w-full px-4 py-2.5 rounded-xl text-gray-500 hover:text-red-400 hover:bg-red-500/5 transition-all text-sm">
+        <span>🚪</span><span>切換角色</span>
+      </button>
+      <div className="text-[10px] text-gray-600 px-2 mt-1">v2.0 · 遊戲化介面</div>
     </div>
   )
 }
 
-/* ═══════════════════════════════════════
-   手機版：底部 Tab（維持基本導航）
-   ═══════════════════════════════════════ */
 export function BottomTabBar({ page, setPage, allowedPages, onLogout }: {
   page: string; setPage: (page: string) => void; allowedPages: string[]; onLogout?: () => void
 }) {
@@ -262,26 +143,15 @@ export function BottomTabBar({ page, setPage, allowedPages, onLogout }: {
   )
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-30"
-      style={{
-        background: 'linear-gradient(180deg, var(--wood-frame) 0%, var(--wood-dark) 100%)',
-        borderTop: '4px solid var(--wood-highlight)',
-      }}
-    >
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-dark-800 border-t border-white/5">
       <div className="flex items-stretch">
         {mobileNav.map(n => (
-          <button key={n.id} onClick={() => setPage(n.id)}
-            className="flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-none"
-            style={{
-              color: page === n.id ? 'var(--rpg-gold)' : 'var(--text-dim)',
-              textShadow: page === n.id ? '0 0 6px rgba(232,200,64,0.4)' : 'none',
-            }}
-          >
-            <span className="text-xl">{n.icon}</span>
-            <span style={{ fontSize: '10px' }}>{n.label}</span>
-            {page === n.id && (
-              <div style={{ position: 'absolute', bottom: 0, width: '32px', height: '3px', background: 'var(--rpg-gold)' }} />
-            )}
+          <button key={n.id} onClick={() => setPage(n.id)} className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-all relative ${
+            page === n.id ? 'text-white' : 'text-gray-500'
+          }`}>
+            <span className={`text-xl transition-transform ${page === n.id ? 'scale-110' : ''}`}>{n.icon}</span>
+            <span className="text-[10px]">{n.label}</span>
+            {page === n.id && <div className="absolute bottom-0 w-8 h-0.5 bg-purple-400 rounded-full" />}
           </button>
         ))}
         <MobileMoreMenu page={page} setPage={setPage} allowedPages={allowedPages} onLogout={onLogout} />
@@ -293,6 +163,7 @@ export function BottomTabBar({ page, setPage, allowedPages, onLogout }: {
 function MobileMoreMenu({ page, setPage, allowedPages, onLogout }: {
   page: string; setPage: (p: string) => void; allowedPages: string[]; onLogout?: () => void
 }) {
+  // useState is already imported at file top
   const [open, setOpen] = useState(false)
   const moreItems = ALL_NAV.filter(n =>
     !['home', 'log', 'tasks', 'rewards'].includes(n.id) && allowedPages.includes(n.id)
@@ -300,44 +171,27 @@ function MobileMoreMenu({ page, setPage, allowedPages, onLogout }: {
 
   return (
     <div className="flex-1 relative">
-      <button onClick={() => setOpen(!open)}
-        className="w-full h-full flex flex-col items-center justify-center py-3 gap-1 transition-none"
-        style={{ color: moreItems.some(n => n.id === page) ? 'var(--rpg-gold)' : 'var(--text-dim)' }}
-      >
+      <button onClick={() => setOpen(!open)} className={`w-full h-full flex flex-col items-center justify-center py-3 gap-1 transition-all ${
+        moreItems.some(n => n.id === page) ? 'text-white' : 'text-gray-500'
+      }`}>
         <span className="text-xl">⋯</span>
-        <span style={{ fontSize: '10px' }}>更多</span>
+        <span className="text-[10px]">更多</span>
       </button>
       {open && (
-        <div className="absolute bottom-full right-0 mb-2 w-48 overflow-hidden"
-          style={{
-            background: 'var(--bg-700)',
-            border: '4px solid var(--wood-frame)',
-            borderTopColor: 'var(--wood-highlight)',
-            borderLeftColor: 'var(--wood-light)',
-            borderRightColor: 'var(--wood-mid)',
-            borderBottomColor: 'var(--wood-dark)',
-            boxShadow: '3px 3px 0 rgba(0,0,0,0.4)',
-          }}
-        >
+        <div className="absolute bottom-full right-0 mb-2 w-48 bg-dark-800 border border-white/10 rounded-xl overflow-hidden shadow-2xl">
           {moreItems.map(n => (
             <button key={n.id} onClick={() => { setPage(n.id); setOpen(false) }}
-              className="flex items-center gap-3 w-full px-4 py-3 text-sm transition-none"
-              style={{
-                color: page === n.id ? 'var(--rpg-gold)' : 'var(--text-primary)',
-                background: page === n.id ? 'rgba(232,200,64,0.08)' : 'transparent',
-                borderBottom: '2px solid var(--wood-dark)',
-              }}
-            >
+              className={`flex items-center gap-3 w-full px-4 py-3 text-sm transition-all ${
+                page === n.id ? 'bg-purple-500/20 text-white' : 'text-gray-400 hover:bg-dark-600'
+              }`}>
               <span>{n.icon}</span><span>{n.label}</span>
             </button>
           ))}
           {onLogout && (
             <>
-              <div style={{ borderTop: '2px solid var(--wood-mid)' }} />
+              <div className="border-t border-white/5" />
               <button onClick={() => { onLogout(); setOpen(false) }}
-                className="flex items-center gap-3 w-full px-4 py-3 text-sm transition-none"
-                style={{ color: 'var(--rpg-red)' }}
-              >
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-all">
                 <span>🚪</span><span>切換角色</span>
               </button>
             </>

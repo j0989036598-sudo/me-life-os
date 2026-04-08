@@ -26,24 +26,25 @@ export default function ExplorePage() {
           return (
             <div key={region.id}
               onClick={() => canAccess && setSelectedRegion(region.id === selectedRegion ? null : region.id)}
-              className={`glass p-6 text-center transition-all cursor-pointer relative overflow-hidden ${
+              className={`glass rounded-2xl p-6 text-center transition-all cursor-pointer relative overflow-hidden ${
                 !canAccess ? 'opacity-30 grayscale cursor-not-allowed' :
                 selectedRegion === region.id ? 'ring-2 scale-[1.02]' : 'hover:scale-[1.01] hover:border-white/10'
               }`}
-              style={{ ...( !canAccess ? {} : selectedRegion === region.id ? { borderColor: region.color, boxShadow: `0 0 30px ${region.color}20` } : {} ) }}>
+              style={{ ['--ring-color' as string]: region.color, borderColor: selectedRegion === region.id ? region.color : undefined,
+                boxShadow: selectedRegion === region.id ? `0 0 30px ${region.color}20` : undefined }}>
 
               {/* Background glow */}
               <div className="absolute inset-0 opacity-10" style={{ background: `radial-gradient(circle at center, ${region.color}, transparent)` }} />
 
               <div className="relative">
                 <div className="text-5xl mb-3">{region.icon}</div>
-                <h3 style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '11px', color: 'var(--rpg-gold)', textShadow: '1px 1px 0 rgba(0,0,0,0.5)' }}>{region.name}</h3>
+                <h3 className="font-bold text-lg">{region.name}</h3>
                 <p className="text-xs text-gray-400 mt-1">{region.desc}</p>
 
                 {canAccess ? (
                   <>
-                    <div className="mt-3 w-full h-2 bg-dark-600 overflow-hidden" style={{ borderRadius: '0' }}>
-                      <div className="h-full progress-bar" style={{ width: `${region.progress}%`, backgroundColor: region.color, borderRadius: '0' }} />
+                    <div className="mt-3 w-full h-2 bg-dark-600 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full progress-bar" style={{ width: `${region.progress}%`, backgroundColor: region.color }} />
                     </div>
                     <div className="flex justify-between mt-1.5 text-xs">
                       <span className="text-gray-500">進度 {region.progress}%</span>
@@ -64,11 +65,11 @@ export default function ExplorePage() {
 
       {/* Selected Region Detail */}
       {selected && (
-        <div className="glass p-6 animate-fade">
+        <div className="glass rounded-2xl p-6 animate-fade">
           <div className="flex items-center gap-4 mb-4">
             <div className="text-5xl">{selected.icon}</div>
             <div>
-              <h3 style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '11px', color: 'var(--rpg-gold)', textShadow: '1px 1px 0 rgba(0,0,0,0.5)' }}>{selected.name}</h3>
+              <h3 className="text-xl font-black">{selected.name}</h3>
               <p className="text-sm text-gray-400">{selected.desc}</p>
               <div className="flex gap-3 mt-2 text-xs">
                 <span style={{ color: selected.color }}>📍 進度 {selected.progress}%</span>
@@ -83,8 +84,8 @@ export default function ExplorePage() {
               { name: '分析 SaaS 定價策略', xp: 80, gold: 50, done: false },
               { name: '完成科技業競品報告', xp: 100, gold: 70, done: false },
             ].map((q, i) => (
-              <div key={i} className={`flex items-center gap-3 p-4 ${q.done ? 'bg-emerald-500/5 border border-emerald-500/10' : 'bg-dark-700/50 border border-white/5'}`} style={{ borderRadius: '0' }}>
-                <div className={`w-6 h-6 border-2 flex items-center justify-center text-xs ${q.done ? 'border-emerald-400 bg-emerald-400 text-dark-900' : 'border-gray-600'}`} style={{ borderRadius: '0' }}>
+              <div key={i} className={`flex items-center gap-3 p-4 rounded-xl ${q.done ? 'bg-emerald-500/5 border border-emerald-500/10' : 'bg-dark-700/50 border border-white/5'}`}>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs ${q.done ? 'border-emerald-400 bg-emerald-400 text-dark-900' : 'border-gray-600'}`}>
                   {q.done && '✓'}
                 </div>
                 <span className={`flex-1 text-sm ${q.done ? 'line-through text-gray-500' : ''}`}>{q.name}</span>
@@ -96,8 +97,8 @@ export default function ExplorePage() {
               { name: '撰寫社群危機處理 SOP', xp: 70, gold: 45, done: true },
               { name: '分析輿論風向指標', xp: 50, gold: 30, done: false },
             ].map((q, i) => (
-              <div key={i} className={`flex items-center gap-3 p-4 ${q.done ? 'bg-emerald-500/5 border border-emerald-500/10' : 'bg-dark-700/50 border border-white/5'}`} style={{ borderRadius: '0' }}>
-                <div className={`w-6 h-6 border-2 flex items-center justify-center text-xs ${q.done ? 'border-emerald-400 bg-emerald-400 text-dark-900' : 'border-gray-600'}`} style={{ borderRadius: '0' }}>
+              <div key={i} className={`flex items-center gap-3 p-4 rounded-xl ${q.done ? 'bg-emerald-500/5 border border-emerald-500/10' : 'bg-dark-700/50 border border-white/5'}`}>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs ${q.done ? 'border-emerald-400 bg-emerald-400 text-dark-900' : 'border-gray-600'}`}>
                   {q.done && '✓'}
                 </div>
                 <span className={`flex-1 text-sm ${q.done ? 'line-through text-gray-500' : ''}`}>{q.name}</span>
@@ -109,8 +110,8 @@ export default function ExplorePage() {
               { name: '學習基礎財務報表分析', xp: 60, gold: 35, done: false },
               { name: '研究行銷 ROI 計算方法', xp: 70, gold: 45, done: false },
             ].map((q, i) => (
-              <div key={i} className={`flex items-center gap-3 p-4 bg-dark-700/50 border border-white/5`} style={{ borderRadius: '0' }}>
-                <div className="w-6 h-6 border-2 border-gray-600 flex items-center justify-center text-xs" style={{ borderRadius: '0' }} />
+              <div key={i} className={`flex items-center gap-3 p-4 rounded-xl bg-dark-700/50 border border-white/5`}>
+                <div className="w-6 h-6 rounded-full border-2 border-gray-600 flex items-center justify-center text-xs" />
                 <span className="flex-1 text-sm">{q.name}</span>
                 <span className="text-xs text-xp-400">+{q.xp} XP</span>
                 <span className="text-xs text-gold-400">+{q.gold} 🪙</span>
