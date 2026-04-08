@@ -18,44 +18,45 @@ export interface OfficeMember {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 辦公室安全走道點（只在空曠地板上）
-// 對應俯視辦公室地圖的走廊和桌子間隙
-const OFFICE_WAYPOINTS = [
-  { x: 36, y: 48 }, // 上方桌排下方走道左
-  { x: 50, y: 48 }, // 上方桌排下方走道中
-  { x: 60, y: 48 }, // 上方桌排下方走道右
-  { x: 36, y: 60 }, // 中央走道左
-  { x: 50, y: 60 }, // 中央走道中
-  { x: 62, y: 60 }, // 中央走道右
-  { x: 36, y: 72 }, // 下方走道左
-  { x: 50, y: 72 }, // 下方走道中
-  { x: 62, y: 72 }, // 下方走道右
-  { x: 44, y: 82 }, // 入口走道左
-  { x: 56, y: 82 }, // 入口走道右
+// 導航圖：節點 + 連線（只能在已連接的節點之間移動，不會穿越家具）
+// adj = 可以直接走過去的相鄰節點 index
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface NavNode { x: number; y: number; adj: number[] }
+
+// 辦公室走廊網格
+// 形狀：
+//  A - B - C    ← 主走廊（上方桌排下面）
+//      |
+//      D         ← 中央走廊（兩組下方桌之間）
+//      |
+//      E         ← 底部區域
+//
+const OFFICE_NAV: NavNode[] = [
+  { x: 36, y: 50, adj: [1]       }, // 0: A 主走廊左
+  { x: 50, y: 50, adj: [0, 2, 3] }, // 1: B 主走廊中（十字路口）
+  { x: 66, y: 50, adj: [1]       }, // 2: C 主走廊右
+  { x: 50, y: 63, adj: [1, 4]    }, // 3: D 中央走廊中
+  { x: 50, y: 76, adj: [3]       }, // 4: E 底部中央
 ]
 
-// 休息區（海灘）安全走道點（只在沙地上）
-const REST_WAYPOINTS = [
-  { x: 38, y: 44 }, // 上方沙地左
-  { x: 52, y: 44 }, // 上方沙地中
-  { x: 62, y: 44 }, // 上方沙地右
-  { x: 36, y: 55 }, // 中央沙地左
-  { x: 50, y: 55 }, // 中央沙地中
-  { x: 62, y: 55 }, // 中央沙地右
-  { x: 40, y: 66 }, // 下方沙地左
-  { x: 54, y: 66 }, // 下方沙地中
-  { x: 50, y: 76 }, // 木棧道旁
+// 休息區（海灘）沙地網格
+// 形狀：
+//  F - G - H    ← 上方沙地（躺椅前方）
+//  |   |
+//  I - J        ← 中央沙地
+//
+const REST_NAV: NavNode[] = [
+  { x: 36, y: 48, adj: [1, 3]    }, // 0: F 上方沙地左
+  { x: 50, y: 48, adj: [0, 2, 4] }, // 1: G 上方沙地中（路口）
+  { x: 62, y: 48, adj: [1]       }, // 2: H 上方沙地右
+  { x: 36, y: 60, adj: [0, 4]    }, // 3: I 中央沙地左
+  { x: 50, y: 60, adj: [1, 3]    }, // 4: J 中央沙地中
 ]
 
-// 初始出現位置（接近各自地圖的桌子/躺椅）
-const OFFICE_STARTS = [
-  { x: 36, y: 48 }, { x: 50, y: 48 }, { x: 60, y: 60 },
-  { x: 36, y: 72 }, { x: 62, y: 72 }, { x: 50, y: 82 },
-]
-const REST_STARTS = [
-  { x: 38, y: 44 }, { x: 52, y: 44 }, { x: 62, y: 44 },
-  { x: 36, y: 55 }, { x: 62, y: 66 }, { x: 50, y: 76 },
-]
+// 初始位置（對齊導航圖節點）
+const OFFICE_STARTS = [0, 1, 2, 3, 4, 1] // 節點 index
+const REST_STARTS   = [0, 1, 2, 3, 4, 1]
 
 const STATUS_CONFIG = {
   online:  { color: '#4ade80' },
@@ -70,21 +71,11 @@ function rand(min: number, max: number) {
   return min + Math.random() * (max - min)
 }
 
-function pickWaypoint(
-  waypoints: { x: number; y: number }[],
-  current: { x: number; y: number }
-) {
-  // 避免選到目前所在的同一個點
-  const others = waypoints.filter(
-    w => Math.abs(w.x - current.x) > 3 || Math.abs(w.y - current.y) > 3
-  )
-  const pool = others.length > 0 ? others : waypoints
-  return pool[Math.floor(Math.random() * pool.length)]
-}
-
 interface DogState {
+  nodeIndex: number   // 目前在哪個節點
   x: number
   y: number
+  targetNodeIndex: number
   targetX: number
   targetY: number
   isMoving: boolean
@@ -110,11 +101,10 @@ export default function OfficeCanvas({
   const dogsRef           = useRef<DogState[]>([])
   const timeoutsRef       = useRef<ReturnType<typeof setTimeout>[]>([])
 
-  const isRest    = bgImage.includes('rest')
-  const waypoints = isRest ? REST_WAYPOINTS : OFFICE_WAYPOINTS
-  const starts    = isRest ? REST_STARTS    : OFFICE_STARTS
+  const isRest  = bgImage.includes('rest')
+  const nav     = isRest ? REST_NAV     : OFFICE_NAV
+  const starts  = isRest ? REST_STARTS  : OFFICE_STARTS
 
-  // 容器寬度偵測
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
@@ -129,32 +119,43 @@ export default function OfficeCanvas({
   // 初始化
   useEffect(() => {
     const initial: DogState[] = members.map((_, i) => {
-      const s = starts[i % starts.length]
-      return { x: s.x, y: s.y, targetX: s.x, targetY: s.y,
-               isMoving: false, facingLeft: false, transitionMs: 0 }
+      const nodeIdx = starts[i % starts.length]
+      const node = nav[nodeIdx]
+      return {
+        nodeIndex: nodeIdx, x: node.x, y: node.y,
+        targetNodeIndex: nodeIdx, targetX: node.x, targetY: node.y,
+        isMoving: false, facingLeft: false, transitionMs: 0,
+      }
     })
     dogsRef.current = initial
     setDogs(initial)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [members.length, isRest])
 
-  // 移動排程（只走 waypoints 之間）
+  // 沿著導航圖走到相鄰節點
   function scheduleDog(index: number, waitMs: number) {
     if (isRest) return
 
     const t = setTimeout(() => {
-      const current = dogsRef.current[index]
-      if (!current) return
+      const dog = dogsRef.current[index]
+      if (!dog) return
 
-      const wp = pickWaypoint(waypoints, { x: current.x, y: current.y })
-      const dx = wp.x - current.x
-      const dy = wp.y - current.y
+      const currentNode = nav[dog.nodeIndex]
+      if (!currentNode || currentNode.adj.length === 0) return
+
+      // 隨機選一個相鄰節點
+      const nextNodeIdx = currentNode.adj[Math.floor(Math.random() * currentNode.adj.length)]
+      const nextNode    = nav[nextNodeIdx]
+
+      const dx = nextNode.x - dog.x
+      const dy = nextNode.y - dog.y
       const dist = Math.sqrt(dx * dx + dy * dy)
-      const transitionMs = Math.max(800, Math.round((dist / SPEED) * 1000))
+      const transitionMs = Math.max(600, Math.round((dist / SPEED) * 1000))
 
       const moving: DogState = {
-        ...current,
-        targetX: wp.x, targetY: wp.y,
+        ...dog,
+        targetNodeIndex: nextNodeIdx,
+        targetX: nextNode.x, targetY: nextNode.y,
         isMoving: true, facingLeft: dx < 0, transitionMs,
       }
       dogsRef.current = dogsRef.current.map((d, i) => i === index ? moving : d)
@@ -163,13 +164,14 @@ export default function OfficeCanvas({
       const arrive = setTimeout(() => {
         const arrived: DogState = {
           ...dogsRef.current[index],
-          x: wp.x, y: wp.y,
+          nodeIndex: nextNodeIdx,
+          x: nextNode.x, y: nextNode.y,
           isMoving: false, transitionMs: 0,
         }
         dogsRef.current = dogsRef.current.map((d, i) => i === index ? arrived : d)
         setDogs([...dogsRef.current])
-        scheduleDog(index, rand(2000, 5000))
-      }, transitionMs + 200)
+        scheduleDog(index, rand(1500, 4500))
+      }, transitionMs + 150)
 
       timeoutsRef.current.push(arrive)
     }, waitMs)
@@ -181,7 +183,7 @@ export default function OfficeCanvas({
     if (!imgLoaded || members.length === 0) return
     timeoutsRef.current.forEach(clearTimeout)
     timeoutsRef.current = []
-    members.forEach((_, i) => scheduleDog(i, rand(500, 3000)))
+    members.forEach((_, i) => scheduleDog(i, rand(500, 2500)))
     return () => timeoutsRef.current.forEach(clearTimeout)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imgLoaded, members.length, isRest])
