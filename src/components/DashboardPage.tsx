@@ -208,8 +208,12 @@ export default function DashboardPage({ role }: { role: UserRole }) {
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
                 <span className="text-[10px] text-gray-400">{day.count}</span>
                 <div
-                  className="w-full bg-gradient-to-t from-purple-500/60 to-purple-400/40 rounded-t-lg transition-all duration-500"
-                  style={{ height: `${Math.max((day.count / maxTrend) * 100, 4)}%` }}
+                  className={`w-full rounded-t-lg transition-all duration-500 ${
+                    day.count === 0
+                      ? 'bg-gray-700/30 border border-dashed border-gray-600'
+                      : 'bg-gradient-to-t from-purple-500/60 to-purple-400/40'
+                  }`}
+                  style={{ height: `${day.count === 0 ? 8 : Math.max((day.count / maxTrend) * 100, 15)}%` }}
                 />
                 <span className="text-[10px] text-gray-500">{day.date}</span>
               </div>
@@ -251,7 +255,9 @@ export default function DashboardPage({ role }: { role: UserRole }) {
 
         {/* 排行榜 */}
         <div className="glass rounded-2xl p-5 border border-white/5">
-          <h3 className="font-bold mb-4 flex items-center gap-2">🏆 XP 排行榜 TOP 5</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold flex items-center gap-2">🏆 排行榜 TOP 5</h3>
+          </div>
           <div className="space-y-2">
             {stats.topPerformers.map((p, i) => (
               <div key={i} className="flex items-center gap-3 py-2 px-3 rounded-xl hover:bg-white/5 transition-all">

@@ -171,8 +171,11 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
           </div>
           <span className="text-xs text-gray-500">{state.seasonXp.toLocaleString()} / {state.seasonXpMax.toLocaleString()} 賽季XP</span>
         </div>
-        <div className="w-full h-2 bg-dark-600 rounded-full overflow-hidden mb-4">
+        <div className="w-full h-2 bg-dark-600 rounded-full overflow-hidden mb-4 relative">
           <div className="h-full bg-gradient-to-r from-amber-500 via-purple-500 to-emerald-500 rounded-full progress-bar" style={{ width: `${(state.seasonXp / state.seasonXpMax) * 100}%` }} />
+          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white pointer-events-none">
+            {Math.round((state.seasonXp / state.seasonXpMax) * 100)}%
+          </div>
         </div>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
           {SEASON_PASS.tiers.map((tier) => {
@@ -215,7 +218,11 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
             ⚡ 待完成任務 <span className="text-xs text-gray-500">{doneTasks.length}/{myTasks.length}</span>
           </h3>
           {activeTasks.length === 0 ? (
-            <div className="text-center text-gray-500 py-6 text-sm">🎉 沒有待完成的任務！</div>
+            <div className="text-center py-6">
+              <span className="text-3xl block mb-2">🎯</span>
+              <p className="text-gray-500 text-sm mb-2">還沒有待完成的任務</p>
+              <p className="text-gray-600 text-xs">去「任務委托」指派任務，或等主管分配吧！</p>
+            </div>
           ) : (
             <div className="space-y-2">
               {activeTasks.slice(0, 4).map((t) => (
@@ -235,7 +242,11 @@ export default function HomePage({ user, role, userId }: { user?: { avatar: stri
         <div className="glass rounded-2xl p-6">
           <h3 className="font-bold mb-4 flex items-center gap-2">📖 最近日誌</h3>
           {myLogs.length === 0 ? (
-            <div className="text-center text-gray-500 py-6 text-sm">📖 尚無日誌紀錄</div>
+            <div className="text-center py-6">
+              <span className="text-3xl block mb-2">📖</span>
+              <p className="text-gray-500 text-sm mb-2">還沒有日誌紀錄</p>
+              <p className="text-gray-600 text-xs">去「賢者之書」寫下今天的冒險吧！</p>
+            </div>
           ) : (
             <div className="space-y-2">
               {myLogs.slice(0, 4).map((log) => (

@@ -28,6 +28,7 @@ export default function NotificationCenter({ userId, onNavigate }: {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [limit, setLimit] = useState(20)
   const panelRef = useRef<HTMLDivElement>(null)
 
   // 載入未讀數
@@ -168,30 +169,40 @@ export default function NotificationCenter({ userId, onNavigate }: {
                 <span className="text-gray-500 text-sm">暫無通知</span>
               </div>
             ) : (
-              notifications.map(n => {
-                const config = TYPE_CONFIG[n.type] || TYPE_CONFIG.system
-                return (
-                  <button
-                    key={n.id}
-                    onClick={() => handleRead(n)}
-                    className={`w-full text-left px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-all flex gap-3 ${
-                      !n.read ? 'bg-purple-500/5' : ''
-                    }`}
-                  >
-                    <span className={`text-xl mt-0.5 ${config.color}`}>{config.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-medium ${!n.read ? 'text-white' : 'text-gray-300'}`}>
-                          {n.title}
-                        </span>
-                        {!n.read && <span className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0" />}
+              <>
+                {notifications.slice(0, limit).map(n => {
+                  const config = TYPE_CONFIG[n.type] || TYPE_CONFIG.system
+                  return (
+                    <button
+                      key={n.id}
+                      onClick={() => handleRead(n)}
+                      className={`w-full text-left px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-all flex gap-3 ${
+                        !n.read ? 'bg-purple-500/5' : ''
+                      }`}
+                    >
+                      <span className={`text-xl mt-0.5 ${config.color}`}>{config.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm font-medium ${!n.read ? 'text-white' : 'text-gray-300'}`}>
+                            {n.title}
+                          </span>
+                          {!n.read && <span className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0" />}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{n.message}</p>
+                        <span className="text-[10px] text-gray-500 mt-1 block">{timeAgo(n.created_at)}</span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{n.message}</p>
-                      <span className="text-[10px] text-gray-500 mt-1 block">{timeAgo(n.created_at)}</span>
-                    </div>
+                    </button>
+                  )
+                })}
+                {notifications.length > limit && (
+                  <button
+                    onClick={() => setLimit(prev => prev + 20)}
+                    className="w-full py-3 text-xs text-purple-400 hover:text-purple-300 hover:bg-white/5 transition-all"
+                  >
+                    載入更多通知...
                   </button>
-                )
-              })
+                )}
+              </>
             )}
           </div>
         </div>

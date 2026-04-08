@@ -48,7 +48,8 @@ export default function SettingsPage({ profile, onProfileUpdate }: SettingsPageP
     if (updated) {
       onProfileUpdate(updated)
       setSaved(true)
-      setTimeout(() => setSaved(false), 2500)
+      setError(null)
+      setTimeout(() => setSaved(false), 3000)
     } else {
       setError('儲存失敗，請再試一次')
     }
@@ -77,6 +78,17 @@ export default function SettingsPage({ profile, onProfileUpdate }: SettingsPageP
 
   return (
     <div className="animate-fade max-w-xl mx-auto">
+      {saved && (
+        <div className="fixed top-20 right-4 z-50 bg-green-500/20 border border-green-500/30 text-green-400 px-4 py-3 rounded-xl text-sm font-medium animate-fade flex items-center gap-2 shadow-lg">
+          ✅ 資料已更新
+        </div>
+      )}
+      {error && (
+        <div className="fixed top-20 right-4 z-50 bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm font-medium animate-fade flex items-center gap-2 shadow-lg">
+          ❌ {error}
+        </div>
+      )}
+
       <div className="flex items-center gap-3 mb-6">
         <span className="text-3xl">⚙️</span>
         <div>
@@ -84,18 +96,6 @@ export default function SettingsPage({ profile, onProfileUpdate }: SettingsPageP
           <p className="text-gray-400 text-sm">編輯你的角色資料</p>
         </div>
       </div>
-
-      {saved && (
-        <div className="glass rounded-xl p-4 mb-4 border border-emerald-500/30 bg-emerald-500/5 text-emerald-300 text-sm text-center animate-fade">
-          ✅ 個人資料已儲存！
-        </div>
-      )}
-
-      {error && (
-        <div className="glass rounded-xl p-4 mb-4 border border-red-500/30 bg-red-500/5 text-red-300 text-sm text-center">
-          ⚠️ {error}
-        </div>
-      )}
 
       {resetResult && (
         <div className={`glass rounded-xl p-4 mb-4 border text-sm text-center ${

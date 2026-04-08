@@ -139,7 +139,7 @@ export function BottomTabBar({ page, setPage, allowedPages, onLogout }: {
   page: string; setPage: (page: string) => void; allowedPages: string[]; onLogout?: () => void
 }) {
   const mobileNav = ALL_NAV.filter(n =>
-    ['home', 'log', 'tasks', 'guild', 'market'].includes(n.id) && allowedPages.includes(n.id)
+    ['home', 'log', 'tasks', 'rewards'].includes(n.id) && allowedPages.includes(n.id)
   )
 
   return (
@@ -166,7 +166,7 @@ function MobileMoreMenu({ page, setPage, allowedPages, onLogout }: {
   // useState is already imported at file top
   const [open, setOpen] = useState(false)
   const moreItems = ALL_NAV.filter(n =>
-    !['home', 'log', 'tasks', 'guild', 'market'].includes(n.id) && allowedPages.includes(n.id)
+    !['home', 'log', 'tasks', 'rewards'].includes(n.id) && allowedPages.includes(n.id)
   )
 
   return (

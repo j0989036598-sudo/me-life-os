@@ -35,6 +35,9 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
   const [confirmingRedemption, setConfirmingRedemption] = useState(false)
   const [redemptionMsg, setRedemptionMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
+  // Shop tab state
+  const [filterCategory, setFilterCategory] = useState<'all' | 'leave' | 'bonus' | 'gift' | 'custom'>('all')
+
   // Manage tab state
   const [newRewardName, setNewRewardName] = useState('')
   const [newRewardDesc, setNewRewardDesc] = useState('')
@@ -308,8 +311,25 @@ export default function RewardPage({ profile, role }: { profile: Profile; role: 
             </div>
           )}
 
+          {/* 分類篩選 */}
+          <div className="flex gap-2 mb-4 flex-wrap">
+            {(['all', 'leave', 'bonus', 'gift', 'custom'] as const).map(cat => (
+              <button
+                key={cat}
+                onClick={() => setFilterCategory(cat)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  filterCategory === cat
+                    ? 'bg-purple-500/30 text-purple-300 border border-purple-500/30'
+                    : 'bg-dark-700 text-gray-400 hover:text-white border border-white/5'
+                }`}
+              >
+                {cat === 'all' ? '🏷️ 全部' : cat === 'leave' ? '🌴 假期' : cat === 'bonus' ? '💰 獎金' : cat === 'gift' ? '🎁 禮品' : '✨ 自訂'}
+              </button>
+            ))}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rewards.map(reward => {
+            {rewards.filter(r => r.active && (filterCategory === 'all' || r.category === filterCategory)).map(reward => {
               const canAfford =
                 reward.cost_gold > 0 ? state.gold >= reward.cost_gold : state.diamond >= reward.cost_diamond
               return (
