@@ -49,7 +49,7 @@ function drawCharacterPreview(
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
   // Draw head (10x10 units = 40x40 pixels)
-  ctx.fillStyle = character.skinTone
+  ctx.fillStyle = SKIN_TONES[character.skinTone]
   ctx.fillRect((centerX - 20) * scale / 4, (centerY - 40) * scale / 4, 10 * scale, 10 * scale)
 
   // Draw simple eyes
