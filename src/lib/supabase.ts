@@ -836,6 +836,7 @@ export async function createNotificationBatch(
 export interface CharacterProfile {
   id: string
   user_id: string
+  sprite_id: string | null  // 新版：角色 sprite ID（對應 sprites.ts）
   hair_style: number
   hair_color: string
   skin_tone: number
@@ -875,11 +876,12 @@ export async function getCharacterProfile(userId: string): Promise<CharacterProf
 
 // 建立或更新角色外觀
 export async function upsertCharacterProfile(userId: string, character: {
-  hair_style: number
-  hair_color: string
-  skin_tone: number
-  outfit_color: string
-  accessory: number
+  sprite_id?: string | null
+  hair_style?: number
+  hair_color?: string
+  skin_tone?: number
+  outfit_color?: string
+  accessory?: number
 }): Promise<CharacterProfile | null> {
   const { data, error } = await supabase
     .from('character_profiles')
